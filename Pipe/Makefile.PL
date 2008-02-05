@@ -2,12 +2,17 @@ use ExtUtils::MakeMaker;
 use Config;
 $BORLAND = 1 if $Config{'cc'} =~ /^bcc32/i;
 WriteMakefile(
-    'INC'	=> ($BORLAND ? '' : '-GX'),
-    'OBJECT'	=> 'Cpipe$(OBJ_EXT) Pipe$(OBJ_EXT)',
-    'NAME'	=> 'Win32::Pipe',
-    'VERSION_FROM' => 'Pipe.pm',
-    'XS'	=> { 'Pipe.xs' => 'Pipe.cpp' },
-    'dist'	=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
+    'INC'		=> ($BORLAND ? '' : '-GX'),
+    'OBJECT'		=> 'Cpipe$(OBJ_EXT) Pipe$(OBJ_EXT)',
+    'NAME'		=> 'Win32::Pipe',
+    'VERSION_FROM'	=> 'Pipe.pm',
+    'XS'		=> { 'Pipe.xs' => 'Pipe.cpp' },
+    'dist'		=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
+    ($] < 5.005 ? () :
+      (
+	'AUTHOR'	=> 'Dave Roth <rothd@roth.net>',
+	'ABSTRACT'	=> 'Pipe extension for Win32 Perl',
+      )),
 );
 
 sub MY::xs_c {

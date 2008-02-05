@@ -32,6 +32,11 @@ extern "C" {
 #include <EXTERN.h>
 #include "perl.h"
 #include "XSub.h"
+#include "patchlevel.h"
+
+#if (PATCHLEVEL < 5) && !defined(PL_sv_undef)
+# define PL_sv_undef sv_undef
+#endif
 
 #if defined(__cplusplus)
 }
@@ -121,7 +126,8 @@ XS(XS_WIN32__Pipe_Constant)
 		croak("Usage: Win23::Pipe::Constant(name, arg)\n");
     }
 	{
-		char* name = (char*)SvPV(ST(0),na);
+	        STRLEN n_a;
+		char* name = (char*)SvPV(ST(0),n_a);
 		ST(0) = sv_newmortal();
 		sv_setiv(ST(0), constant(name));
 	}
@@ -147,11 +153,12 @@ XS(XS_WIN32__Pipe_Create)
 	UCHAR	*szName = 0;
 	DWORD	dWait = DEFAULT_WAIT_TIME;
 	CPipe	*Pipe = 0;
-	
+	STRLEN  n_a;
+
 	if(items != 2){
 		CROAK("usage: Create(\"$Name\", $TimeToWait);\n");
 	}
-	szName = (UCHAR *)SvPV(ST(0), na);
+	szName = (UCHAR *)SvPV(ST(0), n_a);
 	dWait = (DWORD)SvIV(ST(1));
 
 	PUSHMARK(sp);
@@ -252,7 +259,7 @@ XS(XS_WIN32__Pipe_Read)
 			if(dLen){
 				XPUSHs(sv_2mortal(newSVpv((char *)vpData, dLen)));
 			}else{
-				sv_setsv(ST(0), (SV*) &sv_undef);
+				sv_setsv(ST(0), (SV*) &PL_sv_undef);
 			}
 		}
 	}
@@ -427,9 +434,7 @@ XS(boot_Win32__Pipe)
 	newXS("Win32::Pipe::PipeBufferSize",		XS_WIN32__Pipe_BufferSize,  file);
 	newXS("Win32::Pipe::Info",					XS_WIN32__Pipe_Info, file);
 
- 	ST(0) = &sv_yes;
-	XSRETURN(1);
-
+	XSRETURN_YES;
 }
 
 

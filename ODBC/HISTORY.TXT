@@ -67,6 +67,16 @@ ODBC.PM HISTORY:
 97.02.08 Dave Roth <rothd@roth.net>
          - Corrected Error reporting bug.
 
+99.09.25 Gurusamy Sarathy <gsar@activestate.com>
+	 - DumpData() typo fix from Rex Livingston <Rex.Livingston@praxa.com.au>
+	 - s/sql/Sql/; a minor efficiency improvement
+	 - some minor tweaks for compatibility with Perl 5.005xx
+	 - html -> pod documentation from David Rosinger <dsrosing@ingr.com>
+	 - added ODBC_{ADD,REMOVE,CONFIG}_SYS_DSN constants for working with
+	   system DSNs (from Stergios Marinopoulos <stergios@onward-net.com>)
+	 - minor cosmetic edits to Constant.cpp for portability
+
+
 ODBC.PLL HISTORY:
 ----------------
 96.04.10 Dave Roth <rothd@roth.net>

@@ -5,5 +5,13 @@ use Config;
 WriteMakefile(
     'NAME'		=> 'Win32API::Registry',
     'VERSION_FROM'	=> 'Registry.pm',	# finds $VERSION
-    ($Config{'archname'} =~ /-object$/i ? ('CAPI' => 'TRUE') : ()),
+    ($Config{'archname'} !~ /-object$/i ? () :
+      (
+	'CAPI'		=> 'TRUE'
+      )),
+    ($] < 5.005 ? () :
+      (
+	'AUTHOR'	=> 'Tye McQueen <tye@metronet.com>',
+	'ABSTRACT_FROM'	=> 'Registry.pm',
+      )),
 );

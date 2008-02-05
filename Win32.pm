@@ -1,6 +1,12 @@
 package Win32;
 
-$VERSION = $VERSION = '0.14';
+#
+#  Documentation for all Win32:: functions are in Win32.pod (which is a
+#  standard part of development versions of Perl 5.6, and is also
+#  included with the latest builds of the ActivePerl distribution.)
+#
+
+$VERSION = $VERSION = '0.15';
 
 require Exporter;
 require DynaLoader;

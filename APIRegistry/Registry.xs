@@ -5,9 +5,13 @@
 #include "XSUB.h"
 #define  WIN32_LEAN_AND_MEAN	/* Tell windows.h to skip much */
 #include <windows.h>
-#ifdef __cplusplus
-#include <malloc.h>
-#endif
+/*#ifdef __cplusplus
+#include <malloc.h>*/
+void * __cdecl _alloca(size_t);
+/*#endif*/
+
+#define oDWORD	DWORD
+#define oHKEY	HKEY
 
 
 #ifndef DEBUGGING
@@ -16,75 +20,75 @@
 # define	Debug(list)	ErrPrintf list
 # include <stdarg.h>
     static void
-    ErrPrintf( const char *fmt, ... )
+    ErrPrintf( const char *sFmt, ... )
     {
-      va_list alist;
-      static char *env= NULL;
-      DWORD iErr= GetLastError();
-	if(  NULL == env  ) {
-	    if(  NULL == ( env= getenv("DEBUG_WIN32API_REGISTRY") )  )
-		env= "";
+      va_list aArgs;
+      static char *sEnv= NULL;
+      DWORD nErr= GetLastError();
+	if(  NULL == sEnv  ) {
+	    if(  NULL == ( sEnv= getenv("DEBUG_WIN32API_REGISTRY") )  )
+		sEnv= "";
 	}
-	if(  '\0' == *env  )
+	if(  '\0' == *sEnv  )
 	    return;
-	va_start( alist, fmt );
-	vfprintf( stderr, fmt, alist );
-	va_end( alist );
-	SetLastError( iErr );
+	va_start( aArgs, sFmt );
+	vfprintf( stderr, sFmt, aArgs );
+	va_end( aArgs );
+	SetLastError( nErr );
     }
 #endif /* DEBUGGING */
 
 
 DWORD
-constant( char *name, int arg )
+constant( char *sName, int iArg )
 {
     errno= 0;
-    if(  '\0' == name[0]  ||  '\0' == name[1]
-     ||  '\0' == name[2]  ||  '\0' == name[3]  ) {
+    if(  '\0' == sName[0]  ||  '\0' == sName[1]
+     ||  '\0' == sName[2]  ||  '\0' == sName[3]  ) {
 	;
-    } else switch(  name[4]  ) {
+    } else switch(  sName[4]  ) {
 	case 's':
-	    if(  strEQ(name,"constant")  )
+	    if(  strEQ(sName,"constant")  )
 		break;	/* Prevent infinite recursion for some typos */
 	    break;
 	case '_':
-	    if(  strEQ( name, "HKEY_CLASSES_ROOT" )  )
+	    if(  strEQ( sName, "HKEY_CLASSES_ROOT" )  )
 #ifdef HKEY_CLASSES_ROOT
 		return (DWORD)HKEY_CLASSES_ROOT;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "HKEY_CURRENT_CONFIG" )  )
+	    if(  strEQ( sName, "HKEY_CURRENT_CONFIG" )  )
 #ifdef HKEY_CURRENT_CONFIG
 		return (DWORD)HKEY_CURRENT_CONFIG;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "HKEY_CURRENT_USER" )  )
+	    if(  strEQ( sName, "HKEY_CURRENT_USER" )  )
 #ifdef HKEY_CURRENT_USER
 		return (DWORD)HKEY_CURRENT_USER;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "HKEY_DYN_DATA" )  )
+	    if(  strEQ( sName, "HKEY_DYN_DATA" )  )
 #ifdef HKEY_DYN_DATA
 		return (DWORD)HKEY_DYN_DATA;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "HKEY_LOCAL_MACHINE" )  )
+	    if(  strEQ( sName, "HKEY_LOCAL_MACHINE" )  )
 #ifdef HKEY_LOCAL_MACHINE
 		return (DWORD)HKEY_LOCAL_MACHINE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "HKEY_PERFORMANCE_DATA" )  )
+	    if(  strEQ( sName, "HKEY_PERFORMANCE_DATA" )  )
 #ifdef HKEY_PERFORMANCE_DATA
 		return (DWORD)HKEY_PERFORMANCE_DATA;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "HKEY_USERS" )  )
+	    if(  strEQ( sName, "HKEY_USERS" )  )
 #ifdef HKEY_USERS
 		return (DWORD)HKEY_USERS;
 #else
@@ -92,7 +96,7 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'A':
-	    if(  strEQ( name, "KEY_ALL_ACCESS" )  )
+	    if(  strEQ( sName, "KEY_ALL_ACCESS" )  )
 #ifdef KEY_ALL_ACCESS
 		return (DWORD)KEY_ALL_ACCESS;
 #else
@@ -100,7 +104,7 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'B':
-	    if(  strEQ( name, "REG_BINARY" )  )
+	    if(  strEQ( sName, "REG_BINARY" )  )
 #ifdef REG_BINARY
 		return REG_BINARY;
 #else
@@ -108,25 +112,25 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'C':
-	    if(  strEQ( name, "KEY_CREATE_LINK" )  )
+	    if(  strEQ( sName, "KEY_CREATE_LINK" )  )
 #ifdef KEY_CREATE_LINK
 		return KEY_CREATE_LINK;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "KEY_CREATE_LINK" )  )
+	    if(  strEQ( sName, "KEY_CREATE_LINK" )  )
 #ifdef KEY_CREATE_LINK
 		return KEY_CREATE_LINK;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "KEY_CREATE_SUB_KEY" )  )
+	    if(  strEQ( sName, "KEY_CREATE_SUB_KEY" )  )
 #ifdef KEY_CREATE_SUB_KEY
 		return KEY_CREATE_SUB_KEY;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_CREATED_NEW_KEY" )  )
+	    if(  strEQ( sName, "REG_CREATED_NEW_KEY" )  )
 #ifdef REG_CREATED_NEW_KEY
 		return REG_CREATED_NEW_KEY;
 #else
@@ -134,19 +138,19 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'D':
-	    if(  strEQ( name, "REG_DWORD" )  )
+	    if(  strEQ( sName, "REG_DWORD" )  )
 #ifdef REG_DWORD
 		return REG_DWORD;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_DWORD_BIG_ENDIAN" )  )
+	    if(  strEQ( sName, "REG_DWORD_BIG_ENDIAN" )  )
 #ifdef REG_DWORD_BIG_ENDIAN
 		return REG_DWORD_BIG_ENDIAN;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_DWORD_LITTLE_ENDIAN" )  )
+	    if(  strEQ( sName, "REG_DWORD_LITTLE_ENDIAN" )  )
 #ifdef REG_DWORD_LITTLE_ENDIAN
 		return REG_DWORD_LITTLE_ENDIAN;
 #else
@@ -154,19 +158,19 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'E':
-	    if(  strEQ( name, "KEY_ENUMERATE_SUB_KEYS" )  )
+	    if(  strEQ( sName, "KEY_ENUMERATE_SUB_KEYS" )  )
 #ifdef KEY_ENUMERATE_SUB_KEYS
 		return KEY_ENUMERATE_SUB_KEYS;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "KEY_EXECUTE" )  )
+	    if(  strEQ( sName, "KEY_EXECUTE" )  )
 #ifdef KEY_EXECUTE
 		return KEY_EXECUTE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_EXPAND_SZ" )  )
+	    if(  strEQ( sName, "REG_EXPAND_SZ" )  )
 #ifdef REG_EXPAND_SZ
 		return REG_EXPAND_SZ;
 #else
@@ -174,7 +178,7 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'F':
-	    if(  strEQ( name, "REG_FULL_RESOURCE_DESCRIPTOR" )  )
+	    if(  strEQ( sName, "REG_FULL_RESOURCE_DESCRIPTOR" )  )
 #ifdef REG_FULL_RESOURCE_DESCRIPTOR
 		return REG_FULL_RESOURCE_DESCRIPTOR;
 #else
@@ -192,19 +196,19 @@ constant( char *name, int arg )
 	case 'K':
 	    break;
 	case 'L':
-	    if(  strEQ( name, "REG_LEGAL_CHANGE_FILTER" )  )
+	    if(  strEQ( sName, "REG_LEGAL_CHANGE_FILTER" )  )
 #ifdef REG_LEGAL_CHANGE_FILTER
 		return REG_LEGAL_CHANGE_FILTER;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_LEGAL_OPTION" )  )
+	    if(  strEQ( sName, "REG_LEGAL_OPTION" )  )
 #ifdef REG_LEGAL_OPTION
 		return REG_LEGAL_OPTION;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_LINK" )  )
+	    if(  strEQ( sName, "REG_LINK" )  )
 #ifdef REG_LINK
 		return REG_LINK;
 #else
@@ -212,7 +216,7 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'M':
-	    if(  strEQ( name, "REG_MULTI_SZ" )  )
+	    if(  strEQ( sName, "REG_MULTI_SZ" )  )
 #ifdef REG_MULTI_SZ
 		return REG_MULTI_SZ;
 #else
@@ -220,43 +224,43 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'N':
-	    if(  strEQ( name, "KEY_NOTIFY" )  )
+	    if(  strEQ( sName, "KEY_NOTIFY" )  )
 #ifdef KEY_NOTIFY
 		return KEY_NOTIFY;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_NO_LAZY_FLUSH" )  )
+	    if(  strEQ( sName, "REG_NO_LAZY_FLUSH" )  )
 #ifdef REG_NO_LAZY_FLUSH
 		return REG_NO_LAZY_FLUSH;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_NONE" )  )
+	    if(  strEQ( sName, "REG_NONE" )  )
 #ifdef REG_NONE
 		return REG_NONE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_NOTIFY_CHANGE_ATTRIBUTES" )  )
+	    if(  strEQ( sName, "REG_NOTIFY_CHANGE_ATTRIBUTES" )  )
 #ifdef REG_NOTIFY_CHANGE_ATTRIBUTES
 		return REG_NOTIFY_CHANGE_ATTRIBUTES;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_NOTIFY_CHANGE_LAST_SET" )  )
+	    if(  strEQ( sName, "REG_NOTIFY_CHANGE_LAST_SET" )  )
 #ifdef REG_NOTIFY_CHANGE_LAST_SET
 		return REG_NOTIFY_CHANGE_LAST_SET;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_NOTIFY_CHANGE_NAME" )  )
+	    if(  strEQ( sName, "REG_NOTIFY_CHANGE_NAME" )  )
 #ifdef REG_NOTIFY_CHANGE_NAME
 		return REG_NOTIFY_CHANGE_NAME;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_NOTIFY_CHANGE_SECURITY" )  )
+	    if(  strEQ( sName, "REG_NOTIFY_CHANGE_SECURITY" )  )
 #ifdef REG_NOTIFY_CHANGE_SECURITY
 		return REG_NOTIFY_CHANGE_SECURITY;
 #else
@@ -264,43 +268,43 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'O':
-	    if(  strEQ( name, "REG_OPENED_EXISTING_KEY" )  )
+	    if(  strEQ( sName, "REG_OPENED_EXISTING_KEY" )  )
 #ifdef REG_OPENED_EXISTING_KEY
 		return REG_OPENED_EXISTING_KEY;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_OPTION_BACKUP_RESTORE" )  )
+	    if(  strEQ( sName, "REG_OPTION_BACKUP_RESTORE" )  )
 #ifdef REG_OPTION_BACKUP_RESTORE
 		return REG_OPTION_BACKUP_RESTORE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_OPTION_CREATE_LINK" )  )
+	    if(  strEQ( sName, "REG_OPTION_CREATE_LINK" )  )
 #ifdef REG_OPTION_CREATE_LINK
 		return REG_OPTION_CREATE_LINK;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_OPTION_NON_VOLATILE" )  )
+	    if(  strEQ( sName, "REG_OPTION_NON_VOLATILE" )  )
 #ifdef REG_OPTION_NON_VOLATILE
 		return REG_OPTION_NON_VOLATILE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_OPTION_OPEN_LINK" )  )
+	    if(  strEQ( sName, "REG_OPTION_OPEN_LINK" )  )
 #ifdef REG_OPTION_OPEN_LINK
 		return REG_OPTION_OPEN_LINK;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_OPTION_RESERVED" )  )
+	    if(  strEQ( sName, "REG_OPTION_RESERVED" )  )
 #ifdef REG_OPTION_RESERVED
 		return REG_OPTION_RESERVED;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_OPTION_VOLATILE" )  )
+	    if(  strEQ( sName, "REG_OPTION_VOLATILE" )  )
 #ifdef REG_OPTION_VOLATILE
 		return REG_OPTION_VOLATILE;
 #else
@@ -310,7 +314,7 @@ constant( char *name, int arg )
 	case 'P':
 	    break;
 	case 'Q':
-	    if(  strEQ( name, "KEY_QUERY_VALUE" )  )
+	    if(  strEQ( sName, "KEY_QUERY_VALUE" )  )
 #ifdef KEY_QUERY_VALUE
 		return KEY_QUERY_VALUE;
 #else
@@ -318,25 +322,25 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'R':
-	    if(  strEQ( name, "KEY_READ" )  )
+	    if(  strEQ( sName, "KEY_READ" )  )
 #ifdef KEY_READ
 		return KEY_READ;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_REFRESH_HIVE" )  )
+	    if(  strEQ( sName, "REG_REFRESH_HIVE" )  )
 #ifdef REG_REFRESH_HIVE
 		return REG_REFRESH_HIVE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_RESOURCE_LIST" )  )
+	    if(  strEQ( sName, "REG_RESOURCE_LIST" )  )
 #ifdef REG_RESOURCE_LIST
 		return REG_RESOURCE_LIST;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_RESOURCE_REQUIREMENTS_LIST" )  )
+	    if(  strEQ( sName, "REG_RESOURCE_REQUIREMENTS_LIST" )  )
 #ifdef REG_RESOURCE_REQUIREMENTS_LIST
 		return REG_RESOURCE_REQUIREMENTS_LIST;
 #else
@@ -344,13 +348,13 @@ constant( char *name, int arg )
 #endif
 	    break;
 	case 'S':
-	    if(  strEQ( name, "KEY_SET_VALUE" )  )
+	    if(  strEQ( sName, "KEY_SET_VALUE" )  )
 #ifdef KEY_SET_VALUE
 		return KEY_SET_VALUE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_SZ" )  )
+	    if(  strEQ( sName, "REG_SZ" )  )
 #ifdef REG_SZ
 		return REG_SZ;
 #else
@@ -364,13 +368,13 @@ constant( char *name, int arg )
 	 case 'V':
 	    break;
 	 case 'W':
-	    if(  strEQ( name, "KEY_WRITE" )  )
+	    if(  strEQ( sName, "KEY_WRITE" )  )
 #ifdef KEY_WRITE
 		return KEY_WRITE;
 #else
 		goto not_there;
 #endif
-	    if(  strEQ( name, "REG_WHOLE_HIVE_VOLATILE" )  )
+	    if(  strEQ( sName, "REG_WHOLE_HIVE_VOLATILE" )  )
 #ifdef REG_WHOLE_HIVE_VOLATILE
 		return REG_WHOLE_HIVE_VOLATILE;
 #else
@@ -393,12 +397,12 @@ not_there:
 
 
 static LONG
-ErrorRet( DWORD iErr )
+ErrorRet( DWORD uErr )
 {
-    if(  ERROR_SUCCESS == iErr  )
+    if(  ERROR_SUCCESS == uErr  )
 	return( TRUE );
-    SetLastError( iErr );
-    /* if(  ERROR_INSUFFICIENT_BUFFER == iErr  )
+    SetLastError( uErr );
+    /* if(  ERROR_INSUFFICIENT_BUFFER == uErr  )
 	return( TRUE );
     */
     return FALSE;
@@ -414,9 +418,9 @@ PROTOTYPES: DISABLE
 
 
 long
-constant( sName, iArg )
+constant( sName, ivArg=0 )
 	char *	sName
-	int	iArg
+	int	ivArg
 
 
 bool
@@ -438,14 +442,18 @@ AllowPriv( sPrivName, bEnable )
 	       TOKEN_ADJUST_PRIVILEGES, &hToken )
 	 &&  LookupPrivilegeValue( NULL, sPrivName,
 	       &tokPrivNew.Privileges[0].Luid )
-	 &&  AdjustTokenPrivileges( hToken, FALSE, &tokPrivNew,
-	       NULL, NULL, NULL )  ) {
-	    RETVAL= TRUE;
+	) {
+	    SetLastError( ERROR_SUCCESS );
+	    AdjustTokenPrivileges( hToken, FALSE, &tokPrivNew,
+	      NULL, NULL, NULL );
+	    if(  ERROR_SUCCESS == GetLastError()  ) {
+		RETVAL= TRUE;
+	    }
+	}
+	if(  ! RETVAL  &&  INVALID_HANDLE_VALUE != hToken  ) {
+	  DWORD uErr= GetLastError();
 	    CloseHandle( hToken );
-	} else if(  INVALID_HANDLE_VALUE != hToken  ) {
-	  DWORD iErr= GetLastError();
-	    CloseHandle( hToken );
-	    SetLastError( iErr );
+	    SetLastError( uErr );
 	}
     OUTPUT:
 	RETVAL
@@ -457,24 +465,24 @@ AbortSystemShutdownA( sComputerName )
 
 
 BOOL
-AbortSystemShutdownW( sComputerName )
-	WCHAR *	sComputerName
+AbortSystemShutdownW( swComputerName )
+	WCHAR *	swComputerName
 
 
 BOOL
-InitiateSystemShutdownA( sComputer, sMessage, iTimeoutSecs, bForce, bReboot )
+InitiateSystemShutdownA( sComputer, sMessage, uTimeoutSecs, bForce, bReboot )
 	char *	sComputer
 	char *	sMessage
-	DWORD	iTimeoutSecs
+	DWORD	uTimeoutSecs
 	BOOL	bForce
 	BOOL	bReboot
 
 
 BOOL
-InitiateSystemShutdownW( sComputer, sMessage, iTimeoutSecs, bForce, bReboot )
-	WCHAR *	sComputer
-	WCHAR *	sMessage
-	DWORD	iTimeoutSecs
+InitiateSystemShutdownW( swComputer, swMessage, uTimeoutSecs, bForce, bReboot )
+	WCHAR *	swComputer
+	WCHAR *	swMessage
+	DWORD	uTimeoutSecs
 	BOOL	bForce
 	BOOL	bReboot
 
@@ -489,91 +497,93 @@ RegCloseKey( hKey )
 
 
 bool
-RegConnectRegistryA( sComputer, hKey, phKey )
+RegConnectRegistryA( sComputer, hRootKey, ohKey )
 	char *	sComputer
-	HKEY	hKey
-	HKEY *	phKey
+	HKEY	hRootKey
+	oHKEY *	ohKey
     CODE:
-	RETVAL= ErrorRet(  RegConnectRegistryA( sComputer, hKey, phKey )  );
+	RETVAL= ErrorRet(  RegConnectRegistryA(
+			     sComputer, hRootKey, ohKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohKey
 
 
 bool
-RegConnectRegistryW( sComputer, hKey, phKey )
-	WCHAR *	sComputer
-	HKEY	hKey
-	HKEY *	phKey
+RegConnectRegistryW( swComputer, hRootKey, ohKey )
+	WCHAR *	swComputer
+	HKEY	hRootKey
+	HKEY *	ohKey
     CODE:
-	RETVAL= ErrorRet(  RegConnectRegistryW( sComputer, hKey, phKey )  );
+	RETVAL= ErrorRet(  RegConnectRegistryW(
+			     swComputer, hRootKey, ohKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohKey
 
 
 bool
-RegCreateKeyA( hKey, sSubKey, phKey )
+RegCreateKeyA( hKey, sSubKey, ohSubKey )
 	HKEY	hKey
 	char *	sSubKey
-	HKEY *	phKey
+	oHKEY *	ohSubKey
     CODE:
-	RETVAL= ErrorRet(  RegCreateKeyA( hKey, sSubKey, phKey )  );
+	RETVAL= ErrorRet(  RegCreateKeyA( hKey, sSubKey, ohSubKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohSubKey
 
 
 bool
-RegCreateKeyW( hKey, sSubKey, phKey )
+RegCreateKeyW( hKey, swSubKey, ohSubKey )
 	HKEY	hKey
-	WCHAR *	sSubKey
-	HKEY *	phKey
+	WCHAR *	swSubKey
+	oHKEY *	ohSubKey
     CODE:
-	RETVAL= ErrorRet(  RegCreateKeyW( hKey, sSubKey, phKey )  );
+	RETVAL= ErrorRet(  RegCreateKeyW( hKey, swSubKey, ohSubKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohSubKey
 
 
 bool
-RegCreateKeyExA(hKey,sSubKey,iZero,sClass,iOpts,iAccess,pSecAttr,phKey,piDisp)
-	HKEY	hKey
-	char *	sSubKey
-	DWORD	iZero
-	char *	sClass
-	DWORD	iOpts
-	REGSAM	iAccess
-	void *	pSecAttr
-	HKEY *	phKey
-	DWORD *	piDisp
+RegCreateKeyExA(hKey,sSubKey,uZero,sClass,uOpts,uAccess,pSecAttr,ohNewKey,ouDisp)
+	HKEY		hKey
+	char *		sSubKey
+	DWORD		uZero
+	char *		sClass
+	DWORD		uOpts
+	REGSAM		uAccess
+	void *		pSecAttr
+	oHKEY *		ohNewKey
+	oDWORD *	ouDisp
     CODE:
-	RETVAL= ErrorRet(  RegCreateKeyExA( hKey, sSubKey, iZero,
-	  sClass, iOpts, iAccess, pSecAttr, phKey, piDisp )  );
+	RETVAL= ErrorRet(  RegCreateKeyExA( hKey, sSubKey, uZero,
+	  sClass, uOpts, uAccess, pSecAttr, ohNewKey, ouDisp )  );
     OUTPUT:
 	RETVAL
-	phKey
-	piDisp
+	ohNewKey
+	ouDisp
 
 
 bool
-RegCreateKeyExW(hKey,sSubKey,iZero,sClass,iOpts,iAccess,pSecAttr,phKey,piDisp)
-	HKEY	hKey
-	WCHAR *	sSubKey
-	DWORD	iZero
-	WCHAR *	sClass
-	DWORD	iOpts
-	REGSAM	iAccess
-	void *	pSecAttr
-	HKEY *	phKey
-	DWORD *	piDisp
+RegCreateKeyExW(hKey,swSubKey,uZero,swClass,uOpts,uAccess,pSecAttr,ohNewKey,ouDisp)
+	HKEY		hKey
+	WCHAR *		swSubKey
+	DWORD		uZero
+	WCHAR *		swClass
+	DWORD		uOpts
+	REGSAM		uAccess
+	void *		pSecAttr
+	oHKEY *		ohNewKey
+	oDWORD *	ouDisp
     CODE:
-	RETVAL= ErrorRet(  RegCreateKeyExW( hKey, sSubKey, iZero,
-	  sClass, iOpts, iAccess, pSecAttr, phKey, piDisp )  );
+	RETVAL= ErrorRet(  RegCreateKeyExW( hKey, swSubKey, uZero,
+	  swClass, uOpts, uAccess, pSecAttr, ohNewKey, ouDisp )  );
     OUTPUT:
 	RETVAL
-	phKey
-	piDisp
+	ohNewKey
+	ouDisp
 
 
 bool
@@ -587,11 +597,11 @@ RegDeleteKeyA( hKey, sSubKey )
 
 
 bool
-RegDeleteKeyW( hKey, sSubKey )
+RegDeleteKeyW( hKey, swSubKey )
 	HKEY	hKey
-	WCHAR *	sSubKey
+	WCHAR *	swSubKey
     CODE:
-	RETVAL= ErrorRet(  RegDeleteKeyW( hKey, sSubKey )  );
+	RETVAL= ErrorRet(  RegDeleteKeyW( hKey, swSubKey )  );
     OUTPUT:
 	RETVAL
 
@@ -607,213 +617,200 @@ RegDeleteValueA( hKey, sValueName )
 
 
 bool
-RegDeleteValueW( hKey, sValueName )
+RegDeleteValueW( hKey, swValueName )
 	HKEY	hKey
-	WCHAR *	sValueName
+	WCHAR *	swValueName
 
 
 bool
-_RegEnumKeyA( hKey, iIndex, sName, lNameSize )
+_RegEnumKeyA( hKey, uIndex, osName, ilNameSize )
 	HKEY	hKey
-	DWORD	iIndex
-	char *	sName
-	DWORD	lNameSize
-    PREINIT:
-    	DWORD		iErr;
+	DWORD	uIndex
+	char *	osName= NULL;
+	DWORD	ilNameSize= init_buf_l($arg);
     CODE:
-	grow_buf_l( sName,ST(2), lNameSize,ST(3) );
-	iErr= RegEnumKeyA( hKey, iIndex, sName, lNameSize );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(3))  ) {
-	    grow_buf_l( sName,ST(2), lNameSize,ST(3) );
-	    iErr= RegEnumKeyA( hKey, iIndex, sName, lNameSize );
-	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_l( RETVAL, sName,ST(2), lNameSize );
+	grow_buf_l( osName,ST(2), ilNameSize,ST(3) );
+	RETVAL= ErrorRet(  RegEnumKeyA( hKey, uIndex, osName, ilNameSize )  );
     OUTPUT:
 	RETVAL
-	sName
-	lNameSize
+	osName	trunc_buf_z( RETVAL, osName,ST(2) );
 
 
 bool
-_RegEnumKeyW( hKey, iIndex, sName, lwNameSize )
+_RegEnumKeyW( hKey, uIndex, oswName, ilwNameSize )
 	HKEY	hKey
-	DWORD	iIndex
-	WCHAR *	sName
-	DWORD	lwNameSize
-    PREINIT:
-    	DWORD		iErr;
+	DWORD	uIndex
+	WCHAR *	oswName= NULL;
+	DWORD	ilwNameSize= init_buf_lw($arg);
     CODE:
-	grow_buf_lw( sName,ST(2), lwNameSize,ST(3) );
-	iErr= RegEnumKeyW( hKey, iIndex, sName, lwNameSize );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(3))  ) {
-	    grow_buf_lw( sName,ST(2), lwNameSize,ST(3) );
-	    iErr= RegEnumKeyW( hKey, iIndex, sName, lwNameSize );
-	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_lw( RETVAL, sName,ST(2), lwNameSize );
+	grow_buf_lw( oswName,ST(2), ilwNameSize,ST(3) );
+	RETVAL= ErrorRet(  RegEnumKeyW( hKey, uIndex, oswName, ilwNameSize )  );
     OUTPUT:
 	RETVAL
-	sName
-	lwNameSize
+	oswName	trunc_buf_zw( RETVAL, oswName,ST(2) );
 
 
 bool
-_RegEnumKeyExA(hKey,iIndex,sName,plName,pNull,sClass,plClass,pftLastWrite)
+_RegEnumKeyExA(hKey,uIndex,osName,iolName,pNull,osClass,iolClass,opftLastWrite)
 	HKEY		hKey
-	DWORD		iIndex
-	char *		sName
-	DWORD *		plName
+	DWORD		uIndex
+	char *		osName= NULL;
+	DWORD *		iolName
 	DWORD *		pNull
-	char *		sClass
-	DWORD *		plClass
-	FILETIME *	pftLastWrite
+	char *		osClass= NULL;
+	DWORD *		iolClass
+	FILETIME *	opftLastWrite
     PREINIT:
-    	DWORD		iErr;
+    	DWORD		uErr;
     CODE:
-	grow_buf_pl( sName,ST(2), plName,ST(3) );
-	grow_buf_pl( sClass,ST(5), plClass,ST(6) );
-	iErr= RegEnumKeyExA( hKey, iIndex, sName, plName,
-	  pNull, sClass, plClass, pftLastWrite );
-	if(  ERROR_MORE_DATA == iErr
+	init_buf_pl( iolName,ST(3) );
+	grow_buf_pl( osName,ST(2), iolName,ST(3) );
+	init_buf_pl( iolClass,ST(6) );
+	grow_buf_pl( osClass,ST(5), iolClass,ST(6) );
+	uErr= RegEnumKeyExA( hKey, uIndex, osName, iolName,
+	  pNull, osClass, iolClass, opftLastWrite );
+	if(  ERROR_MORE_DATA == uErr
 	 &&  ( autosize(ST(3)) || autosize(ST(6)) )  ) {
-	    grow_buf_pl( sName,ST(2), plName,ST(3) );
-	    grow_buf_pl( sClass,ST(5), plClass,ST(6) );
-	    iErr= RegEnumKeyExA( hKey, iIndex, sName, plName,
-	      pNull, sClass, plClass, pftLastWrite );
+	    grow_buf_pl( osName,ST(2), iolName,ST(3) );
+	    grow_buf_pl( osClass,ST(5), iolClass,ST(6) );
+	    uErr= RegEnumKeyExA( hKey, uIndex, osName, iolName,
+	      pNull, osClass, iolClass, opftLastWrite );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, sName,ST(2), plName );
-	trunc_buf_pl( RETVAL, sClass,ST(5), plClass );
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plName
+	osName	trunc_buf_pl( RETVAL, osName,ST(2), iolName );
+	iolName
 	pNull
-	plClass
-	pftLastWrite
+	osClass	trunc_buf_pl( RETVAL, osClass,ST(5), iolClass );
+	iolClass
+	opftLastWrite
 
 
 bool
-_RegEnumKeyExW(hKey,iIndex,sName,plwName,pNull,sClass,plwClass,pftLastWrite)
+_RegEnumKeyExW(hKey,uIndex,oswName,iolwName,pNull,oswClass,iolwClass,opftLastWrite)
 	HKEY		hKey
-	DWORD		iIndex
-	WCHAR *		sName
-	DWORD *		plwName
+	DWORD		uIndex
+	WCHAR *		oswName= NULL;
+	DWORD *		iolwName
 	DWORD *		pNull
-	WCHAR *		sClass
-	DWORD *		plwClass
-	FILETIME *	pftLastWrite
+	WCHAR *		oswClass= NULL;
+	DWORD *		iolwClass
+	FILETIME *	opftLastWrite
     PREINIT:
-	DWORD		iErr;
+	DWORD		uErr;
     CODE:
-	grow_buf_plw( sName,ST(2), plwName,ST(3) );
-	grow_buf_plw( sClass,ST(5), plwClass,ST(6) );
-	grow_buf_typ( pftLastWrite,ST(7), FILETIME );
-	iErr= RegEnumKeyExW( hKey, iIndex, sName, plwName,
-	  pNull, sClass, plwClass, pftLastWrite );
-	if(  ERROR_MORE_DATA == iErr
+	init_buf_plw( iolwName,ST(3) );
+	grow_buf_plw( oswName,ST(2), iolwName,ST(3) );
+	init_buf_plw( iolwClass,ST(6) );
+	grow_buf_plw( oswClass,ST(5), iolwClass,ST(6) );
+	uErr= RegEnumKeyExW( hKey, uIndex, oswName, iolwName,
+	  pNull, oswClass, iolwClass, opftLastWrite );
+	if(  ERROR_MORE_DATA == uErr
 	 &&  ( autosize(ST(3)) || autosize(ST(6)) )  ) {
-	    grow_buf_plw( sName,ST(2), plwName,ST(3) );
-	    grow_buf_plw( sClass,ST(5), plwClass,ST(6) );
-	    iErr= RegEnumKeyExW( hKey, iIndex, sName, plwName,
-	      pNull, sClass, plwClass, pftLastWrite );
+	    grow_buf_plw( oswName,ST(2), iolwName,ST(3) );
+	    grow_buf_plw( oswClass,ST(5), iolwClass,ST(6) );
+	    uErr= RegEnumKeyExW( hKey, uIndex, oswName, iolwName,
+	      pNull, oswClass, iolwClass, opftLastWrite );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_plw( RETVAL, sName,ST(2), plwName );
-	trunc_buf_plw( RETVAL, sClass,ST(5), plwClass );
-	trunc_buf_typ( RETVAL, pftLastWrite,ST(7), FILETIME );
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plwName
+	oswName		trunc_buf_plw( RETVAL, oswName,ST(2), iolwName );
+	iolwName
 	pNull
-	plwClass
-	pftLastWrite
+	oswClass	trunc_buf_plw( RETVAL, oswClass,ST(5), iolwClass );
+	iolwClass
+	opftLastWrite
 
 
 bool
-_RegEnumValueA(hKey,iIndex,sValName,plValName,pNull,piType,pValData,plValData)
-	HKEY	hKey
-	DWORD	iIndex
-	char *	sValName
-	DWORD *	plValName
-	DWORD *	pNull
-	DWORD *	piType
-	BYTE *	pValData
-	DWORD *	plValData
+_RegEnumValueA(hKey,uIndex,osName,iolName,pNull,ouType,opData,iolData)
+	HKEY		hKey
+	DWORD		uIndex
+	char *		osName= NULL;
+	DWORD *		iolName
+	DWORD *		pNull
+	oDWORD *	ouType
+	BYTE *		opData= NULL;
+	DWORD *		iolData
     PREINIT:
-	DWORD	iErr;
+	DWORD	uErr;
     CODE:
-	grow_buf_pl( sValName,ST(2), plValName,ST(3) );
-	grow_buf_pl( pValData,ST(6), plValData,ST(7) );
-	if(  NULL == piType  &&  NULL != pValData  &&  null_arg(ST(7))  )
-	    piType= (DWORD *) _alloca( sizeof(DWORD) );
-	iErr= RegEnumValueA( hKey, iIndex, sValName,
-	  plValName, pNull, piType, pValData, plValData );
-	if(  ERROR_MORE_DATA == iErr
+	init_buf_pl( iolName,ST(3) );
+	grow_buf_pl( osName,ST(2), iolName,ST(3) );
+	init_buf_pl( iolData,ST(7) );
+	grow_buf_pl( opData,ST(6), iolData,ST(7) );
+	if(  NULL == ouType  &&  NULL != opData  &&  null_arg(ST(7))  )
+	    ouType= (DWORD *) _alloca( sizeof(DWORD) );
+	uErr= RegEnumValueA( hKey, uIndex, osName,
+	  iolName, pNull, ouType, opData, iolData );
+	if(  ERROR_MORE_DATA == uErr
 	 &&  ( autosize(ST(3)) || autosize(ST(7)) )  ) {
-	    grow_buf_pl( sValName,ST(2), plValName,ST(3) );
-	    grow_buf_pl( pValData,ST(6), plValData,ST(7) );
-	    iErr= RegEnumValueA( hKey, iIndex, sValName,
-	      plValName, pNull, piType, pValData, plValData );
+	    grow_buf_pl( osName,ST(2), iolName,ST(3) );
+	    grow_buf_pl( opData,ST(6), iolData,ST(7) );
+	    uErr= RegEnumValueA( hKey, uIndex, osName,
+	      iolName, pNull, ouType, opData, iolData );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, sValName,ST(2), plValName );
-	trunc_buf_pl( RETVAL, pValData,ST(6), plValData );
-	/* Traim trailing '\0' from REG*_SZ values if plValData was C<[]>: */
-	if(  RETVAL  &&  NULL != pValData  &&  NULL != piType
-	 &&  ( REG_SZ == *piType || REG_EXPAND_SZ == *piType )
-	 &&  null_arg(ST(7))  &&  '\0' == pValData[*plValData-1]  )
-	    SvCUR_set( ST(6), --*plValData );
+	RETVAL= ErrorRet( uErr );
+	/* Traim trailing '\0' from REG*_SZ values if iolData was C<[]>: */
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
+	 &&  null_arg(ST(7))  &&  '\0' == opData[*iolData-1]  )
+	    --*iolData;
     OUTPUT:
 	RETVAL
-	sValName
-	plValName
+	osName		trunc_buf_pl( RETVAL, osName,ST(2), iolName );
+	iolName
 	pNull
-	piType
-	pValData
-	plValData
+	ouType
+	opData		trunc_buf_pl( RETVAL, opData,ST(6), iolData );
+	iolData
 
 
 bool
-_RegEnumValueW(hKey,iIndex,sValName,plwValName,pNull,piType,pValData,plValData)
-	HKEY	hKey
-	DWORD	iIndex
-	WCHAR *	sValName
-	DWORD *	plwValName
-	DWORD *	pNull
-	DWORD *	piType
-	BYTE *	pValData
-	DWORD *	plValData
+_RegEnumValueW(hKey,uIndex,oswName,iolwName,pNull,ouType,opData,iolData)
+	HKEY		hKey
+	DWORD		uIndex
+	WCHAR *		oswName= NULL;
+	DWORD *		iolwName
+	DWORD *		pNull
+	oDWORD *	ouType
+	BYTE *		opData= NULL;
+	DWORD *		iolData
     PREINIT:
-	DWORD	iErr;
+	DWORD	uErr;
     CODE:
-	grow_buf_plw( sValName,ST(2), plwValName,ST(3) );
-	grow_buf_pl( pValData,ST(6), plValData,ST(7) );
-	if(  NULL == piType  &&  NULL != pValData  &&  null_arg(ST(7))  )
-	    piType= (DWORD *) _alloca( sizeof(DWORD) );
-	iErr= RegEnumValueW( hKey, iIndex, sValName, plwValName,
-	  pNull, piType, pValData, plValData );
-	if(  ERROR_MORE_DATA == iErr
+	init_buf_plw( iolwName,ST(3) );
+	grow_buf_plw( oswName,ST(2), iolwName,ST(3) );
+	init_buf_pl( iolData,ST(7) );
+	grow_buf_pl( opData,ST(6), iolData,ST(7) );
+	if(  NULL == ouType  &&  NULL != opData  &&  null_arg(ST(7))  )
+	    ouType= (DWORD *) _alloca( sizeof(DWORD) );
+	uErr= RegEnumValueW( hKey, uIndex, oswName, iolwName,
+	  pNull, ouType, opData, iolData );
+	if(  ERROR_MORE_DATA == uErr
 	 &&  ( autosize(ST(3)) || autosize(ST(7)) )  ) {
-	    grow_buf_plw( sValName,ST(2), plwValName,ST(3) );
-	    grow_buf_pl( pValData,ST(6), plValData,ST(7) );
-	    iErr= RegEnumValueW( hKey, iIndex, sValName, plwValName,
-	      pNull, piType, pValData, plValData );
+	    grow_buf_plw( oswName,ST(2), iolwName,ST(3) );
+	    grow_buf_pl( opData,ST(6), iolData,ST(7) );
+	    uErr= RegEnumValueW( hKey, uIndex, oswName, iolwName,
+	      pNull, ouType, opData, iolData );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_plw( RETVAL, sValName,ST(2), plwValName );
-	trunc_buf_pl( RETVAL, pValData,ST(6), plValData );
-	/* Traim trailing L'\0' from REG*_SZ values if plValData was C<[]>: */
-	if(  RETVAL  &&  NULL != pValData  &&  NULL != piType
-	 &&  ( REG_SZ == *piType || REG_EXPAND_SZ == *piType )
-	 &&  null_arg(ST(7))  &&  L'\0' == pValData[*plValData-1]  )
-	    SvCUR_set( ST(6), sizeof(WCHAR)*(--*plValData) );
+	RETVAL= ErrorRet( uErr );
+	/* Traim trailing L'\0' from REG*_SZ values if iolData was C<[]>: */
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
+	 &&  null_arg(ST(7))
+	 &&  L'\0' == ((WCHAR *)opData)[(*iolData/sizeof(WCHAR))-1]  )
+	    *iolData -= sizeof(WCHAR);
     OUTPUT:
 	RETVAL
-	plwValName
+	oswName		trunc_buf_plw( RETVAL, oswName,ST(2), iolwName );
+	iolwName
 	pNull
-	piType
-	plValData
+	ouType
+	opData		trunc_buf_pl( RETVAL, opData,ST(6), iolData );
+	iolData
 
 
 bool
@@ -826,25 +823,26 @@ RegFlushKey( hKey )
 
 
 bool
-_RegGetKeySecurity( hKey, iSecInfo, pSecDesc, plSecDesc )
+_RegGetKeySecurity( hKey, uSecInfo, opSecDesc, iolSecDesc )
 	HKEY			hKey
-	SECURITY_INFORMATION	iSecInfo
-	SECURITY_DESCRIPTOR *	pSecDesc
-	DWORD *			plSecDesc
+	SECURITY_INFORMATION	uSecInfo
+	SECURITY_DESCRIPTOR *	opSecDesc= NULL;
+	DWORD *			iolSecDesc
     PREINIT:
-	DWORD			iErr;
+	DWORD			uErr;
     CODE:
-	grow_buf_pl( pSecDesc,ST(2), plSecDesc,ST(3) );
-	iErr= RegGetKeySecurity( hKey, iSecInfo, pSecDesc, plSecDesc );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(3))  ) {
-	    grow_buf_pl( pSecDesc,ST(2), plSecDesc,ST(3) );
-	    iErr= RegGetKeySecurity( hKey, iSecInfo, pSecDesc, plSecDesc );
+	init_buf_pl( iolSecDesc,ST(3) );
+	grow_buf_pl( opSecDesc,ST(2), iolSecDesc,ST(3) );
+	uErr= RegGetKeySecurity( hKey, uSecInfo, opSecDesc, iolSecDesc );
+	if(  ERROR_INSUFFICIENT_BUFFER == uErr  &&  autosize(ST(3))  ) {
+	    grow_buf_pl( opSecDesc,ST(2), iolSecDesc,ST(3) );
+	    uErr= RegGetKeySecurity( hKey, uSecInfo, opSecDesc, iolSecDesc );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, pSecDesc,ST(2), plSecDesc );
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plSecDesc
+	opSecDesc	trunc_buf_pl( RETVAL, opSecDesc,ST(2), iolSecDesc );
+	iolSecDesc	if(!null_arg(ST(3)) && !SvREADONLY(ST(3))) sv_setiv( ST(3), (IV)(RETVAL ? GetSecurityDescriptorLength(opSecDesc) : *iolSecDesc) );
 
 
 bool
@@ -859,332 +857,363 @@ RegLoadKeyA( hKey, sSubKey, sFileName )
 
 
 bool
-RegLoadKeyW( hKey, sSubKey, sFileName )
+RegLoadKeyW( hKey, swSubKey, swFileName )
 	HKEY	hKey
-	WCHAR *	sSubKey
-	WCHAR *	sFileName
+	WCHAR *	swSubKey
+	WCHAR *	swFileName
     CODE:
-	RETVAL= ErrorRet(  RegLoadKeyW( hKey, sSubKey, sFileName )  );
+	RETVAL= ErrorRet(  RegLoadKeyW( hKey, swSubKey, swFileName )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-RegNotifyChangeKeyValue( hKey, bWatchSubtree, iNotifyFilter, hEvent, bAsync )
+RegNotifyChangeKeyValue( hKey, bWatchSubtree, uNotifyFilter, hEvent, bAsync )
 	HKEY	hKey
 	BOOL	bWatchSubtree
-	DWORD	iNotifyFilter
+	DWORD	uNotifyFilter
 	HANDLE	hEvent
 	BOOL	bAsync
     CODE:
 	RETVAL= ErrorRet(  RegNotifyChangeKeyValue(
-	  hKey, bWatchSubtree, iNotifyFilter, hEvent, bAsync )  );
+	  hKey, bWatchSubtree, uNotifyFilter, hEvent, bAsync )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-RegOpenKeyA( hKey, sSubKey, phKey )
+RegOpenKeyA( hKey, sSubKey, ohSubKey )
 	HKEY	hKey
 	char *	sSubKey
-	HKEY *	phKey
+	oHKEY *	ohSubKey
     CODE:
-	RETVAL= ErrorRet(  RegOpenKeyA( hKey, sSubKey, phKey )  );
+	RETVAL= ErrorRet(  RegOpenKeyA( hKey, sSubKey, ohSubKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohSubKey
 
 
 bool
-RegOpenKeyW( hKey, sSubKey, phKey )
+RegOpenKeyW( hKey, swSubKey, ohSubKey )
 	HKEY	hKey
-	WCHAR *	sSubKey
-	HKEY *	phKey
+	WCHAR *	swSubKey
+	oHKEY *	ohSubKey
     CODE:
-	RETVAL= ErrorRet(  RegOpenKeyW( hKey, sSubKey, phKey )  );
+	RETVAL= ErrorRet(  RegOpenKeyW( hKey, swSubKey, ohSubKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohSubKey
 
 
 bool
-RegOpenKeyExA( hKey, sSubKey, iOptions, iAccess, phKey )
+RegOpenKeyExA( hKey, sSubKey, uOptions, uAccess, ohSubKey )
 	HKEY	hKey
 	char *	sSubKey
-	DWORD	iOptions
-	REGSAM	iAccess
-	HKEY *	phKey
+	DWORD	uOptions
+	REGSAM	uAccess
+	oHKEY *	ohSubKey
     CODE:
 	RETVAL= ErrorRet(  RegOpenKeyExA(
-	  hKey, sSubKey, iOptions, iAccess, phKey )  );
+	  hKey, sSubKey, uOptions, uAccess, ohSubKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohSubKey
 
 
 bool
-RegOpenKeyExW( hKey, sSubKey, iOptions, iAccess, phKey )
+RegOpenKeyExW( hKey, swSubKey, uOptions, uAccess, ohSubKey )
 	HKEY	hKey
-	WCHAR *	sSubKey
-	DWORD	iOptions
-	REGSAM	iAccess
-	HKEY *	phKey
+	WCHAR *	swSubKey
+	DWORD	uOptions
+	REGSAM	uAccess
+	oHKEY *	ohSubKey
     CODE:
 	RETVAL= ErrorRet(  RegOpenKeyExW(
-	  hKey, sSubKey, iOptions, iAccess, phKey )  );
+	  hKey, swSubKey, uOptions, uAccess, ohSubKey )  );
     OUTPUT:
 	RETVAL
-	phKey
+	ohSubKey
 
 
 bool
-_RegQueryInfoKeyA( hKey, sClass, plClass, pNull, pcSubKeys, plSubKey, plSubClass, pcValues, plValName, plValData, plSecDesc, pftTime )
+_RegQueryInfoKeyA( hKey, osClass, iolClass, pNull, ocSubKeys, olSubKey, olSubClass, ocValues, olValName, olValData, olSecDesc, opftTime )
 	HKEY		hKey
-	char *		sClass
-	DWORD *		plClass
+	char *		osClass= NULL;
+	DWORD *		iolClass
 	DWORD *		pNull
-	DWORD *		pcSubKeys
-	DWORD *		plSubKey
-	DWORD *		plSubClass
-	DWORD *		pcValues
-	DWORD *		plValName
-	DWORD *		plValData
-	DWORD *		plSecDesc
-	FILETIME *	pftTime
+	oDWORD *	ocSubKeys
+	oDWORD *	olSubKey
+	oDWORD *	olSubClass
+	oDWORD *	ocValues
+	oDWORD *	olValName
+	oDWORD *	olValData
+	oDWORD *	olSecDesc
+	FILETIME *	opftTime
     PREINIT:
-	DWORD		iErr;
+	DWORD		uErr;
     CODE:
-	grow_buf_pl( sClass,ST(1), plClass,ST(2) );
-	iErr= RegQueryInfoKeyA( hKey, sClass, plClass,
-	  pNull, pcSubKeys, plSubKey, plSubClass, pcValues,
-	  plValName, plValData, plSecDesc, pftTime );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(2))  ) {
-	    grow_buf_pl( sClass,ST(1), plClass,ST(2) );
-	    iErr= RegQueryInfoKeyA( hKey, sClass, plClass,
-	      pNull, pcSubKeys, plSubKey, plSubClass, pcValues,
-	      plValName, plValData, plSecDesc, pftTime );
+	init_buf_pl( iolClass,ST(2) );
+	grow_buf_pl( osClass,ST(1), iolClass,ST(2) );
+	uErr= RegQueryInfoKeyA( hKey, osClass, iolClass,
+	  pNull, ocSubKeys, olSubKey, olSubClass, ocValues,
+	  olValName, olValData, olSecDesc, opftTime );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(2))  ) {
+	    grow_buf_pl( osClass,ST(1), iolClass,ST(2) );
+	    uErr= RegQueryInfoKeyA( hKey, osClass, iolClass,
+	      pNull, ocSubKeys, olSubKey, olSubClass, ocValues,
+	      olValName, olValData, olSecDesc, opftTime );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, sClass,ST(1), plClass );
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plClass
+	osClass		trunc_buf_pl( RETVAL, osClass,ST(1), iolClass );
+	iolClass
 	pNull
-	pcSubKeys
-	plSubKey
-	plSubClass
-	pcValues
-	plValName
-	plValData
-	plSecDesc
-	pftTime
+	ocSubKeys
+	olSubKey
+	olSubClass
+	ocValues
+	olValName
+	olValData
+	olSecDesc
+	opftTime
 
 
 bool
-_RegQueryInfoKeyW( hKey, sClass, plwClass, pNull, pcSubKeys, plwSubKey, plwSubClass, pcValues, plwValName, plValData, plSecDesc, pftTime )
+_RegQueryInfoKeyW( hKey, oswClass, iolwClass, pNull, ocSubKeys, olwSubKey, olwSubClass, ocValues, olwValName, olValData, olSecDesc, opftTime )
 	HKEY		hKey
-	WCHAR *		sClass
-	DWORD *		plwClass
+	WCHAR *		oswClass= NULL;
+	DWORD *		iolwClass
 	DWORD *		pNull
-	DWORD *		pcSubKeys
-	DWORD *		plwSubKey
-	DWORD *		plwSubClass
-	DWORD *		pcValues
-	DWORD *		plwValName
-	DWORD *		plValData
-	DWORD *		plSecDesc
-	FILETIME *	pftTime
+	oDWORD *	ocSubKeys
+	oDWORD *	olwSubKey
+	oDWORD *	olwSubClass
+	oDWORD *	ocValues
+	oDWORD *	olwValName
+	oDWORD *	olValData
+	oDWORD *	olSecDesc
+	FILETIME *	opftTime
     PREINIT:
-    	DWORD		iErr;
+    	DWORD		uErr;
     CODE:
-	grow_buf_plw( sClass,ST(1), plwClass,ST(2) );
-	iErr= RegQueryInfoKeyW( hKey, sClass, plwClass,
-	  pNull, pcSubKeys, plwSubKey, plwSubClass, pcValues,
-	  plwValName, plValData, plSecDesc, pftTime );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(2))  ) {
-	    grow_buf_plw( sClass,ST(1), plwClass,ST(2) );
-	    iErr= RegQueryInfoKeyW( hKey, sClass, plwClass,
-	      pNull, pcSubKeys, plwSubKey, plwSubClass, pcValues,
-	      plwValName, plValData, plSecDesc, pftTime );
+	init_buf_plw( iolwClass,ST(2) );
+	grow_buf_plw( oswClass,ST(1), iolwClass,ST(2) );
+	uErr= RegQueryInfoKeyW( hKey, oswClass, iolwClass,
+	  pNull, ocSubKeys, olwSubKey, olwSubClass, ocValues,
+	  olwValName, olValData, olSecDesc, opftTime );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(2))  ) {
+	    grow_buf_plw( oswClass,ST(1), iolwClass,ST(2) );
+	    uErr= RegQueryInfoKeyW( hKey, oswClass, iolwClass,
+	      pNull, ocSubKeys, olwSubKey, olwSubClass, ocValues,
+	      olwValName, olValData, olSecDesc, opftTime );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_plw( RETVAL, sClass,ST(1), plwClass );
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plwClass
+	oswClass	trunc_buf_plw( RETVAL, oswClass,ST(1), iolwClass );
+	iolwClass
 	pNull
-	pcSubKeys
-	plwSubKey
-	plwSubClass
-	pcValues
-	plwValName
-	plValData
-	plSecDesc
-	pftTime
+	ocSubKeys
+	olwSubKey
+	olwSubClass
+	ocValues
+	olwValName
+	olValData
+	olSecDesc
+	opftTime
 
 
 bool
-_RegQueryMultipleValuesA( hKey, pValueEnts, cValueEnts, pBuffer, plBuffer )
-	HKEY	hKey
-	void *	pValueEnts
-	DWORD	cValueEnts
-	char *	pBuffer
-	DWORD *	plBuffer
+_RegQueryMultipleValuesA(hKey,ioarValueEnts,icValueEnts,opBuffer,iolBuffer)
+	HKEY		hKey
+	VALENTA *	ioarValueEnts
+	DWORD		icValueEnts
+	char *		opBuffer= NULL;
+	DWORD *		iolBuffer
     PREINIT:
-	DWORD	iErr;
+	DWORD		uErr;
     CODE:
-	grow_buf_pl( pBuffer,ST(3), plBuffer,ST(4) );
-	iErr= RegQueryMultipleValuesA(
-	  hKey, pValueEnts, cValueEnts, pBuffer, plBuffer );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(4))  ) {
-	    grow_buf_pl( pBuffer,ST(3), plBuffer,ST(4) );
-	    iErr= RegQueryMultipleValuesA(
-	      hKey, pValueEnts, cValueEnts, pBuffer, plBuffer );
+	if(  NULL != ioarValueEnts  ) {
+	    if(  0 == icValueEnts  ) {
+		icValueEnts= SvCUR(ST(1)) / sizeof(VALENTA);
+	    }
+	    if(  SvCUR(ST(1)) < icValueEnts * sizeof(VALENTA)  ) {
+		croak( "%s: %s (%d bytes < %d * %d)",
+		  "Win32API::Registry::_RegQueryMultipleValuesA",
+		  "ioarValueEnts shorter than specified",
+		  SvCUR(ST(1)), icValueEnts, sizeof(VALENTA) );
+	    }
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, pBuffer,ST(3), plBuffer );
+	init_buf_pl( iolBuffer,ST(4) );
+	grow_buf_pl( opBuffer,ST(3), iolBuffer,ST(4) );
+	uErr= RegQueryMultipleValuesA(
+	  hKey, ioarValueEnts, icValueEnts, opBuffer, iolBuffer );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(4))  ) {
+	    grow_buf_pl( opBuffer,ST(3), iolBuffer,ST(4) );
+	    uErr= RegQueryMultipleValuesA(
+	      hKey, ioarValueEnts, icValueEnts, opBuffer, iolBuffer );
+	}
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plBuffer
+	opBuffer	trunc_buf_pl( RETVAL, opBuffer,ST(3), iolBuffer );
+	iolBuffer
 
 
 bool
-_RegQueryMultipleValuesW( hKey, pValueEnts, cValueEnts, pBuffer, plBuffer )
-	HKEY	hKey
-	void *	pValueEnts
-	DWORD	cValueEnts
-	WCHAR *	pBuffer
-	DWORD *	plBuffer
+_RegQueryMultipleValuesW(hKey,ioarValueEnts,icValueEnts,opBuffer,iolBuffer)
+	HKEY		hKey
+	VALENTW *	ioarValueEnts
+	DWORD		icValueEnts
+	WCHAR *		opBuffer= NULL;
+	DWORD *		iolBuffer
     PREINIT:
-    	DWORD	iErr;
+    	DWORD		uErr;
     CODE:
-	grow_buf_pl( pBuffer,ST(3), plBuffer,ST(4) );
-	iErr= RegQueryMultipleValuesW(
-	  hKey, pValueEnts, cValueEnts, pBuffer, plBuffer );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(4))  ) {
-	    grow_buf_pl( pBuffer,ST(3), plBuffer,ST(4) );
-	    iErr= RegQueryMultipleValuesW(
-	      hKey, pValueEnts, cValueEnts, pBuffer, plBuffer );
+	if(  NULL != ioarValueEnts  ) {
+	    if(  0 == icValueEnts  ) {
+		icValueEnts= SvCUR(ST(1)) / sizeof(VALENTW);
+	    }
+	    if(  SvCUR(ST(1)) < icValueEnts * sizeof(VALENTW)  ) {
+		croak( "%s: %s (%d bytes < %d * %d)",
+		  "Win32API::Registry::_RegQueryMultipleValuesW",
+		  "ioarValueEnts shorter than specified",
+		  SvCUR(ST(1)), icValueEnts, sizeof(VALENTW) );
+	    }
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, pBuffer,ST(3), plBuffer );
+	init_buf_pl( iolBuffer,ST(4) );
+	grow_buf_pl( opBuffer,ST(3), iolBuffer,ST(4) );
+	uErr= RegQueryMultipleValuesW(
+	  hKey, ioarValueEnts, icValueEnts, opBuffer, iolBuffer );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(4))  ) {
+	    grow_buf_pl( opBuffer,ST(3), iolBuffer,ST(4) );
+	    uErr= RegQueryMultipleValuesW(
+	      hKey, ioarValueEnts, icValueEnts, opBuffer, iolBuffer );
+	}
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plBuffer
+	opBuffer	trunc_buf_pl( RETVAL, opBuffer,ST(3), iolBuffer );
+	iolBuffer
 
 
 bool
-_RegQueryValueA( hKey, sSubKey, sValueData, plValueData )
+_RegQueryValueA( hKey, sSubKey, osValueData, iolValueData )
 	HKEY	hKey
 	char *	sSubKey
-	char *	sValueData
-	LONG *	plValueData
+	char *	osValueData= NULL;
+	LONG *	iolValueData
     PREINIT:
-	DWORD	iErr;
+	DWORD	uErr;
     CODE:
-	grow_buf_pl( sValueData,ST(2), plValueData,ST(3) );
-	iErr= RegQueryValueA( hKey, sSubKey, sValueData, plValueData );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(3))  ) {
-	    grow_buf_pl( sValueData,ST(2), plValueData,ST(3) );
-	    iErr= RegQueryValueA( hKey, sSubKey, sValueData, plValueData );
+	init_buf_pl( iolValueData,ST(3) );
+	grow_buf_pl( osValueData,ST(2), iolValueData,ST(3) );
+	uErr= RegQueryValueA( hKey, sSubKey, osValueData, iolValueData );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(3))  ) {
+	    grow_buf_pl( osValueData,ST(2), iolValueData,ST(3) );
+	    uErr= RegQueryValueA( hKey, sSubKey, osValueData, iolValueData );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, sValueData,ST(2), plValueData );
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plValueData
+	osValueData	trunc_buf_pl( RETVAL, osValueData,ST(2), iolValueData );
+	iolValueData
 
 
 bool
-_RegQueryValueW( hKey, sSubKey, sValueData, plValueData )
+_RegQueryValueW( hKey, swSubKey, oswValueData, iolValueData )
 	HKEY	hKey
-	WCHAR *	sSubKey
-	WCHAR *	sValueData
-	LONG *	plValueData
+	WCHAR *	swSubKey
+	WCHAR *	oswValueData= NULL;
+	LONG *	iolValueData
     PREINIT:
-    	DWORD	iErr;
+    	DWORD	uErr;
     CODE:
-	grow_buf_pl( sValueData,ST(2), plValueData,ST(3) );
-	iErr= RegQueryValueW( hKey, sSubKey, sValueData, plValueData );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(3))  ) {
-	    grow_buf_pl( sValueData,ST(2), plValueData,ST(3) );
-	    iErr= RegQueryValueW( hKey, sSubKey, sValueData, plValueData );
+	init_buf_pl( iolValueData,ST(3) );
+	grow_buf_pl( oswValueData,ST(2), iolValueData,ST(3) );
+	uErr= RegQueryValueW( hKey, swSubKey, oswValueData, iolValueData );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(3))  ) {
+	    grow_buf_pl( oswValueData,ST(2), iolValueData,ST(3) );
+	    uErr= RegQueryValueW( hKey, swSubKey, oswValueData, iolValueData );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, sValueData,ST(2), plValueData );
+	RETVAL= ErrorRet( uErr );
     OUTPUT:
 	RETVAL
-	plValueData
+	oswValueData	trunc_buf_pl(RETVAL,oswValueData,ST(2),iolValueData);
+	iolValueData
 
 
 bool
-_RegQueryValueExA( hKey, sValueName, pNull, piType, pValueData, plValueData )
-	HKEY	hKey
-	char *	sValueName
-	DWORD *	pNull
-	DWORD *	piType
-	BYTE *	pValueData
-	DWORD *	plValueData
+_RegQueryValueExA( hKey, sName, pNull, ouType, opData, iolData )
+	HKEY		hKey
+	char *		sName
+	DWORD *		pNull
+	oDWORD *	ouType
+	BYTE *		opData= NULL;
+	DWORD *		iolData
     PREINIT:
-	DWORD	iErr;
+	DWORD	uErr;
     CODE:
-	grow_buf_pl( pValueData,ST(4), plValueData,ST(5) );
-	if(  NULL == piType  &&  NULL != pValueData  &&  null_arg(ST(5))  )
-	    piType= (DWORD *) _alloca( sizeof(DWORD) );
-	iErr= RegQueryValueExA(
-	  hKey, sValueName, pNull, piType, pValueData, plValueData );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(5))  ) {
-	    grow_buf_pl( pValueData,ST(4), plValueData,ST(5) );
-	    iErr= RegQueryValueExA(
-	      hKey, sValueName, pNull, piType, pValueData, plValueData );
+	if(  NULL == ouType  &&  NULL != opData  &&  null_arg(ST(5))  )
+	    ouType= (DWORD *) _alloca( sizeof(DWORD) );
+	init_buf_pl( iolData,ST(5) );
+	grow_buf_pl( opData,ST(4), iolData,ST(5) );
+	uErr= RegQueryValueExA(
+	  hKey, sName, pNull, ouType, opData, iolData );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(5))  ) {
+	    grow_buf_pl( opData,ST(4), iolData,ST(5) );
+	    uErr= RegQueryValueExA(
+	      hKey, sName, pNull, ouType, opData, iolData );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, pValueData,ST(4), plValueData );
-	/* Traim trailing '\0' from REG*_SZ values if plValueData was C<[]>: */
-	if(  RETVAL  &&  NULL != pValueData  &&  NULL != piType
-	 &&  ( REG_SZ == *piType || REG_EXPAND_SZ == *piType )
-	 &&  null_arg(ST(5))  &&  '\0' == pValueData[*plValueData-1]  )
-	    SvCUR_set( ST(4), --*plValueData );
+	RETVAL= ErrorRet( uErr );
+	/* Traim trailing '\0' from REG*_SZ values if iolData was C<[]>: */
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
+	 &&  null_arg(ST(5))  &&  '\0' == opData[*iolData-1]  )
+	    --*iolData;
     OUTPUT:
 	RETVAL
 	pNull
-	piType
-	plValueData
+	ouType
+	opData	trunc_buf_pl( RETVAL, opData,ST(4), iolData );
+	iolData
 
 
 bool
-_RegQueryValueExW( hKey, sValueName, pNull, piType, pValueData, plValueData )
-	HKEY	hKey
-	WCHAR *	sValueName
-	DWORD *	pNull
-	DWORD *	piType
-	BYTE *	pValueData
-	DWORD *	plValueData
+_RegQueryValueExW( hKey, swName, pNull, ouType, opData, iolData )
+	HKEY		hKey
+	WCHAR *		swName
+	DWORD *		pNull
+	oDWORD *	ouType
+	BYTE *		opData= NULL;
+	DWORD *		iolData
     PREINIT:
-	DWORD	iErr;
+	DWORD	uErr;
     CODE:
-	grow_buf_pl( pValueData,ST(4), plValueData,ST(5) );
-	if(  NULL == piType  &&  NULL != pValueData  &&  null_arg(ST(7))  )
-	    piType= (DWORD *) _alloca( sizeof(DWORD) );
-	iErr= RegQueryValueExW(
-	  hKey, sValueName, pNull, piType, pValueData, plValueData );
-	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(5))  ) {
-	    grow_buf_pl( pValueData,ST(4), plValueData,ST(5) );
-	    iErr= RegQueryValueExW(
-	      hKey, sValueName, pNull, piType, pValueData, plValueData );
+	if(  NULL == ouType  &&  NULL != opData  &&  null_arg(ST(7))  )
+	    ouType= (DWORD *) _alloca( sizeof(DWORD) );
+	init_buf_pl( iolData,ST(5) );
+	grow_buf_pl( opData,ST(4), iolData,ST(5) );
+	uErr= RegQueryValueExW(
+	  hKey, swName, pNull, ouType, opData, iolData );
+	if(  ERROR_MORE_DATA == uErr  &&  autosize(ST(5))  ) {
+	    grow_buf_pl( opData,ST(4), iolData,ST(5) );
+	    uErr= RegQueryValueExW(
+	      hKey, swName, pNull, ouType, opData, iolData );
 	}
-	RETVAL= ErrorRet( iErr );
-	trunc_buf_pl( RETVAL, pValueData,ST(4), plValueData );
-	/* Traim trailing L'\0' from REG*_SZ values if plValueData was C<[]>: */
-	if(  RETVAL  &&  NULL != pValueData  &&  NULL != piType
-	 &&  ( REG_SZ == *piType || REG_EXPAND_SZ == *piType )
-	 &&  null_arg(ST(5))  &&  '\0' == pValueData[*plValueData-1]  )
-	    SvCUR_set( ST(4), sizeof(WCHAR)*(--*plValueData) );
+	RETVAL= ErrorRet( uErr );
+	/* Traim trailing L'\0' from REG*_SZ vals if iolData was C<[]>: */
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
+	 &&  null_arg(ST(5))
+	 &&  L'\0' == ((WCHAR *)opData)[(*iolData/sizeof(WCHAR))-1]  )
+	    *iolData -= sizeof(WCHAR);
     OUTPUT:
 	RETVAL
 	pNull
-	piType
-	plValueData
+	ouType
+	opData	trunc_buf_pl( RETVAL, opData,ST(4), iolData );
+	iolData
 
 
 bool
@@ -1201,36 +1230,36 @@ RegReplaceKeyA( hKey, sSubKey, sNewFile, sOldFile )
 
 
 bool
-RegReplaceKeyW( hKey, sSubKey, sNewFile, sOldFile )
+RegReplaceKeyW( hKey, swSubKey, swNewFile, swOldFile )
 	HKEY	hKey
-	WCHAR *	sSubKey
-	WCHAR *	sNewFile
-	WCHAR *	sOldFile
+	WCHAR *	swSubKey
+	WCHAR *	swNewFile
+	WCHAR *	swOldFile
     CODE:
 	RETVAL= ErrorRet(
-	  RegReplaceKeyW( hKey, sSubKey, sNewFile, sOldFile )  );
+	  RegReplaceKeyW( hKey, swSubKey, swNewFile, swOldFile )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-RegRestoreKeyA( hKey, sFileName, iFlags )
+RegRestoreKeyA( hKey, sFileName, uFlags )
 	HKEY	hKey
 	char *	sFileName
-	DWORD	iFlags
+	DWORD	uFlags
     CODE:
-	RETVAL= ErrorRet(  RegRestoreKeyA( hKey, sFileName, iFlags )  );
+	RETVAL= ErrorRet(  RegRestoreKeyA( hKey, sFileName, uFlags )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-RegRestoreKeyW( hKey, sFileName, iFlags )
+RegRestoreKeyW( hKey, swFileName, uFlags )
 	HKEY	hKey
-	WCHAR *	sFileName
-	DWORD	iFlags
+	WCHAR *	swFileName
+	DWORD	uFlags
     CODE:
-	RETVAL= ErrorRet(  RegRestoreKeyW( hKey, sFileName, iFlags )  );
+	RETVAL= ErrorRet(  RegRestoreKeyW( hKey, swFileName, uFlags )  );
     OUTPUT:
 	RETVAL
 
@@ -1247,101 +1276,100 @@ RegSaveKeyA( hKey, sFileName, pSecAttr )
 
 
 bool
-RegSaveKeyW( hKey, sFileName, pSecAttr )
+RegSaveKeyW( hKey, swFileName, pSecAttr )
 	HKEY			hKey
-	WCHAR *			sFileName
+	WCHAR *			swFileName
 	SECURITY_ATTRIBUTES *	pSecAttr
     CODE:
-	RETVAL= ErrorRet(  RegSaveKeyW( hKey, sFileName, pSecAttr )  );
+	RETVAL= ErrorRet(  RegSaveKeyW( hKey, swFileName, pSecAttr )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-RegSetKeySecurity( hKey, iSecInfo, pSecDesc )
+RegSetKeySecurity( hKey, uSecInfo, pSecDesc )
 	HKEY			hKey
-	SECURITY_INFORMATION	iSecInfo
+	SECURITY_INFORMATION	uSecInfo
 	SECURITY_DESCRIPTOR *	pSecDesc
     CODE:
-	RETVAL= ErrorRet(  RegSetKeySecurity( hKey, iSecInfo, pSecDesc )  );
+	RETVAL= ErrorRet(  RegSetKeySecurity( hKey, uSecInfo, pSecDesc )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-_RegSetValueA( hKey, sSubKey, iType, sValueData, lValueData )
+_RegSetValueA( hKey, sSubKey, uType, sValueData, lValueData )
 	HKEY	hKey
 	char *	sSubKey
-	DWORD	iType
+	DWORD	uType
 	char *	sValueData
 	DWORD	lValueData
     CODE:
 	if(  0 == lValueData  )
 	    lValueData= SvCUR( ST(3) );
 	RETVAL= ErrorRet(
-	  RegSetValueA( hKey, sSubKey, iType, sValueData, lValueData )  );
+	  RegSetValueA( hKey, sSubKey, uType, sValueData, lValueData )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-_RegSetValueW( hKey, sSubKey, iType, sValueData, lValueData )
+_RegSetValueW( hKey, swSubKey, uType, swValueData, lValueData )
 	HKEY	hKey
-	WCHAR *	sSubKey
-	DWORD	iType
-	WCHAR *	sValueData
+	WCHAR *	swSubKey
+	DWORD	uType
+	WCHAR *	swValueData
 	DWORD	lValueData
     CODE:
 	if(  0 == lValueData  )
 	    lValueData= SvCUR( ST(3) ) / sizeof(WCHAR);
 	RETVAL= ErrorRet(
-	  RegSetValueW( hKey, sSubKey, iType, sValueData, lValueData )  );
+	  RegSetValueW( hKey, swSubKey, uType, swValueData, lValueData )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-_RegSetValueExA( hKey, sValueName, iZero, iType, pValueData, lValueData )
+_RegSetValueExA( hKey, sName, uZero, uType, pData, lData )
 	HKEY	hKey
-	char *	sValueName
-	DWORD	iZero
-	DWORD	iType
-	BYTE *	pValueData
-	DWORD	lValueData
+	char *	sName
+	DWORD	uZero
+	DWORD	uType
+	BYTE *	pData
+	DWORD	lData
     CODE:
-	if(  0 == lValueData  ) {
-	    lValueData= SvCUR( ST(4) );
-	    if(  ( REG_SZ == iType || REG_EXPAND_SZ == iType )
-	     &&  '\0' != pValueData[lValueData-1]  ) {
-		sv_catpvn( ST(4), "", 1 );
-		lValueData= SvCUR( ST(4) );
+	if(  0 == lData  ) {
+	    lData= SvCUR( ST(4) );
+	    if(  ( REG_SZ == uType || REG_EXPAND_SZ == uType )
+	     &&  '\0' != pData[lData-1]  ) {
+		pData[lData++]= '\0';	/* Should already be '\0', though. */
 	    }
 	}
 	RETVAL= ErrorRet(  RegSetValueExA(
-	  hKey, sValueName, iZero, iType, pValueData, lValueData )  );
+	  hKey, sName, uZero, uType, pData, lData )  );
     OUTPUT:
 	RETVAL
 
 
 bool
-_RegSetValueExW( hKey, sValueName, iZero, iType, pValueData, lValueData )
+_RegSetValueExW( hKey, swName, uZero, uType, pData, lData )
 	HKEY	hKey
-	WCHAR *	sValueName
-	DWORD	iZero
-	DWORD	iType
-	BYTE *	pValueData
-	DWORD	lValueData
+	WCHAR *	swName
+	DWORD	uZero
+	DWORD	uType
+	BYTE *	pData
+	DWORD	lData
     CODE:
-	if(  0 == lValueData  ) {
-	    lValueData= SvCUR( ST(4) );
-	    if(  ( REG_SZ == iType || REG_EXPAND_SZ == iType )
-	     &&  L'\0' != ((WCHAR *)pValueData)[lValueData-1]  ) {
-		sv_catpvn( ST(4), (char *)L"", sizeof(WCHAR) );
-		lValueData= SvCUR( ST(4) ) / sizeof(WCHAR);
+	if(  0 == lData  ) {
+	    lData= SvCUR( ST(4) );
+	    if(  ( REG_SZ == uType || REG_EXPAND_SZ == uType )
+	     &&  L'\0' != ((WCHAR *)pData)[(lData/sizeof(WCHAR))-1]  ) {
+		pData[lData/sizeof(WCHAR)]= L'\0'; /* Should already be L'\0' */
+		lData += sizeof(WCHAR);
 	    }
 	}
 	RETVAL= ErrorRet(  RegSetValueExW(
-	  hKey, sValueName, iZero, iType, pValueData, lValueData )  );
+	  hKey, swName, uZero, uType, pData, lData )  );
     OUTPUT:
 	RETVAL
 
@@ -1357,10 +1385,10 @@ RegUnLoadKeyA( hKey, sSubKey )
 
 
 bool
-RegUnLoadKeyW( hKey, sSubKey )
+RegUnLoadKeyW( hKey, swSubKey )
 	HKEY	hKey
-	WCHAR *	sSubKey
+	WCHAR *	swSubKey
     CODE:
-	RETVAL= ErrorRet(  RegUnLoadKeyW( hKey, sSubKey )  );
+	RETVAL= ErrorRet(  RegUnLoadKeyW( hKey, swSubKey )  );
     OUTPUT:
 	RETVAL

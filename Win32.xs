@@ -8,11 +8,12 @@ XS(w32_ExpandEnvironmentStrings)
     char *lpSource;
     char buffer[2048];
     DWORD dwDataLen;
+    STRLEN n_a;
 
     if (items != 1)
 	croak("usage: Win32::ExpandEnvironmentStrings($String);\n");
 
-    lpSource = (char *)SvPV(ST(0), na);
+    lpSource = (char *)SvPV(ST(0), n_a);
     dwDataLen = ExpandEnvironmentStrings(lpSource, buffer, sizeof(buffer));
 
     XSRETURN_PV(buffer);
@@ -26,15 +27,16 @@ XS(w32_LookupAccountName)
     SID_NAME_USE snu;
     char Domain[256];
     DWORD DomLen;
-	
+    STRLEN n_a;
+
     if (items != 5)
 	croak("usage: Win32::LookupAccountName($system, $account, $domain, "
 	      "$sid, $sidtype);\n");
 
     SIDLen = sizeof(SID);
     DomLen = sizeof(Domain);
-    if (LookupAccountName(SvPV(ST(0), na),	/* System */
-			  SvPV(ST(1), na),	/* Account name */
+    if (LookupAccountName(SvPV(ST(0), n_a),	/* System */
+			  SvPV(ST(1), n_a),	/* Account name */
 			  &SID,			/* SID structure */
 			  &SIDLen,		/* Size of SID buffer */
 			  Domain,		/* Domain buffer */
@@ -63,13 +65,14 @@ XS(w32_LookupAccountSID)
     DWORD DomLen = sizeof(Domain);
     SID_NAME_USE snu;
     long retval;
+    STRLEN n_a;
 
     if (items != 5)
 	croak("usage: Win32::LookupAccountSID($system, $sid, $account, $domain, $sidtype);\n");
 
-    sid = SvPV(ST(1), na);
+    sid = SvPV(ST(1), n_a);
     if (IsValidSid(sid)) {
-	if (LookupAccountSid(SvPV(ST(0), na),	/* System */
+	if (LookupAccountSid(SvPV(ST(0), n_a),	/* System */
 			     sid,		/* SID structure */
 			     Account,		/* Account name buffer */
 			     &AcctLen,		/* name buffer length */
@@ -100,12 +103,13 @@ XS(w32_InitiateSystemShutdown)
     TOKEN_PRIVILEGES tkp;       /* pointer to token structure  */
     BOOL bRet;
     char *machineName, *message;
+    STRLEN n_a;
 
     if (items != 5)
 	croak("usage: Win32::InitiateSystemShutdown($machineName, $message, "
 	      "$timeOut, $forceClose, $reboot);\n");
 
-    machineName = SvPV(ST(0), na);
+    machineName = SvPV(ST(0), n_a);
 
     if (OpenProcessToken(GetCurrentProcess(),
 			 TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
@@ -122,7 +126,7 @@ XS(w32_InitiateSystemShutdown)
 			      (PTOKEN_PRIVILEGES)NULL, 0);
     }
 
-    message = SvPV(ST(1), na);
+    message = SvPV(ST(1), n_a);
     bRet = InitiateSystemShutdown(machineName, message,
 				  SvIV(ST(2)), SvIV(ST(3)), SvIV(ST(4)));
 
@@ -141,11 +145,12 @@ XS(w32_AbortSystemShutdown)
     TOKEN_PRIVILEGES tkp;       /* pointer to token structure  */
     BOOL bRet;
     char *machineName;
+    STRLEN n_a;
 
     if (items != 1)
 	croak("usage: Win32::AbortSystemShutdown($machineName);\n");
 
-    machineName = SvPV(ST(0), na);
+    machineName = SvPV(ST(0), n_a);
 
     if (OpenProcessToken(GetCurrentProcess(),
 			 TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
@@ -179,15 +184,16 @@ XS(w32_MsgBox)
     char *msg;
     char *title = "Perl";
     DWORD flags = MB_ICONEXCLAMATION;
+    STRLEN n_a;
 
     if (items < 1 || items > 3)
 	croak("usage: Win32::MsgBox($message [, $flags [, $title]]);\n");
 
-    msg = SvPV(ST(0), na);
+    msg = SvPV(ST(0), n_a);
     if (items > 1) {
 	flags = SvIV(ST(1));
 	if (items > 2)
-	    title = SvPV(ST(2), na);
+	    title = SvPV(ST(2), n_a);
     }
     XSRETURN_IV(MessageBox(GetActiveWindow(), msg, title, flags));
 }
@@ -195,9 +201,11 @@ XS(w32_MsgBox)
 XS(w32_LoadLibrary)
 {
     dXSARGS;
+    STRLEN n_a;
+
     if (items != 1)
 	croak("usage: Win32::LoadLibrary($libname)\n");
-    XSRETURN_IV((long)LoadLibrary((char *)SvPV(ST(0), na)));
+    XSRETURN_IV((long)LoadLibrary((char *)SvPV(ST(0), n_a)));
 }
 
 XS(w32_FreeLibrary)
@@ -214,9 +222,10 @@ XS(w32_FreeLibrary)
 XS(w32_GetProcAddress)
 {
     dXSARGS;
+    STRLEN n_a;
     if (items != 2)
 	croak("usage: Win32::GetProcAddress($hinstance, $procname)\n");
-    XSRETURN_IV((long)GetProcAddress((HINSTANCE)SvIV(ST(0)), SvPV(ST(1), na)));
+    XSRETURN_IV((long)GetProcAddress((HINSTANCE)SvIV(ST(0)), SvPV(ST(1), n_a)));
 }
 
 XS(w32_RegisterServer)
@@ -225,10 +234,11 @@ XS(w32_RegisterServer)
     BOOL result = FALSE;
     HINSTANCE hnd;
     FARPROC func;
+    STRLEN n_a;
 
     if (items != 1)
 	croak("usage: Win32::RegisterServer($libname)\n");
-    hnd = LoadLibrary(SvPV(ST(0), na));
+    hnd = LoadLibrary(SvPV(ST(0), n_a));
     if (hnd) {
 	func = GetProcAddress(hnd, "DllRegisterServer");
 	if (func && func() == 0)
@@ -247,10 +257,11 @@ XS(w32_UnregisterServer)
     BOOL result = FALSE;
     HINSTANCE hnd;
     FARPROC func;
+    STRLEN n_a;
 
     if (items != 1)
 	croak("usage: Win32::UnregisterServer($libname)\n");
-    hnd = LoadLibrary(SvPV(ST(0), na));
+    hnd = LoadLibrary(SvPV(ST(0), n_a));
     if (hnd) {
 	func = GetProcAddress(hnd, "DllUnregisterServer");
 	if (func && func() == 0)
@@ -300,6 +311,5 @@ XS(boot_Win32)
     newXS("Win32::GetArchName", w32_GetArchName, file);
     newXS("Win32::GetChipName", w32_GetChipName, file);
 
-    ST(0) = &sv_yes;
-    XSRETURN(1);
+    XSRETURN_YES;
 }

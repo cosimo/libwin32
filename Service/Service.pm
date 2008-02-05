@@ -4,7 +4,7 @@ package Win32::Service;
 # Service.pm
 # Written by Douglas_Lankshear@ActiveWare.com
 #
-# subsequently hacked by Gurusamy Sarathy <gsar@umich.edu>
+# subsequently hacked by Gurusamy Sarathy <gsar@activestate.com>
 #
 
 $VERSION = '0.04';

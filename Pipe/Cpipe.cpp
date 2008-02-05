@@ -2,15 +2,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include <EXTERN.h>
-#include "perl.h"
-#include "XSub.h"
 #include "CPipe.hpp"
 #include "pipe.h"
-
-CPipe::CPipe(char *szName){
-	CPipe(szName, DEFAULT_WAIT_TIME);
-}
 
 CPipe::CPipe(char *szName, DWORD dWait){
 	int	iTemp;
@@ -93,7 +86,7 @@ CPipe::~CPipe(){
 		hPipe = 0;
 	}
 	if(cBuffer){
-		delete cBuffer;
+		delete [] cBuffer;
 	}
 }
 
@@ -107,7 +100,7 @@ DWORD CPipe::ResizeBuffer(DWORD dNewSize){
 	if (dNewSize > 0){
 		if (szNewBuffer = new char [dNewSize]){
 			memset((void *)szNewBuffer, 0, dNewSize);
-			delete cBuffer;
+			delete [] cBuffer;
 			dBufferSize = dNewSize;
 			cBuffer = szNewBuffer;
 		}

@@ -40,6 +40,11 @@ extern "C" {
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSub.h"
+#include "patchlevel.h"
+#if (PATCHLEVEL < 5) && !defined(PL_sv_undef)
+#define PL_sv_undef sv_undef
+#endif
+
 #if defined(__cplusplus)
 }	
 #endif
@@ -60,12 +65,13 @@ extern	CMOM *cMom;
 XS(XS_WIN32__ODBC_Constant)
 {
 	dXSARGS;
-	if (items != 2)
+	if (items < 1)
 	{
-		croak("Usage: Win32::ODBC::Constant(name, arg)\n");
+		croak("Usage: Win32::ODBC::Constant(name)\n");
     }
 	{
-		char* name = (char*)SvPV(ST(0),na);
+	        STRLEN n_a;
+		char* name = (char*)SvPV(ST(0),n_a);
 		ST(0) = sv_newmortal();
 		sv_setiv(ST(0), constant(name));
 	}
@@ -607,6 +613,7 @@ XS(XS_WIN32__ODBC_Connect) // ODBC_Connect(Connection string: input) returns con
 	UCHAR   buff[ODBC_BUFF_SIZE];
 	SDWORD  bufflenout;
 	int     lenn = 0;
+	STRLEN  n_a;
 
 	if(items < 1 || !(items & 1)){
 			//	We need at least 1 (DSN) entry. If more then we need them in pairs of
@@ -614,7 +621,7 @@ XS(XS_WIN32__ODBC_Connect) // ODBC_Connect(Connection string: input) returns con
 			//	(dsn) + (ConnetOption, Value) [ + (ConnectOption, Value)] ...
 		CROAK("usage: ($Connection, $Err, $ErrText) = ODBC_Connect($DSN [, $ConnectOption , $Value] ...)\n");
 	}
-	szIn = SvPV(ST(0), na); 
+	szIn = SvPV(ST(0), n_a); 
 
 	if(strcspn(szIn, "[]{}(),;?*=!@") < strlen(szIn)){
 		strncpy(szDSN, szIn, DSN_LENGTH - 1);
@@ -663,7 +670,7 @@ XS(XS_WIN32__ODBC_Connect) // ODBC_Connect(Connection string: input) returns con
     				if (SvIOKp(ST(iTemp)) || SvNOKp(ST(iTemp))){
     					udValue = SvIV(ST(iTemp));
 					}else{
-						udValue = (UDWORD) SvPV(ST(iTemp), na);
+						udValue = (UDWORD) SvPV(ST(iTemp), n_a);
 					}
 			        retcode = SQLSetConnectOption(h->hdbc->hdbc, uType, udValue);
 			        if (retcode != SQL_SUCCESS){
@@ -734,6 +741,7 @@ XS(XS_WIN32__ODBC_Execute) // ODBC_Execute($connection, $sql_text) returns (0,@f
 	UWORD  x;
 	char * szSQL; 
 	int len;
+	STRLEN n_a;
 
 	if(items < 2){
 		CROAK("usage: ($err,@fields) = ODBC_Execute($connection, $sql_text)\nprint \"Oops: $field[0]\" if ($err);\n");
@@ -745,7 +753,7 @@ XS(XS_WIN32__ODBC_Execute) // ODBC_Execute($connection, $sql_text) returns (0,@f
 	PUSHMARK(sp);
 
 	if (h != ODBCLIST){
-		szSQL = SvPV(ST(1), na);            // get SQL string
+		szSQL = SvPV(ST(1), n_a);            // get SQL string
 			//	Do we really want to resetsmtm now? 
 		if (ResetStmt(h) == SQL_SUCCESS){
 			if (h->szCommand){
@@ -954,6 +962,7 @@ RETCODE TableColList(int iType){
 	UCHAR  buff2[ODBC_BUFF_SIZE];
 	SDWORD bufflenout;
 	UWORD  x;
+	STRLEN n_a;
 
 	RETCODE retcode;
 	UCHAR	*szQualifier, *szOwner, *szName, *szType;
@@ -963,25 +972,25 @@ RETCODE TableColList(int iType){
 	h = _NT_ODBC_Verify(SvIV(ST(0)));
 	CleanError(h->Error);
 	
-	if (szQualifier = (unsigned char *) SvPV(ST(1), na)){
+	if (szQualifier = (unsigned char *) SvPV(ST(1), n_a)){
 		if (!(sQLen = strlen((char *)szQualifier))){
 			szQualifier = 0;
 		}
 	}
 
-	if (szOwner = (unsigned char *) SvPV(ST(2), na)){
+	if (szOwner = (unsigned char *) SvPV(ST(2), n_a)){
 		if (!(sOLen = strlen((char *)szOwner))){
 			szOwner = 0;
 		}
 	}
 
-	if (szName = (unsigned char *) SvPV(ST(3), na)){
+	if (szName = (unsigned char *) SvPV(ST(3), n_a)){
 		if (!(sNLen = strlen((char *)szName))){
 			szName = 0;
 		}
 	}
 
-	if (szType = (unsigned char *) SvPV(ST(4), na)){
+	if (szType = (unsigned char *) SvPV(ST(4), n_a)){
 		if (!(sTLen = strlen((char *)szType))){
 			szType = 0;
 		}
@@ -1149,6 +1158,7 @@ XS(XS_WIN32__ODBC_GetDSN)
 	char	*szKeys= 0;
 	char    *szValues = 0;
 	char	*szPointer = 0;
+	STRLEN  n_a;
 
 	if(items > 2 || items < 1){
 		CROAK("usage: ($Err, $DSN) = ODBC_GetDSN($Connection [, $DSN])\n");
@@ -1157,7 +1167,7 @@ XS(XS_WIN32__ODBC_GetDSN)
 	CleanError(h->Error);
 
 	if (items > 1){
-		szDSN = SvPV(ST(1), na);
+		szDSN = SvPV(ST(1), n_a);
 		if (! strlen(szDSN)){
 			szDSN = 0;
 		}
@@ -1235,6 +1245,7 @@ XS(XS_WIN32__ODBC_DataSources)
 	SWORD	pcbDesc;	
 	char	*szRequestedDSN = 0;
 	RETCODE	retcode;
+	STRLEN  n_a;
 
 	if(items > 1){
 		CROAK("usage: ($Err, $DSN) = ODBC_DataSources([$DSN])\n");
@@ -1243,7 +1254,7 @@ XS(XS_WIN32__ODBC_DataSources)
 	h = ODBCLIST;
 
 	if (items){
-		szRequestedDSN = SvPV(ST(0), na);
+		szRequestedDSN = SvPV(ST(0), n_a);
 		if (!strlen(szRequestedDSN)){
 			szRequestedDSN = 0;
 		}
@@ -1444,7 +1455,8 @@ XS(XS_WIN32__ODBC_SetConnectOption)
     UWORD   uType;
     UDWORD  udValue;
     RETCODE rResult = 0;
-	
+    STRLEN  n_a;
+
     if(items != 3){
         CROAK("usage: ($Err, $Type) = ODBC_SetConnectOption($Connection, $Type, $Value)\n");
 	}
@@ -1455,7 +1467,7 @@ XS(XS_WIN32__ODBC_SetConnectOption)
     if (SvIOKp(ST(2)) || SvNOKp(ST(2))){
     	udValue = SvIV(ST(2));
 	}else{
-		udValue = (UDWORD) SvPV(ST(2), na);
+		udValue = (UDWORD) SvPV(ST(2), n_a);
 	}
 	PUSHMARK(sp);
 
@@ -1544,7 +1556,8 @@ XS(XS_WIN32__ODBC_StmtOption)
 	UDWORD	udValue;
 	UCHAR	uType;
     RETCODE rResult = 0;
-	
+    STRLEN  n_a;
+
     if(items < 2 || items > 3){
         CROAK("usage: ($Err, $NumValue, $Value) = ODBC_StmtOption($Connection, $Type [,$Value])\n");
 	}
@@ -1556,7 +1569,7 @@ XS(XS_WIN32__ODBC_StmtOption)
 	    if (SvIOKp(ST(2)) || SvNOKp(ST(2))){
 	    	udValue = SvIV(ST(2));
 		}else{
-			udValue = (UDWORD) SvPV(ST(2), na);
+			udValue = (UDWORD) SvPV(ST(2), n_a);
 		}
 	}
 
@@ -1726,7 +1739,8 @@ XS(XS_WIN32__ODBC_ConfigDSN)
 	char	*szAttributes = 0;
     int		iResult = 0;
 	int		iSize = 0;
-	
+	STRLEN  n_a;
+
     if(items < 3){
         CROAK("usage: ($Err, $Type) = ODBC_ConfigDSN($Connection, $Function, $Driver, @Attributes)\n");
 	}
@@ -1736,7 +1750,7 @@ XS(XS_WIN32__ODBC_ConfigDSN)
 	iStack++;
     uType = SvIV(ST(iStack));
 	iStack++;
-	szDriver = SvPV(ST(iStack), na);
+	szDriver = SvPV(ST(iStack), n_a);
 	if (strlen(szDriver) == 0){
 		szDriver = 0;
 	}
@@ -1745,7 +1759,7 @@ XS(XS_WIN32__ODBC_ConfigDSN)
 
 					//	Remember: when starting szAttributes = 0, not ""
 	while (items--){
-		szTemp = SvPV(ST(iStack), na);
+		szTemp = SvPV(ST(iStack), n_a);
 		if(strcspn(szTemp, "[]{}(),?*!@;") < strlen(szTemp)){
 			ODBCError("Illegal use of reserved characters []{}(),?*!@;", h, "ODBC_ConfigDSN", "1");
 			break;
@@ -1915,13 +1929,14 @@ XS(XS_WIN32__ODBC_ColAttributes)
 	SWORD	dBuffLen = 0;
 	SDWORD	dValue = 0;
 	RETCODE	rResult;
-												
+	STRLEN  n_a;
+
 	if(items != 3){
 		CROAK("usage: ($Err) = ODBC_ColAttributes($Connection, $ColName, $Description)\n");
 	}
 
 	h = _NT_ODBC_Verify(SvIV(ST(0)));
-	szName = (unsigned char *) SvPV(ST(1), na);
+	szName = (unsigned char *) SvPV(ST(1), n_a);
 	iType = SvIV(ST(2));
 	
 	PUSHMARK(sp);
@@ -1964,7 +1979,8 @@ XS(XS_WIN32__ODBC_ColAttributes)
 	char	*szFile = 0;
 	char	szBuff[286];
 	DWORD	dCount;
-												
+	STRLEN  n_a;
+
 	if(items < 1 || items > 3){
 		CROAK("usage: $Debug = ODBC_Debug($Connection [, $Value])\n");
 	}
@@ -1975,7 +1991,7 @@ XS(XS_WIN32__ODBC_ColAttributes)
 	if (items > 1 && !h->Error->ErrNum){
 		iDebug = SvIV(ST(1));
 		if (items > 2){
-			szFile = SvPV(ST(2), na);
+			szFile = SvPV(ST(2), n_a);
 		}
 			//	What about the output file?
 		if (szFile){
@@ -2153,7 +2169,7 @@ XS(XS_WIN32__ODBC_GetData)
 				sv = sv_2mortal(newSVpv(crTemp->operator[](iTemp), dTemp));
 			}else{
 					//	If the data field has 0 size (is NULL or empty) then return undef.
-				sv = &sv_undef;
+				sv = &PL_sv_undef;
 			}
 			XPUSHs(sv);
 		}
@@ -2211,7 +2227,8 @@ XS(XS_WIN32__ODBC_CursorName)
 	char	*szName;
 	SWORD	sSize = 0;
     RETCODE retcode = 0;
-	
+    STRLEN  n_a;
+
     if(items < 1 || items > 2){
         CROAK("usage: ($Err, $Type) = ODBC_CursorName($Connection [, $Name])\n");
 	}
@@ -2223,7 +2240,7 @@ XS(XS_WIN32__ODBC_CursorName)
 
 	if(!h->Error->ErrNum){
 		if (items > 1){
-			szName = SvPV(ST(1), na); 
+			szName = SvPV(ST(1), n_a); 
 			if (SQLSetCursorName(h->hstmt, (UCHAR *)szName, (SWORD)strlen(szName)) != SQL_SUCCESS){;
 				_NT_ODBC_Error(h, "ODBC_CursorName", "1");
 			}

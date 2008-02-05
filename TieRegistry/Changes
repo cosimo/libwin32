@@ -1,22 +1,28 @@
 Revision history for Perl extension Win32::TieRegistry.
 
-0.10  Fri Nov 21 15:08:55 1997
-	- original, limited install, named Tie::Registry.
+0.23  Sat Jul  3 00:06:20 1999
+	- Fixed two embarrassing typographical errors.
+	- Using invalid REG_* or KEY_* constant as string now detected.
+	- With ArrayValues(1), $key->{NonExistantValueName} used to return
+	  C<[]> but now returns C<undef> [or C<()>].  Old code like
+	  C<if( $reg->{value}->[0] )> should still work but now can be
+	  improved to C<if( $reg->{value} )> [which used to always be true
+	  when the ArrayValues option was enabled].
+	- All implicit C<return>s made explicit [C<$val;> to C<return $val;>].
+	- Simplified C<return wantarray ? () : undef> to C<return ()>.
 
-0.12  Mon Dec 29 10:11:30 1997
-	- misc.
+0.22  Fri Apr  9 22:13:52 1999
+	- C<new Win32::TieRegistry> and "Win32::TieRegistry->new" now work.
+	- CreateKey()'s "disposition" argument now can get its string value
+	  set to "REG_CREATED_NEW_KEY" or "REG_OPENED_EXISTING_KEY".
+	- GetOptions()'s fancier usages defined.
+	- New documentation section on exports [C<use> and C<import()>].
+	- New documentation section on best ways to use symbolic constants.
+	- New documentation section on probable future directions.
+	- Minor documentation fixes.
 
-0.13  Tue Mar 31 20:50:28 1998
-	- "Delimiter" now spelled correctly throughout (sigh).
-	- SetValue now translates "REG_*" strings to numeric constants.
-	- Removed dependance on $^E being tied to Win32::GetLastError().
-
-0.14  Never released
-	- Added Install.bat for people without a version of "make".
-	- Report key path when STORE fails.
-
-0.15  Tue Jul 14 14:14:54 1998
-	- "Stub" version of Tie::Registry for backward compatibility only.
+0.21  Thu Sep 17 14:49:26 1998
+	- Remove a few "harmless" warnings reported by C<-w>.
 
 0.20  Tue Jul 14 14:14:54 1998
 	- Renamed to Win32::TieRegistry.
@@ -39,5 +45,20 @@ Revision history for Perl extension Win32::TieRegistry.
 	    to load into _local_ LMachine.
 	- Finished POD.
 
-0.21  Thu Sep 17 14:49:26 1998
-	- Remove a few "harmless" warnings reported by C<-w>.
+0.15  Tue Jul 14 14:14:54 1998
+	- "Stub" version of Tie::Registry for backward compatibility only.
+
+0.14  Never released
+	- Added Install.bat for people without a version of "make".
+	- Report key path when STORE fails.
+
+0.13  Tue Mar 31 20:50:28 1998
+	- "Delimiter" now spelled correctly throughout (sigh).
+	- SetValue now translates "REG_*" strings to numeric constants.
+	- Removed dependance on $^E being tied to Win32::GetLastError().
+
+0.12  Mon Dec 29 10:11:30 1997
+	- misc.
+
+0.10  Fri Nov 21 15:08:55 1997
+	- original, limited install, named Tie::Registry.

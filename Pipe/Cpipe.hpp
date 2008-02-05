@@ -15,8 +15,7 @@
 
 class CPipe {
 	public:
-		CPipe(char *szPipeName, DWORD dWait);
-		CPipe(char *szPipeName);
+		CPipe(char *szPipeName, DWORD dWait = DEFAULT_WAIT_TIME);
 		CPipe(char *szServer, char *szPipeName);
 		~CPipe();
 		int	Write(void *vBuffer, DWORD dSize);

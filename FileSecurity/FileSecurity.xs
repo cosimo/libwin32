@@ -5,7 +5,7 @@
  * Thanks to the guys at ActiveWare!
  * v0.66
  *
- * minor misc hacks by Gurusamy Sarathy <gsar@umich.edu>
+ * minor misc hacks by Gurusamy Sarathy <gsar@activestate.com>
  *
  */
 

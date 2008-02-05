@@ -34,6 +34,22 @@ extern "C" {
 #undef WORD
 #define WORD __TEMP_WORD
 
+#ifndef PERL_VERSION
+#  include "patchlevel.h"
+#  define PERL_REVISION		5
+#  define PERL_VERSION		PATCHLEVEL
+#  define PERL_SUBVERSION	SUBVERSION
+#endif
+
+#if PERL_REVISION == 5 && (PERL_VERSION < 4 || \
+			   (PERL_VERSION == 4 && PERL_SUBVERSION <= 75))
+#  define PL_sv_undef		sv_undef
+#  define PL_sv_yes		sv_yes
+#  define PL_sv_no		sv_no
+#  define PL_na			na
+#  define PL_dowarn		dowarn
+#endif
+
 // Section for the constant definitions.
 #define CROAK croak
 #define MAX_LENGTH 2048
@@ -907,7 +923,7 @@ PPCODE:
 	XPUSHs(sv_2mortal(newSVpv((char *) &mybuf,0)));
     }
     else {
-	XPUSHs(&sv_no);
+	XPUSHs(&PL_sv_no);
     }
 
 
@@ -932,7 +948,7 @@ PPCODE:
     if (InternetReadFile(handle, mybuf, size, &myread))
 	XPUSHs(sv_2mortal(newSVpv(mybuf,myread)));
     else
-	XPUSHs(&sv_no);
+	XPUSHs(&PL_sv_no);
     safefree(mybuf);
 
 
@@ -963,7 +979,7 @@ PPCODE:
 	// printf("InternetQueryVersion: verbuf=%s\n",verbuf);
 	XPUSHs(sv_2mortal(newSVpv((char *)verbuf,infosize)));
     } else {
-	XPUSHs(&sv_no);
+	XPUSHs(&PL_sv_no);
     }
     safefree((char *)ver);
 
@@ -1201,7 +1217,7 @@ PPCODE:
 			  (LPDWORD) &mybuflen))
 	XPUSHs(sv_2mortal(newSVpv(mybuf,mybuflen))); 
     else
-	XPUSHs(&sv_no);
+	XPUSHs(&PL_sv_no);
     safefree((char *)mybuf);
 
 
@@ -1217,7 +1233,7 @@ PPCODE:
     if (InternetCanonicalizeUrl(URL, myURL, &myURLlen, flags))
 	XPUSHs(sv_2mortal(newSVpv(myURL,myURLlen)));
     else
-	XPUSHs(&sv_no);
+	XPUSHs(&PL_sv_no);
     safefree((char *)myURL);
 
 
@@ -1234,7 +1250,7 @@ PPCODE:
     if (InternetCombineUrl(baseURL, relativeURL, myURL, &myURLlen, flags))
 	XPUSHs(sv_2mortal(newSVpv(myURL,myURLlen)));
     else
-	XPUSHs(&sv_no);
+	XPUSHs(&PL_sv_no);
     safefree((char *)myURL);
 
 

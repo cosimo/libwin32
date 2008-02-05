@@ -4,7 +4,7 @@ require Exporter;
 require DynaLoader;
 require AutoLoader;
 
-$VERSION = '0.03';
+$VERSION = '0.05';
 
 @ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export
@@ -28,6 +28,20 @@ $VERSION = '0.03';
     RESOURCE_CONNECTED
     RESOURCE_GLOBALNET
     RESOURCE_REMEMBERED
+);
+
+@EXPORT_OK = qw(
+    GetSharedResources
+    AddConnection
+    CancelConnection
+    WNetGetLastError
+    GetError
+    GetUNCName
+    NetShareAdd
+    NetShareCheck
+    NetShareDel
+    NetShareGetInfo
+    NetShareSetInfo
 );
 
 =head1 NAME
@@ -134,6 +148,12 @@ All of the functions return FALSE (0) if they fail.
 
 Creates a list in @Resources of %NETRESOURCE hash references.
 
+The return value indicates whether there was an error in accessing
+any of the shared resources.  All the shared resources that were
+encountered (until the point of an error, if any) are pushed into
+@Resources as references to %NETRESOURCE hashes.  See example
+below.
+
 =item AddConnection(\%NETRESOURCE,$Password,$UserName,$Connection)
 
 Makes a connection to a network resource specified by %NETRESOURCE
@@ -181,13 +201,38 @@ server $servername.
 
 Set the information for share $netname.
 
-=item AUTHOR
+=back
+
+=head1 EXAMPLE
+
+
+    #
+    # This example displays all the share points in the entire
+    # visible part of the network.
+    #
+
+    use strict;
+    use Win32::NetResource qw(:DEFAULT GetSharedResources GetError);
+    my $resources = [];
+    unless(GetSharedResources($resources, RESOURCETYPE_ANY)) {
+	my $err = undef;
+	GetError($err);
+	warn Win32::FormatMessage($err);
+    }
+
+    foreach my $href (@$resources) {
+	next if ($$href{DisplayType} != RESOURCEDISPLAYTYPE_SHARE);
+	print "-----\n";
+	foreach( keys %$href){
+	    print "$_: $href->{$_}\n";
+	}
+    }
+
+=head1 AUTHOR
 
 Jesse Dougherty for Hip Communications.
-Gurusamy Sarathy <gsar@umich.edu> had to clean up the horrendous code
-and the bugs.
 
-=back
+Additional general cleanups and bug fixes by Gurusamy Sarathy <gsar@activestate.com>.
 
 =cut
 
@@ -252,19 +297,17 @@ sub GetSharedResources
     
     # build the array of hashes in $_[0]
 #   print Dumper($aref);    
-    if ($ret) {
-	foreach ( @$aref ) {
-	    my %hash;
-	    @hash{'Scope',
-		  'Type',
-		  'DisplayType',
-		  'Usage',
-		  'LocalName',
-		  'RemoteName',
-		  'Comment',
-		  'Provider'} = split /\001/, $_;
-	    push @{$_[0]}, \%hash;
-	}
+    foreach ( @$aref ) {
+	my %hash;
+	@hash{'Scope',
+	      'Type',
+	      'DisplayType',
+	      'Usage',
+	      'LocalName',
+	      'RemoteName',
+	      'Comment',
+	      'Provider'} = split /\001/, $_;
+	push @{$_[0]}, \%hash;
     }
 
     $ret;

@@ -2,7 +2,7 @@
  * XS interface to Windows NT Network resources
  * Written by Jesse Dougherty for hip communications
  *
- * Heavily cleaned up and bugfixed by Gurusamy Sarathy <gsar@umich.edu>
+ * Heavily cleaned up and bugfixed by Gurusamy Sarathy <gsar@activestate.com>
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -14,7 +14,7 @@
 #define _UNICODE
 
 #undef LPTSTR        /* This is a band-aid to allow the NetShare* functions to use */
-#define LPTSTR LPWSTR    /* UNICODE strings while allowing the other functionts to use
+#define LPTSTR LPWSTR    /* UNICODE strings while allowing the other functions to use
                            ANSI strings. The functions headers for NetShare*
                functions are WRONG! */
 
@@ -229,8 +229,11 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
     DWORD i; 
     HV*     phvNet;
     SV*        svNetRes;
-    static char nulstr[] = "";
- 
+    AV*	av;
+
+    if (!(SvROK(ARef) && (av = (AV*)SvRV(ARef)) && SvTYPE(av) == SVt_PVAV))
+	croak("Usage: EnumerateFunc(arrayref,lpresource,type)");
+
     dwResult = WNetOpenEnumA(
 	RESOURCE_GLOBALNET, 
         dwType, 
@@ -257,49 +260,50 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
         if (dwResultEnum == NO_ERROR) { 
             for(i = 0; i < cEntries; i++) { 
 		NETRESOURCEA mine = lpnrLocal[i];
-		/* LocalName contains garbage when RESOURCE_GLOBALNET is used */
-		/* fprintf(stderr, "==%s=%s=%s=%s==\n",
-			mine.lpLocalName,
-			mine.lpRemoteName,
-			mine.lpComment,
-			mine.lpProvider);
-		mine.lpLocalName = nulstr;
-		mine.lpRemoteName = nulstr;
-		mine.lpComment = nulstr;
-		mine.lpProvider = nulstr; */
+		if (!mine.lpLocalName)
+		    mine.lpLocalName = "";
+		if (!mine.lpRemoteName)
+		    mine.lpRemoteName = "";
+		if (!mine.lpComment)
+		    mine.lpComment = "";
+		if (!mine.lpProvider)
+		    mine.lpProvider = "";
                 /* Create a new SV and store the current NETRESOURCE. */
-
                 svNetRes = newSVpv("",0);
 		sv_catpvf(svNetRes, "%d\1%d\1%d\1%d\1%s\1%s\1%s\1%s",
 			mine.dwScope, mine.dwType,
 			mine.dwDisplayType, mine.dwUsage,
 			mine.lpLocalName, mine.lpRemoteName,
 			mine.lpComment, mine.lpProvider);
+		/* warn("%_\n", svNetRes); */
                 /* svNetRes = newSVpv( (char *)&mine,sizeof( NETRESOURCEA)); */
                  
                 /* Store the svNetRes in the list to return. */
 
-                av_push( (AV *)SvRV(ARef),svNetRes ); 
+                av_push( av, svNetRes ); 
                                                  
-        /* If this NETRESOURCE is a container, call the function 
+		/* If this NETRESOURCE is a container, call the function 
                   recursively. */
  
-                if(RESOURCEUSAGE_CONTAINER == 
-                        (lpnrLocal[i].dwUsage & RESOURCEUSAGE_CONTAINER)) 
-                    if(!EnumerateFunc(ARef, &lpnrLocal[i],dwType)) {
-                        safefree(lpnrLocal);
-                        return FALSE;
-                        } 
+                if (RESOURCEUSAGE_CONTAINER
+		    == (lpnrLocal[i].dwUsage & RESOURCEUSAGE_CONTAINER)) 
+		{
+                    if (!EnumerateFunc(ARef, &lpnrLocal[i], dwType)) {
+			if (dwLastError != ERROR_ACCESS_DENIED) {
+			    safefree(lpnrLocal);
+			    return FALSE;
+			}
+                    }
+		}
             } 
         } 
- 
-        else if (dwResultEnum != ERROR_NO_MORE_ITEMS) { 
+        else if (dwResultEnum != ERROR_NO_MORE_ITEMS)
+	{ 
             dwLastError = dwResultEnum;
             safefree(lpnrLocal);
             return(FALSE);
         } 
-    } 
-    while(dwResultEnum != ERROR_NO_MORE_ITEMS); 
+    } while (dwResultEnum != ERROR_NO_MORE_ITEMS);
  
     dwResult = WNetCloseEnum(hEnum); 
     safefree(lpnrLocal);
@@ -617,9 +621,9 @@ CODE:
             WCTMB( pShareInfo->shi502_path,        tRet.path,    PATHLEN+1);
             WCTMB( pShareInfo->shi502_passwd,    tRet.passwd,    PWLEN+1);
 
-            /* Store the results. */
-             ReturnInfo = &tRet;
         }
+        /* Store the results. */
+        ReturnInfo = &tRet;
         RETVAL = ( dwLastError == NO_ERROR );
     }
 OUTPUT:

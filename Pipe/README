@@ -34,6 +34,9 @@ PIPE.PM HISTORY:
 96.06.10 Dave Roth <rothd@roth.net>
          -Original release. Very buggy and very beta. No guarantees on
 		  this stuff, kids!
+99.09.25 Gurusamy Sarathy <gsar@activestate.com> (v0.021)
+	 - minor fixes for Perl 5.005xx compatibility
+	 - delete[] things that got new[]-ed
 
 PIPE.PLL HISTORY:
 ----------------

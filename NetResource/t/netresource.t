@@ -1,6 +1,7 @@
 #test for Perl NetResource Module Extension.
 #Written by Jesse Dougherty for hip communications.
-#Subsequently hacked by Gurusamy Sarathy <gsar@umich.edu>
+#Subsequently hacked by Gurusamy Sarathy <gsar@activestate.com>
+
 #NOTE:
 #this test will only work if a username and password are supplied in the 
 #$user and $passwd vars.
@@ -11,25 +12,24 @@ $passwd = "";
 use Win32::NetResource;
 #use Data::Dumper;
 #use Win32;
-$debug = 0;
-sub ErrorCheck
-{
-	my $err;
-	if( $debug ){
-		Win32::NetResource::GetError($err);
-		print "# |$err| => ", Win32::FormatMessage($err), "\n";
-	}
+$debug = 2;
+
+sub deb {
+    if ($debug) {
+	print "# @_\n"
+    }
 }
 
-sub deb
-{
-	print STDERR $_[0] if $debug;
+sub err {
+    my $err;
+    Win32::NetResource::GetError($err);
+    deb("|$err| => ", Win32::FormatMessage($err));
 }
 
 print "1..7\n";
 
-
-$ShareInfo = {	'path' => 'c:\\',
+$ShareInfo = {
+		'path' => 'c:\\',
 		'netname' => "myshare",
 		'remark' => "This mine, leave it alone",
 		'passwd' => "soundgarden",
@@ -39,25 +39,26 @@ $ShareInfo = {	'path' => 'c:\\',
 		'type'  => 10,
 	     };
 
+#
+# test the hash conversion
 
-#test the hash conversion.
-
-deb( "#testing the hash conversion routines\n");
+deb("testing the hash conversion routines");
 
 $this = Win32::NetResource::_hash2SHARE( $ShareInfo );
 $that = Win32::NetResource::_SHARE2hash( $this );
 
-foreach( keys %$ShareInfo ){
-	if($ShareInfo->{$_} ne $that->{$_} ){
-		print "\n#$_ |$ShareInfo->{$_}| vs |$that->{$_}|\nnot";
-	}
+foreach (keys %$ShareInfo) {
+    if ($ShareInfo->{$_} ne $that->{$_}) {
+	deb("$_ |$ShareInfo->{$_}| vs |$that->{$_}|");
+	print "not ";
+    }
 }
 print "ok 1\n";
 
-ErrorCheck();
+err();
 
+#
 # Make a share of the current directory.
-
 
 $ShareInfo = {
 		'path' => "c:\\",
@@ -72,56 +73,49 @@ $ShareInfo = {
 
 
 
-deb("#Testing NetShareAdd\n");
+deb("Testing NetShareAdd");
 $parm = "";
-Win32::NetResource::NetShareAdd( $ShareInfo,$parm ) || print"not ";
+Win32::NetResource::NetShareAdd( $ShareInfo,$parm ) or print "not ";
 print "ok 2\n";
 
+err();
 
-ErrorCheck();
-
-deb("#testing NetShareGetInfo\n");
+deb("testing NetShareGetInfo");
 $NewShare = {};
-Win32::NetResource::NetShareGetInfo("PerlTempShare", $NewShare) || print "not ";
+Win32::NetResource::NetShareGetInfo("PerlTempShare", $NewShare) or print "not ";
 print "ok 3\n";
-ErrorCheck();
+err();
 
-if( $debug ){
-	foreach( keys %$NewShare ){
-		print"# $_ => $NewShare->{ $_ }\n";
-	}
-	print "\n";
+foreach (keys %$NewShare) {
+    deb("# $_ => $NewShare->{ $_ }");
 }
 
-
-
-#test the GetSharedResources function call.
+#
+# test the GetSharedResources function call
 
 $Aref=[];
 
-deb("#testing GetSharedResources\n");
+deb("testing GetSharedResources");
 
 Win32::NetResource::GetSharedResources($Aref,0);
 print "ok 4\n";
-ErrorCheck();
+err();
 
-if( $debug == 2 ){
-	print "-----\n";
-	foreach $href (@$Aref){
-		foreach( keys %$href ){
-			print "$_: $href->{$_}\n";
-		}
-		print "-----\n";
-	}
-
+deb("-----");
+foreach $href (@$Aref){
+    foreach( keys %$href ){
+	    deb(" $_: $href->{$_}");
+    }
+    deb("-----");
 }
 
-# try to connect to the Temp share.
+#
+# try to connect to the Temp share
 
 # Find the NETRESOURCE information for the Temp share.
 $myRef = {};
-foreach $href (@$Aref ){
-		$myRef = $href if( $href->{'RemoteName'} =~ /PerlTempShare/ );
+foreach $href (@$Aref) {
+    $myRef = $href if $href->{'RemoteName'} =~ /PerlTempShare/;
 }
 
 $drive = Win32::GetNextAvailDrive();
@@ -129,22 +123,20 @@ $drive = Win32::GetNextAvailDrive();
 $myRef->{'LocalName'} = $drive;
 #print STDERR "mapping to |$drive|\n", Dumper($myRef), "\n";
 Win32::NetResource::AddConnection($myRef,$passwd,$user,0);
-ErrorCheck();
+err();
 
-
-Win32::NetResource::GetUNCName( $UNCName, $drive ) || print "not ";
+Win32::NetResource::GetUNCName( $UNCName, $drive ) or print "not ";
 print "ok 5\n";
-ErrorCheck();
-deb( "#uncname is $UNCName\n");
+err();
+deb("uncname is $UNCName");
 
-Win32::NetResource::CancelConnection($drive,0,1) || print "not ";
+Win32::NetResource::CancelConnection($drive,0,1) or print "not ";
 print "ok 6\n";
-ErrorCheck();
+err();
 
-
-Win32::NetResource::NetShareDel("PerlTempShare") || print "not ";
+Win32::NetResource::NetShareDel("PerlTempShare") or print "not ";
 print "ok 7\n";
-ErrorCheck();
+err();
 
 
 

@@ -47,6 +47,7 @@ PPCODE:
     HANDLE myhandle;
     HGLOBAL hGlobal;
     LPTSTR szString;
+    STRLEN n_a;
     int leng;
     if (items > 1)
 	text = ST(1);
@@ -54,7 +55,7 @@ PPCODE:
     leng = SvCUR(text);
     if (hGlobal = GlobalAlloc(GMEM_DDESHARE, (leng+1)*sizeof(char))) {
 	szString = (char *) GlobalLock(hGlobal);
-	memcpy(szString, (char *) SvPV(text, na), leng*sizeof(char));
+	memcpy(szString, (char *) SvPV(text, n_a), leng*sizeof(char));
 	szString[leng] = (char) 0;
 	GlobalUnlock(hGlobal);
 

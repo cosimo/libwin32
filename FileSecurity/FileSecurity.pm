@@ -227,13 +227,13 @@ Imported diffs from 0.67 (parent) version
 
 =item 1.02 ALPHA 1997.12.14
 
-Pod fixes, @EXPORT list additions <gsar@umich.edu>
+Pod fixes, @EXPORT list additions <gsar@activestate.com>
 
 Fix unitialized vars on unknown ACLs <jmk@exc.bybyte.de>
 
 =item 1.01 ALPHA 1997.04.25
 
-CORE Win32 version imported from 0.66 <gsar@umich.edu>
+CORE Win32 version imported from 0.66 <gsar@activestate.com>
 
 =item 0.67 ALPHA 1997.07.07
 

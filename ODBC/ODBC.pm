@@ -1,6 +1,6 @@
 package Win32::ODBC;
 
-$VERSION = '0.03';
+$VERSION = '0.031';
 
 # Win32::ODBC.pm
 #       +==========================================================+
@@ -43,6 +43,9 @@ $CacheConnection = 0;
             ODBC_ADD_DSN
             ODBC_REMOVE_DSN
             ODBC_CONFIG_DSN
+            ODBC_ADD_SYS_DSN
+            ODBC_REMOVE_SYS_DSN
+            ODBC_CONFIG_SYS_DSN
 
             SQL_DONT_CLOSE
             SQL_DROP
@@ -701,7 +704,7 @@ sub DumpData {
         print "\n$goo\n";
         while ($self->FetchRow()){
             foreach $f ($self->FieldNames){
-                print $self->data($f) . " ";
+                print $self->Data($f) . " ";
             }
             print "\n";
         }
@@ -735,7 +738,7 @@ sub Run{
     my($self, $Sql) = @_;
 
     print "\nExcecuting connection $self->{'connection'}\nsql statement: \"$Sql\"\n";
-    $self->sql($Sql);
+    $self->Sql($Sql);
     print "Error: \"";
     print $self->error;
     print "\"\n";
@@ -855,7 +858,7 @@ sub AUTOLOAD {
     ($constname = $AUTOLOAD) =~ s/.*:://;
     #reset $! to zero to reset any current errors.
     $!=0;
-    $val = constant($constname, @_ ? $_[0] : 0);
+    $val = constant($constname);
 
     if ($! != 0) {
     if ($! =~ /Invalid/) {
@@ -895,5 +898,595 @@ bootstrap Win32::ODBC;
 1;
 __END__
 
+=head1 NAME
 
+Win32::ODBC - ODBC Extension for Win32
 
+=head1 SYNOPSIS
+
+To use this module, include the following statement at the top of your
+script:
+
+    use Win32::ODBC;
+
+Next, create a data connection to your DSN:
+
+    $Data = new Win32::ODBC("MyDSN");
+
+B<NOTE>: I<MyDSN> can be either the I<DSN> as defined in the ODBC
+Administrator, I<or> it can be an honest-to-God I<DSN Connect String>.
+
+    Example: "DSN=My Database;UID=Brown Cow;PWD=Moo;"
+
+You should check to see if C<$Data> is indeed defined, otherwise there
+has been an error.
+
+You can now send SQL queries and retrieve info to your heart's
+content! See the description of the methods provided by this module
+below and also the file F<TEST.PL> as referred to in L<INSTALLATION
+NOTES> to see how it all works.
+
+Finally, B<MAKE SURE> that you close your connection when you are
+finished:
+
+    $Data->Close();
+
+=head1 DESCRIPTION
+
+=head2 Background
+
+This is a hack of Dan DeMaggio's <dmag@umich.edu> F<NTXS.C> ODBC
+implementation. I have recoded and restructured most of it including
+most of the F<ODBC.PM> package, but its very core is still based on
+Dan's code (thanks Dan!).
+
+The history of this extension is found in the file F<HISTORY.TXT> that
+comes with the original archive (see L<INSTALLATION NOTES> below).
+
+=head2 Benefits
+
+And what are the benefits of this module?
+
+=over
+
+=item *
+
+The number of ODBC connections is limited by memory and ODBC itself
+(have as many as you want!).
+
+=item *
+
+The working limit for the size of a field is 10,240 bytes, but you can
+increase that limit (if needed) to a max of 2,147,483,647 bytes. (You
+can always recompile to increase the max limit.)
+
+=item *
+
+You can open a connection by either specifing a DSN or a connection
+string!
+
+=item *
+
+You can open and close the connections in any order!
+
+=item *
+
+Other things that I can not think of right now... :)
+
+=back
+
+=head1 CONSTANTS
+
+This package defines a number of constants. You may refer to each of
+these constants using the notation C<ODBC::xxxxx>, where C<xxxxx> is
+the constant.
+
+Example:
+
+   print ODBC::SQL_SQL_COLUMN_NAME, "\n";
+
+=head1 SPECIAL NOTATION
+
+For the method documentation that follows, an B<*> following the
+method parameters indicates that that method is new or has been
+modified for this version.
+
+=head1 CONSTRUCTOR
+
+=over
+
+=item new ( ODBC_OBJECT | DSN [, (OPTION1, VALUE1), (OPTION2, VALUE2) ...] )
+*
+
+Creates a new ODBC connection based on C<DSN>, or, if you specify an
+already existing ODBC object, then a new ODBC object will be created
+but using the ODBC Connection specified by C<ODBC_OBJECT>. (The new
+object will be a new I<hstmt> using the I<hdbc> connection in
+C<ODBC_OBJECT>.)
+
+C<DSN> is I<Data Source Name> or a proper C<ODBCDriverConnect> string.
+
+You can specify SQL Connect Options that are implemented before the
+actual connection to the DSN takes place. These option/values are the
+same as specified in C<GetConnectOption>/C<SetConnectOption> (see
+below) and are defined in the ODBC API specs.
+
+Returns a handle to the database on success, or I<undef> on failure.
+
+=back
+
+=head1 METHODS
+
+=over
+
+=item Catalog ( QUALIFIER, OWNER, NAME, TYPE )
+
+Tells ODBC to create a data set that contains table information about
+the DSN. Use C<Fetch> and C<Data> or C<DataHash> to retrieve the data.
+The returned format is:
+
+    [Qualifier] [Owner] [Name] [Type]
+
+Returns I<true> on error.
+
+=item ColAttributes ( ATTRIBUTE [, FIELD_NAMES ] )
+
+Returns the attribute C<ATTRIBUTE> on each of the fields in the list
+C<FIELD_NAMES> in the current record set. If C<FIELD_NAMES> is empty,
+then all fields are assumed. The attributes are returned as an
+associative array.
+
+=item ConfigDSN ( OPTION, DRIVER, ATTRIBUTE1 [, ATTRIBUTE2, ATTRIBUTE3, ...
+] )
+
+Configures a DSN. C<OPTION> takes on one of the following values:
+
+    ODBC_ADD_DSN.......Adds a new DSN.
+    ODBC_MODIFY_DSN....Modifies an existing DSN.
+    ODBC_REMOVE_DSN....Removes an existing DSN.
+
+    ODBC_ADD_SYS_DSN.......Adds a new System DSN.
+    ODBC_MODIFY_SYS_DSN....Modifies an existing System DSN.
+    ODBC_REMOVE_SYS_DSN....Removes an existing System DSN.
+
+You must specify the driver C<DRIVER> (which can be retrieved by using
+C<DataSources> or C<Drivers>).
+
+C<ATTRIBUTE1> B<should> be I<"DSN=xxx"> where I<xxx> is the name of
+the DSN. Other attributes can be any DSN attribute such as:
+
+    "UID=Cow"
+    "PWD=Moo"
+    "Description=My little bitty Data Source Name"
+
+Returns I<true> on success, I<false> on failure.
+
+B<NOTE 1>: If you use C<ODBC_ADD_DSN>, then you must include at least
+I<"DSN=xxx"> and the location of the database.
+
+Example: For MS Access databases, you must specify the
+I<DatabaseQualifier>:
+
+    "DBQ=c:\\...\\MyDatabase.mdb"
+
+B<NOTE 2>: If you use C<ODBC_MODIFY_DSN>, then you need only specify
+the I<"DNS=xxx"> attribute. Any other attribute you include will be
+changed to what you specify.
+
+B<NOTE 3>: If you use C<ODBC_REMOVE_DSN>, then you need only specify
+the I<"DSN=xxx"> attribute.
+
+=item Connection ()
+
+Returns the connection number associated with the ODBC connection.
+
+=item Close ()
+
+Closes the ODBC connection. No return value.
+
+=item Data ( [ FIELD_NAME ] )
+
+Returns the contents of column name C<FIELD_NAME> or the current row
+(if nothing is specified).
+
+=item DataHash ( [ FIELD1, FIELD2, ... ] )
+
+Returns the contents for C<FIELD1, FIELD2, ...> or the entire row (if
+nothing is specified) as an associative array consisting of:
+
+    {Field Name} => Field Data
+
+=item DataSources ()
+
+Returns an associative array of Data Sources and ODBC remarks about them.
+They are returned in the form of:
+
+    $ArrayName{'DSN'}=Driver
+
+where I<DSN> is the Data Source Name and ODBC Driver used.
+
+=item Debug ( [ 1 | 0 ] )
+
+Sets the debug option to on or off. If nothing is specified, then
+nothing is changed.
+
+Returns the debugging value (I<1> or I<0>).
+
+=item Drivers ()
+
+Returns an associative array of ODBC Drivers and their attributes.
+They are returned in the form of:
+
+    $ArrayName{'DRIVER'}=Attrib1;Attrib2;Attrib3;...
+
+where I<DRIVER> is the ODBC Driver Name and I<AttribX> are the
+driver-defined attributes.
+
+=item DropCursor ( [ CLOSE_TYPE ] )
+
+Drops the cursor associated with the ODBC object. This forces the
+cursor to be deallocated. This overrides C<SetStmtCloseType>, but the
+ODBC object does not lose the C<StmtCloseType> setting. C<CLOSE_TYPE>
+can be any valid C<SmtpCloseType> and will perform a close on the stmt
+using the specified close type.
+
+Returns I<true> on success, I<false> on failure.
+
+=item DumpData ()
+
+Dumps to the screen the fieldnames and all records of the current data
+set. Used primarily for debugging. No return value.
+
+=item Error ()
+
+Returns the last encountered error. The returned value is context
+dependent:
+
+If called in a I<scalar> context, then a I<3-element array> is
+returned:
+
+    ( ERROR_NUMBER, ERROR_TEXT, CONNECTION_NUMBER )
+
+If called in a I<string> context, then a I<string> is returned:
+
+    "[ERROR_NUMBER] [CONNECTION_NUMBER] [ERROR_TEXT]"
+
+If debugging is on then two more variables are returned:
+
+    ( ..., FUNCTION, LEVEL )
+
+where C<FUNCTION> is the name of the function in which the error
+occurred, and C<LEVEL> represents extra information about the error
+(usually the location of the error).
+
+=item FetchRow ( [ ROW [, TYPE ] ] )
+
+Retrieves the next record from the keyset. When C<ROW> and/or C<TYPE>
+are specified, the call is made using C<SQLExtendedFetch> instead of
+C<SQLFetch>.
+
+B<NOTE 1>: If you are unaware of C<SQLExtendedFetch> and its
+implications, stay with just regular C<FetchRow> with no parameters.
+
+B<NOTE 2>: The ODBC API explicitly warns against mixing calls to
+C<SQLFetch> and C<SQLExtendedFetch>; use one or the other but not
+both.
+
+If I<ROW> is specified, it moves the keyset B<RELATIVE> C<ROW> number
+of rows.
+
+If I<ROW> is specified and C<TYPE> is B<not>, then the type used is
+B<RELATIVE>.
+
+Returns I<true> when another record is available to read, and I<false>
+when there are no more records.
+
+=item FieldNames ()
+
+Returns an array of fieldnames found in the current data set. There is
+no guarantee on order.
+
+=item GetConnections ()
+
+Returns an array of connection numbers showing what connections are
+currently open.
+
+=item GetConnectOption ( OPTION )
+
+Returns the value of the specified connect option C<OPTION>. Refer to
+ODBC documentation for more information on the options and values.
+
+Returns a string or scalar depending upon the option specified.
+
+=item GetCursorName ()
+
+Returns the name of the current cursor as a string or I<undef>.
+
+=item GetData ()
+
+Retrieves the current row from the dataset. This is not generally
+used by users; it is used internally.
+
+Returns an array of field data where the first element is either
+I<false> (if successful) and I<true> (if B<not> successful).
+
+=item getDSN ( [ DSN ] )
+
+Returns an associative array indicating the configuration for the
+specified DSN.
+
+If no DSN is specified then the current connection is used.
+
+The returned associative array consists of:
+
+    keys=DSN keyword; values=Keyword value. $Data{$Keyword}=Value
+
+=item GetFunctions ( [ FUNCTION1, FUNCTION2, ... ] )
+
+Returns an associative array indicating the ability of the ODBC Driver
+to support the specified functions. If no functions are specified,
+then a 100 element associative array is returned containing all
+possible functions and their values.
+
+C<FUNCTION> must be in the form of an ODBC API constant like
+C<SQL_API_SQLTRANSACT>.
+
+The returned array will contain the results like:
+
+    $Results{SQL_API_SQLTRANSACT}=Value
+
+Example:
+
+    $Results = $O->GetFunctions(
+                                $O->SQL_API_SQLTRANSACT,
+                                SQL_API_SQLSETCONNECTOPTION
+                               );
+    $ConnectOption = $Results{SQL_API_SQLSETCONNECTOPTION};
+    $Transact = $Results{SQL_API_SQLTRANSACT};
+
+=item GetInfo ( OPTION )
+
+Returns a string indicating the value of the particular
+option specified.
+
+=item GetMaxBufSize ()
+
+Returns the current allocated limit for I<MaxBufSize>. For more info,
+see C<SetMaxBufSize>.
+
+=item GetSQLState () *
+
+Returns a string indicating the SQL state as reported by ODBC. The SQL
+state is a code that the ODBC Manager or ODBC Driver returns after the
+execution of a SQL function. This is helpful for debugging purposes.
+
+=item GetStmtCloseType ( [ CONNECTION ] )
+
+Returns a string indicating the type of closure that will be used
+everytime the I<hstmt> is freed. See C<SetStmtCloseType> for details.
+
+By default, the connection of the current object will be used. If
+C<CONNECTION> is a valid connection number, then it will be used.
+
+=item GetStmtOption ( OPTION )
+
+Returns the value of the specified statement option C<OPTION>. Refer
+to ODBC documentation for more information on the options and values.
+
+Returns a string or scalar depending upon the option specified.
+
+=item MoreResults ()
+
+This will report whether there is data yet to be retrieved from the
+query. This can happen if the query was a multiple select.
+
+Example:
+
+    "SELECT * FROM [foo] SELECT * FROM [bar]"
+
+B<NOTE>: Not all drivers support this.
+
+Returns I<1> if there is more data, I<undef> otherwise.
+
+=item RowCount ( CONNECTION )
+
+For I<UPDATE>, I<INSERT> and I<DELETE> statements, the returned value
+is the number of rows affected by the request or I<-1> if the number
+of affected rows is not available.
+
+B<NOTE 1>: This function is not supported by all ODBC drivers! Some
+drivers do support this but not for all statements (e.g., it is
+supported for I<UPDATE>, I<INSERT> and I<DELETE> commands but not for
+the I<SELECT> command).
+
+B<NOTE 2>: Many data sources cannot return the number of rows in a
+result set before fetching them; for maximum interoperability,
+applications should not rely on this behavior.
+
+Returns the number of affected rows, or I<-1> if not supported by the
+driver in the current context.
+
+=item Run ( SQL )
+
+Executes the SQL command B<SQL> and dumps to the screen info about
+it. Used primarily for debugging.
+
+No return value.
+
+=item SetConnectOption ( OPTION ) *
+
+Sets the value of the specified connect option B<OPTION>. Refer to
+ODBC documentation for more information on the options and values.
+
+Returns I<true> on success, I<false> otherwise.
+
+=item SetCursorName ( NAME ) *
+
+Sets the name of the current cursor.
+
+Returns I<true> on success, I<false> otherwise.
+
+=item SetPos ( ROW [, OPTION, LOCK ] ) *
+
+Moves the cursor to the row C<ROW> within the current keyset (B<not>
+the current data/result set).
+
+Returns I<true> on success, I<false> otherwise.
+
+=item SetMaxBufSize ( SIZE )
+
+This sets the I<MaxBufSize> for a particular connection. This will
+most likely never be needed but...
+
+The amount of memory that is allocated to retrieve the field data of a
+record is dynamic and changes when it need to be larger. I found that
+a memo field in an MS Access database ended up requesting 4 Gig of
+space. This was a bit much so there is an imposed limit (2,147,483,647
+bytes) that can be allocated for data retrieval.
+
+Since it is possible that someone has a database with field data
+greater than 10,240, you can use this function to increase the limit
+up to a ceiling of 2,147,483,647 (recompile if you need more).
+
+Returns the max number of bytes.
+
+=item SetStmtCloseType ( TYPE [, CONNECTION ] )
+
+Sets a particular I<hstmt> close type for the connection. This is the
+same as C<ODBCFreeStmt(hstmt, TYPE)>. By default, the connection of
+the current object will be used. If C<CONNECTION> is a valid
+connection number, then it will be used.
+
+C<TYPE> may be one of:
+
+    SQL_CLOSE
+    SQL_DROP
+    SQL_UNBIND
+    SQL_RESET_PARAMS
+
+Returns a string indicating the newly set type.
+
+=item SetStmtOption ( OPTION ) *
+
+Sets the value of the specified statement option C<OPTION>. Refer to
+ODBC documentation for more information on the options and values.
+
+Returns I<true> on success, I<false> otherwise.
+
+=item ShutDown ()
+
+Closes the ODBC connection and dumps to the screen info about
+it. Used primarily for debugging.
+
+No return value.
+
+=item Sql ( SQL_STRING )
+
+Executes the SQL command C<SQL_STRING> on the current connection.
+
+Returns I<?> on success, or an error number on failure.
+
+=item TableList ( QUALIFIER, OWNER, NAME, TYPE )
+
+Returns the catalog of tables that are available in the DSN. For an
+unknown parameter, just specify the empty string I<"">.
+
+Returns an array of table names.
+
+=item Transact ( TYPE ) *
+
+Forces the ODBC connection to perform a I<rollback> or I<commit>
+transaction.
+
+C<TYPE> may be one of:
+
+    SQL_COMMIT
+    SQL_ROLLBACK
+
+B<NOTE>: This only works with ODBC drivers that support transactions.
+Your driver supports it if I<true> is returned from:
+
+    $O->GetFunctions($O->SQL_API_SQLTRANSACT)[1]
+
+(See C<GetFunctions> for more details.)
+
+Returns I<true> on success, I<false> otherwise.
+
+=item Version ( PACKAGES )
+
+Returns an array of version numbers for the requested packages
+(F<ODBC.pm> or F<ODBC.PLL>). If the list C<PACKAGES> is empty, then
+all version numbers are returned.
+
+=back
+
+=head1 LIMITATIONS
+
+What known problems does this thing have?
+
+=over
+
+=item *
+
+If the account under which the process runs does not have write
+permission on the default directory (for the process, not the ODBC
+DSN), you will probably get a runtime error during a
+C<SQLConnection>. I don't think that this is a problem with the code,
+but more like a problem with ODBC. This happens because some ODBC
+drivers need to write a temporary file. I noticed this using the MS
+Jet Engine (Access Driver).
+
+=item *
+
+This module has been neither optimized for speed nor optimized for
+memory consumption.
+
+=back
+
+=head1 INSTALLATION NOTES
+
+If you wish to use this module with a build of Perl other than
+ActivePerl, you may wish to fetch the original source distribution for
+this module at:
+
+  ftp://ftp.roth.net:/pub/ntperl/ODBC/970208/Bin/Win32_ODBC_Build_CORE.zip
+
+or one of the other archives at that same location. See the included
+README for hints on installing this module manually, what to do if you
+get a I<parse exception>, and a pointer to a test script for this
+module.
+
+=head1 OTHER DOCUMENTATION
+
+Find a FAQ for Win32::ODBC at:
+
+  http://www.roth.net/odbc/odbcfaq.htm
+
+=head1 AUTHOR
+
+Dave Roth <rothd@roth.net>
+
+=head1 CREDITS
+
+Based on original code by Dan DeMaggio <dmag@umich.edu>
+
+=head1 DISCLAIMER
+
+I do not guarantee B<ANYTHING> with this package. If you use it you
+are doing so B<AT YOUR OWN RISK>! I may or may not support this
+depending on my time schedule.
+
+=head1 HISTORY
+
+Last Modified 1999.09.25.
+
+=head1 COPYRIGHT
+
+Copyright (c) 1996-1998 Dave Roth. All rights reserved.
+
+Courtesy of Roth Consulting:  http://www.roth.net/consult/
+
+Use under GNU General Public License. Details can be found at:
+http://www.gnu.org/copyleft/gpl.html
+
+=cut

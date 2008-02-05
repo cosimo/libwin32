@@ -1,10 +1,11 @@
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
 WriteMakefile(
-    'NAME'	=> 'Win32::TieRegistry',
-    'VERSION_FROM' => 'TieRegistry.pm',	# finds $VERSION
-    'LIBS'	=> [''],   # e.g., '-lm' 
-    'DEFINE'	=> '',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> '',     # e.g., '-I/usr/include/other' 
+    'NAME'		=> 'Win32::TieRegistry',
+    'VERSION_FROM'	=> 'TieRegistry.pm',	# finds $VERSION
+    'PREREQ_PM'		=> { 'Win32API::Registry' => 0 },
+    ($] < 5.005 ? () :
+      (
+	'ABSTRACT'	=> 'Powerful and easy ways to manipulate a registry',
+	'AUTHOR'	=> 'Tye McQueen <tye@metronet.com>',
+      )),
 );

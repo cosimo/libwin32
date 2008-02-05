@@ -3,7 +3,8 @@ package Win32::Console;
 #
 # Win32::Console - Perl Module for Windows Clipboard Interaction
 # ^^^^^^^^^^^^^^
-# Version: 0.03 (07 Apr 1997)
+# Version: 0.03  (07 Apr 1997)
+# Version: 0.031 (24 Sep 1999) - fixed typo in GenerateCtrlEvent()
 #
 #######################################################################
 
@@ -78,7 +79,7 @@ sub AUTOLOAD {
 #######################################################################
 # STATIC OBJECT PROPERTIES
 #
-$VERSION = "0.03";
+$VERSION = "0.031";
 
 # %HandlerRoutineStack = ();
 # $HandlerRoutineRegistered = 0;
@@ -518,7 +519,7 @@ sub GenerateCtrlEvent {
     my($self, $type, $pid) = @_;
     $type = constant("CTRL_C_EVENT", 0) unless defined($type);
     $pid = 0 unless defined($pid);
-    return _GenerateCtrlEvent($type, $pid);
+    return _GenerateConsoleCtrlEvent($type, $pid);
 }
 
 #===================
@@ -684,3 +685,799 @@ undef $bg;
 
 __END__
 
+=head1 NAME
+
+Win32::Console - Win32 Console and Character Mode Functions
+
+
+=head1 DESCRIPTION
+
+This module implements the Win32 console and character mode
+functions.  They give you full control on the console input and output,
+including: support of off-screen console buffers (eg. multiple screen
+pages)
+
+=over
+
+=item *
+
+reading and writing of characters, attributes and whole portions of
+the screen
+
+=item *
+
+complete processing of keyboard and mouse events
+
+=item *
+
+some very funny additional features :)
+
+=back
+
+Those functions should also make possible a port of the Unix's curses
+library; if there is anyone interested (and/or willing to contribute)
+to this project, e-mail me.  Thank you.
+
+
+=head1 REFERENCE
+
+
+=head2 Methods
+
+=over
+
+=item Alloc
+
+Allocates a new console for the process.  Returns C<undef> on errors, a
+nonzero value on success.  A process cannot be associated with more
+than one console, so this method will fail if there is already an
+allocated console.  Use Free to detach the process from the console,
+and then call Alloc to create a new console.  See also: C<Free>
+
+Example:
+
+    $CONSOLE->Alloc();
+
+=item Attr [attr]
+
+Gets or sets the current console attribute.  This attribute is used by
+the Write method.
+
+Example:
+
+    $attr = $CONSOLE->Attr();
+    $CONSOLE->Attr($FG_YELLOW | $BG_BLUE);
+
+=item Close
+
+Closes a shortcut object.  Note that it is not "strictly" required to
+close the objects you created, since the Win32::Shortcut objects are
+automatically closed when the program ends (or when you elsehow
+destroy such an object).
+
+Example:
+
+    $LINK->Close();
+
+=item Cls [attr]
+
+Clear the console, with the specified I<attr> if given, or using
+ATTR_NORMAL otherwise.
+
+Example:
+
+    $CONSOLE->Cls();
+    $CONSOLE->Cls($FG_WHITE | $BG_GREEN);
+
+=item Cursor [x, y, size, visible]
+
+Gets or sets cursor position and appearance.  Returns C<undef> on
+errors, or a 4-element list containing: I<x>, I<y>, I<size>,
+I<visible>.  I<x> and I<y> are the current cursor position; ...
+
+Example:
+
+    ($x, $y, $size, $visible) = $CONSOLE->Cursor();
+
+    # Get position only
+    ($x, $y) = $CONSOLE->Cursor();
+
+    $CONSOLE->Cursor(40, 13, 50, 1);
+
+    # Set position only
+    $CONSOLE->Cursor(40, 13);
+
+    # Set size and visibility without affecting position
+    $CONSOLE->Cursor(-1, -1, 50, 1);
+
+=item Display
+
+Displays the specified console on the screen.  Returns C<undef> on errors,
+a nonzero value on success.
+
+Example:
+
+    $CONSOLE->Display();
+
+=item FillAttr [attribute, number, col, row]
+
+Fills the specified number of consecutive attributes, beginning at
+I<col>, I<row>, with the value specified in I<attribute>.  Returns the
+number of attributes filled, or C<undef> on errors.  See also:
+C<FillChar>.
+
+Example:
+
+    $CONSOLE->FillAttr($FG_BLACK | $BG_BLACK, 80*25, 0, 0);
+
+=item FillChar char, number, col, row
+
+Fills the specified number of consecutive characters, beginning at
+I<col>, I<row>, with the character specified in I<char>.  Returns the
+number of characters filled, or C<undef> on errors.  See also:
+C<FillAttr>.
+
+Example:
+
+    $CONSOLE->FillChar("X", 80*25, 0, 0);
+
+=item Flush
+
+Flushes the console input buffer.  All the events in the buffer are
+discarded.  Returns C<undef> on errors, a nonzero value on success.
+
+Example:
+
+    $CONSOLE->Flush();
+
+=item Free
+
+Detaches the process from the console.  Returns C<undef> on errors, a
+nonzero value on success.  See also: C<Alloc>.
+
+Example:
+
+    $CONSOLE->Free();
+
+=item GenerateCtrlEvent [type, processgroup]
+
+Sends a break signal of the specified I<type> to the specified
+I<processgroup>.  I<type> can be one of the following constants:
+
+    CTRL_BREAK_EVENT
+    CTRL_C_EVENT
+
+they signal, respectively, the pressing of Control + Break and of
+Control + C; if not specified, it defaults to CTRL_C_EVENT.
+I<processgroup> is the pid of a process sharing the same console.  If
+omitted, it defaults to 0 (the current process), which is also the
+only meaningful value that you can pass to this function.  Returns
+C<undef> on errors, a nonzero value on success.
+
+Example:
+
+    # break this script now
+    $CONSOLE->GenerateCtrlEvent();
+
+=item GetEvents
+
+Returns the number of unread input events in the console's input
+buffer, or C<undef> on errors.  See also: C<Input>, C<InputChar>,
+C<PeekInput>, C<WriteInput>.
+
+Example:
+
+    $events = $CONSOLE->GetEvents();
+
+=item Info
+
+Returns an array of informations about the console (or C<undef> on
+errors), which contains:
+
+=over
+
+=item *
+
+columns (X size) of the console buffer.
+
+=item *
+
+rows (Y size) of the console buffer.
+
+=item *
+
+current column (X position) of the cursor.
+
+=item *
+
+current row (Y position) of the cursor.
+
+=item *
+
+current attribute used for C<Write>.
+
+=item *
+
+left column (X of the starting point) of the current console window.
+
+=item *
+
+top row (Y of the starting point) of the current console window.
+
+=item *
+
+right column (X of the final point) of the current console window.
+
+=item *
+
+bottom row (Y of the final point) of the current console window.
+
+=item *
+
+maximum number of columns for the console window, given the current
+buffer size, font and the screen size.
+
+=item *
+
+maximum number of rows for the console window, given the current
+buffer size, font and the screen size.
+
+=back
+
+See also: C<Attr>, C<Cursor>, C<Size>, C<Window>, C<MaxWindow>.
+
+Example:
+
+    @info = $CONSOLE->Info();
+    print "Cursor at $info[3], $info[4].\n";
+
+=item Input
+
+Reads an event from the input buffer.  Returns a list of values, which
+depending on the event's nature are:
+
+=over
+
+=item keyboard event
+
+The list will contain:
+
+=over
+
+=item *
+
+event type: 1 for keyboard
+
+=item *
+
+key down: TRUE if the key is being pressed, FALSE if the key is being released
+
+=item *
+
+repeat count: the number of times the key is being held down
+
+=item *
+
+virtual keycode: the virtual key code of the key
+
+=item *
+
+virtual scancode: the virtual scan code of the key
+
+=item *
+
+char: the ASCII code of the character (if the key is a character key, 0 otherwise)
+
+=item *
+
+control key state: the state of the control keys (SHIFTs, CTRLs, ALTs, etc.)
+
+=back
+
+=item mouse event
+
+The list will contain:
+
+=over
+
+=item *
+
+event type: 2 for mouse
+
+=item *
+
+mouse pos. X: X coordinate (column) of the mouse location
+
+=item *
+
+mouse pos. Y: Y coordinate (row) of the mouse location
+
+=item *
+
+button state: the mouse button(s) which are pressed
+
+=item *
+
+control key state: the state of the control keys (SHIFTs, CTRLs, ALTs, etc.)
+
+=item *
+
+event flags: the type of the mouse event
+
+=back
+
+=back
+
+This method will return C<undef> on errors.  Note that the events
+returned are depending on the input C<Mode> of the console; for example,
+mouse events are not intercepted unless ENABLE_MOUSE_INPUT is
+specified.  See also: C<GetEvents>, C<InputChar>, C<Mode>,
+C<PeekInput>, C<WriteInput>.
+
+Example:
+
+    @event = $CONSOLE->Input();
+
+=item InputChar number
+
+Reads and returns I<number> characters from the console input buffer,
+or C<undef> on errors.  See also: C<Input>, C<Mode>.
+
+Example:
+
+    $key = $CONSOLE->InputChar(1);
+
+=item InputCP [codepage]
+
+Gets or sets the input code page used by the console.  Note that this
+doesn't apply to a console object, but to the standard input
+console.  This attribute is used by the Write method.  See also:
+C<OutputCP>.
+
+Example:
+
+    $codepage = $CONSOLE->InputCP();
+    $CONSOLE->InputCP(437);
+
+    # you may want to use the non-instanciated form to avoid confuzion :)
+    $codepage = Win32::Console::InputCP();
+    Win32::Console::InputCP(437);
+
+=item MaxWindow
+
+Returns the size of the largest possible console window, based on the
+current font and the size of the display.  The result is C<undef> on
+errors, otherwise a 2-element list containing col, row.
+
+Example:
+
+    ($maxCol, $maxRow) = $CONSOLE->MaxWindow();
+
+=item Mode [flags]
+
+Gets or sets the input or output mode of a console.  I<flags> can be a
+combination of the following constants:
+
+    ENABLE_LINE_INPUT
+    ENABLE_ECHO_INPUT
+    ENABLE_PROCESSED_INPUT
+    ENABLE_WINDOW_INPUT
+    ENABLE_MOUSE_INPUT
+    ENABLE_PROCESSED_OUTPUT
+    ENABLE_WRAP_AT_EOL_OUTPUT
+
+For more informations on the meaning of those flags, please refer to
+the L<"Microsoft's Documentation">.
+
+Example:
+
+    $mode = $CONSOLE->Mode();
+    $CONSOLE->Mode(ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT);
+
+=item MouseButtons
+
+Returns the number of the buttons on your mouse, or C<undef> on errors.
+
+Example:
+
+    print "Your mouse has ", $CONSOLE->MouseButtons(), " buttons.\n";
+
+=item new Win32::Console standard_handle
+
+=item new Win32::Console [accessmode, sharemode]
+
+Creates a new console object.  The first form creates a handle to a
+standard channel, I<standard_handle> can be one of the following:
+
+    STD_OUTPUT_HANDLE
+    STD_ERROR_HANDLE
+    STD_INPUT_HANDLE
+
+The second form, instead, creates a console screen buffer in memory,
+which you can access for reading and writing as a normal console, and
+then redirect on the standard output (the screen) with C<Display>.  In
+this case, you can specify one or both of the following values for
+I<accessmode>:
+
+    GENERIC_READ
+    GENERIC_WRITE
+
+which are the permissions you will have on the created buffer, and one
+or both of the following values for I<sharemode>:
+
+    FILE_SHARE_READ
+    FILE_SHARE_WRITE
+
+which affect the way the console can be shared.  If you don't specify
+any of those parameters, all 4 flags will be used.
+
+Example:
+
+    $STDOUT = new Win32::Console(STD_OUTPUT_HANDLE);
+    $STDERR = new Win32::Console(STD_ERROR_HANDLE);
+    $STDIN  = new Win32::Console(STD_INPUT_HANDLE);
+
+    $BUFFER = new Win32::Console();
+    $BUFFER = new Win32::Console(GENERIC_READ | GENERIC_WRITE);
+
+=item OutputCP [codepage]
+
+Gets or sets the output code page used by the console.  Note that this
+doesn't apply to a console object, but to the standard output console.
+See also: C<InputCP>.
+
+Example:
+
+    $codepage = $CONSOLE->OutputCP();
+    $CONSOLE->OutputCP(437);
+
+    # you may want to use the non-instanciated form to avoid confuzion :)
+    $codepage = Win32::Console::OutputCP();
+    Win32::Console::OutputCP(437);
+
+=item PeekInput
+
+Does exactly the same as C<Input>, except that the event read is not
+removed from the input buffer.  See also: C<GetEvents>, C<Input>,
+C<InputChar>, C<Mode>, C<WriteInput>.
+
+Example:
+
+    @event = $CONSOLE->PeekInput();
+
+=item ReadAttr [number, col, row]
+
+Reads the specified I<number> of consecutive attributes, beginning at
+I<col>, I<row>, from the console.  Returns the attributes read (a
+variable containing one character for each attribute), or C<undef> on
+errors.  You can then pass the returned variable to C<WriteAttr> to
+restore the saved attributes on screen.  See also: C<ReadChar>,
+C<ReadRect>.
+
+Example:
+
+    $colors = $CONSOLE->ReadAttr(80*25, 0, 0);
+
+=item ReadChar [number, col, row]
+
+Reads the specified I<number> of consecutive characters, beginning at
+I<col>, I<row>, from the console.  Returns a string containing the
+characters read, or C<undef> on errors.  You can then pass the
+returned variable to C<WriteChar> to restore the saved characters on
+screen.  See also: C<ReadAttr>, C<ReadRect>.
+
+Example:
+
+    $chars = $CONSOLE->ReadChar(80*25, 0, 0);
+
+=item ReadRect left, top, right, bottom
+
+Reads the content (characters and attributes) of the rectangle
+specified by I<left>, I<top>, I<right>, I<bottom> from the console.
+Returns a string containing the rectangle read, or C<undef> on errors.
+You can then pass the returned variable to C<WriteRect> to restore the
+saved rectangle on screen (or on another console).  See also:
+C<ReadAttr>, C<ReadChar>.
+
+Example:
+
+     $rect = $CONSOLE->ReadRect(0, 0, 80, 25);
+
+=item Scroll left, top, right, bottom, col, row, char, attr,
+             [cleft, ctop, cright, cbottom]
+
+Moves a block of data in a console buffer; the block is identified by
+I<left>, I<top>, I<right>, I<bottom>, while I<row>, I<col> identify
+the new location of the block.  The cells left empty as a result of
+the move are filled with the character I<char> and attribute I<attr>.
+Optionally you can specify a clipping region with I<cleft>, I<ctop>,
+I<cright>, I<cbottom>, so that the content of the console outside this
+rectangle are unchanged.  Returns C<undef> on errors, a nonzero value
+on success.
+
+Example:
+
+    # scrolls the screen 10 lines down, filling with black spaces
+    $CONSOLE->Scroll(0, 0, 80, 25, 0, 10, " ", $FG_BLACK | $BG_BLACK);
+
+=item Select standard_handle
+
+Redirects a standard handle to the specified console.
+I<standard_handle> can have one of the following values:
+
+    STD_INPUT_HANDLE
+    STD_OUTPUT_HANDLE
+    STD_ERROR_HANDLE
+
+Returns C<undef> on errors, a nonzero value on success.
+
+Example:
+
+    $CONSOLE->Select(STD_OUTPUT_HANDLE);
+
+=item Size [col, row]
+
+Gets or sets the console buffer size.
+
+Example:
+
+    ($x, $y) = $CONSOLE->Size();
+    $CONSOLE->Size(80, 25);
+
+=item Title [title]
+
+Gets or sets the title bar the string of the current console window.
+
+Example:
+
+    $title = $CONSOLE->Title();
+    $CONSOLE->Title("This is a title");
+
+=item Window [flag, left, top, right, bottom]
+
+Gets or sets the current console window size.  If called without
+arguments, returns a 4-element list containing the current window
+coordinates in the form of I<left>, I<top>, I<right>, I<bottom>.  To
+set the window size, you have to specify an additional I<flag>
+parameter: if it is 0 (zero), coordinates are considered relative to
+the current coordinates; if it is non-zero, coordinates are absolute.
+
+Example:
+
+    ($left, $top, $right, $bottom) = $CONSOLE->Window();
+    $CONSOLE->Window(1, 0, 0, 80, 50);
+
+=item Write string
+
+Writes I<string> on the console, using the current attribute, that you
+can set with C<Attr>, and advancing the cursor as needed.  This isn't
+so different from Perl's "print" statement.  Returns the number of
+characters written or C<undef> on errors.  See also: C<WriteAttr>,
+C<WriteChar>, C<WriteRect>.
+
+Example:
+
+    $CONSOLE->Write("Hello, world!");
+
+=item WriteAttr attrs, col, row
+
+Writes the attributes in the string I<attrs>, beginning at I<col>,
+I<row>, without affecting the characters that are on screen.  The
+string attrs can be the result of a C<ReadAttr> function, or you can
+build your own attribute string; in this case, keep in mind that every
+attribute is treated as a character, not a number (see example).
+Returns the number of attributes written or C<undef> on errors.  See
+also: C<Write>, C<WriteChar>, C<WriteRect>.
+
+Example:
+
+    $CONSOLE->WriteAttr($attrs, 0, 0);
+
+    # note the use of chr()...
+    $attrs = chr($FG_BLACK | $BG_WHITE) x 80;
+    $CONSOLE->WriteAttr($attrs, 0, 0);
+
+=item WriteChar chars, col, row
+
+Writes the characters in the string I<attr>, beginning at I<col>, I<row>,
+without affecting the attributes that are on screen.  The string I<chars>
+can be the result of a C<ReadChar> function, or a normal string.  Returns
+the number of characters written or C<undef> on errors.  See also:
+C<Write>, C<WriteAttr>, C<WriteRect>.
+
+Example:
+
+    $CONSOLE->WriteChar("Hello, worlds!", 0, 0);
+
+=item WriteInput (event)
+
+Pushes data in the console input buffer.  I<(event)> is a list of values,
+for more information see C<Input>.  The string chars can be the result of
+a C<ReadChar> function, or a normal string.  Returns the number of
+characters written or C<undef> on errors.  See also: C<Write>,
+C<WriteAttr>, C<WriteRect>.
+
+Example:
+
+    $CONSOLE->WriteInput(@event);
+
+=item WriteRect rect, left, top, right, bottom
+
+Writes a rectangle of characters and attributes (contained in I<rect>)
+on the console at the coordinates specified by I<left>, I<top>,
+I<right>, I<bottom>.  I<rect> can be the result of a C<ReadRect>
+function.  Returns C<undef> on errors, otherwise a 4-element list
+containing the coordinates of the affected rectangle, in the format
+I<left>, I<top>, I<right>, I<bottom>.  See also: C<Write>,
+C<WriteAttr>, C<WriteChar>.
+
+Example:
+
+    $CONSOLE->WriteRect($rect, 0, 0, 80, 25);
+
+=back
+
+
+=head2 Constants
+
+The following constants are exported in the main namespace of your
+script using Win32::Console:
+
+    BACKGROUND_BLUE
+    BACKGROUND_GREEN
+    BACKGROUND_INTENSITY
+    BACKGROUND_RED
+    CAPSLOCK_ON
+    CONSOLE_TEXTMODE_BUFFER
+    ENABLE_ECHO_INPUT
+    ENABLE_LINE_INPUT
+    ENABLE_MOUSE_INPUT
+    ENABLE_PROCESSED_INPUT
+    ENABLE_PROCESSED_OUTPUT
+    ENABLE_WINDOW_INPUT
+    ENABLE_WRAP_AT_EOL_OUTPUT
+    ENHANCED_KEY
+    FILE_SHARE_READ
+    FILE_SHARE_WRITE
+    FOREGROUND_BLUE
+    FOREGROUND_GREEN
+    FOREGROUND_INTENSITY
+    FOREGROUND_RED
+    LEFT_ALT_PRESSED
+    LEFT_CTRL_PRESSED
+    NUMLOCK_ON
+    GENERIC_READ
+    GENERIC_WRITE
+    RIGHT_ALT_PRESSED
+    RIGHT_CTRL_PRESSED
+    SCROLLLOCK_ON
+    SHIFT_PRESSED
+    STD_INPUT_HANDLE
+    STD_OUTPUT_HANDLE
+    STD_ERROR_HANDLE
+
+Additionally, the following variables can be used:
+
+    $FG_BLACK
+    $FG_BLUE
+    $FG_LIGHTBLUE
+    $FG_RED
+    $FG_LIGHTRED
+    $FG_GREEN
+    $FG_LIGHTGREEN
+    $FG_MAGENTA
+    $FG_LIGHTMAGENTA
+    $FG_CYAN
+    $FG_LIGHTCYAN
+    $FG_BROWN
+    $FG_YELLOW
+    $FG_GRAY
+    $FG_WHITE
+
+    $BG_BLACK
+    $BG_BLUE
+    $BG_LIGHTBLUE
+    $BG_RED
+    $BG_LIGHTRED
+    $BG_GREEN
+    $BG_LIGHTGREEN
+    $BG_MAGENTA
+    $BG_LIGHTMAGENTA
+    $BG_CYAN
+    $BG_LIGHTCYAN
+    $BG_BROWN
+    $BG_YELLOW
+    $BG_GRAY
+    $BG_WHITE
+
+    $ATTR_NORMAL
+    $ATTR_INVERSE
+
+ATTR_NORMAL is set to gray foreground on black background (DOS's
+standard colors).
+
+
+=head2 Microsoft's Documentation
+
+Documentation for the Win32 Console and Character mode Functions can
+be found on Microsoft's site at this URL:
+
+http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/sys/src/conchar.htm
+
+A reference of the available functions is at:
+
+http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/sys/src/conchar_34.htm
+
+
+=head1 VERSION HISTORY
+
+=over
+
+=item * 0.031 (24 Sep 1999)
+
+=over
+
+=item *
+
+Fixed typo in GenerateCtrlEvent().
+
+=item *
+
+Converted and added pod documentation (from Jan Dubois <jand@activestate.com>).
+
+=back
+
+=item * 0.03 (07 Apr 1997)
+
+=over
+
+=item *
+
+Added "GenerateCtrlEvent" method.
+
+=item *
+
+The PLL file now comes in 2 versions, one for Perl version 5.001
+(build 110) and one for Perl version 5.003 (build 300 and higher,
+EXCEPT 304).
+
+=item *
+
+added an installation program that will automatically copy the right
+version in the right place.
+
+=back
+
+=item * 0.01 (09 Feb 1997)
+
+=over
+
+=item *
+
+First public release.
+
+=back
+
+=back
+
+
+=head1 AUTHOR
+
+Aldo Calpini <a.calpini@romagiubileo.it>
+
+
+=head1 CREDITS
+
+Thanks to: Jesse Dougherty, Dave Roth, ActiveWare, and the
+Perl-Win32-Users community.
+
+
+=head1 DISCLAIMER
+
+This program is FREE; you can redistribute, modify, disassemble, or
+even reverse engineer this software at your will.  Keep in mind,
+however, that NOTHING IS GUARANTEED to work and everything you do is
+AT YOUR OWN RISK - I will not take responsibility for any damage, loss
+of money and/or health that may arise from the use of this program!
+
+This is distributed under the terms of Larry Wall's Artistic License.

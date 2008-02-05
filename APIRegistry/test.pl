@@ -1,3 +1,4 @@
+#!/usr/bin/perl -w
 # Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
@@ -19,7 +20,7 @@ $|= 1   if  $Debug= ( -t STDIN ) != ( -t STDOUT );
 $zero= 16;	# Change to 0 when RegEnumKeyExA() and RegEnumValueA()
 		# handle ERROR_MORE_DATA better!
 
-$ok= RegQueryInfoKey( HKEY_LOCAL_MACHINE, $class, $clen, [],
+$ok= RegQueryInfoKey( HKEY_LOCAL_MACHINE, $class, $clen=0, [],
   $nkeys, $xkey, $xclass, $nvals, $xval, $xdata, $xsec, $time );
 $Debug && !$ok  and  warn "$^E\n";
 $Debug  and  warn "LMach key:  Class=$class <=$xclass, ",
@@ -53,7 +54,7 @@ print $ok ? "" : "not ", "ok 6\n";
 
 $ok= (  $wklen == $klen  &&  2*$wklen == length($wkey)
     &&  $wclen == $clen  &&  2*$wclen == length($wclass)
-    &&  $time == $wtime  );
+    &&  $time eq $wtime  );
 print $ok ? "" : "not ", "ok 7\n";
 
 $ok= RegOpenKeyEx( HKEY_LOCAL_MACHINE, $key, 0, KEY_READ, $hkey );
@@ -79,6 +80,7 @@ while(  0 == $nvals  ) {
     $Debug  and  warn
       "Last LMach\\$path subkey:  Name=$key2, Class=$class2.\n";
     $path .= "\\$key2";
+    $clen2= $klen2;	# Don't warn about these vars being used but once.
 
     $ok= RegOpenKeyEx( $hkey, $key2, 0, KEY_READ, $hkey2 );
     $Debug && !$ok  and  warn "$^E\n";
@@ -147,7 +149,7 @@ print $ok ? "" : "not ", "ok 17\n";
 @types= unpack( " x4 x4 x4 L " x @valnames, $pValueEnts );
 @dat1=  unpack(  join( "", map(" x4 x4 P$_ x4 ",@lens) ), $pValueEnts  );
 @dat2=  unpack( join("",map("a$_",@lens)), $buffer );
-if(  $ok= @dat1==@dat2  ) {
+if(  $ok= ( @dat1==@dat2 && @dat1==@types )  ) {
     for(0..$#dat1) { if( $dat1[$_] ne $dat2[$_] ) { $ok= 0; last; } }
 }
 print $ok ? "" : "not ", "ok 18\n";
@@ -162,7 +164,7 @@ print $ok ? "" : "not ", "ok 20\n";
 $Debug  and  warn "Using closed key gives:  `$^E'.\n";
 
 $ok= (  $^E =~ /handle/i  &&  $^E =~ /invalid/i  );
-print $ok ? "" : "not ", "ok 21\n";
+print $ok ? "" : "# [$^E]\nnot ", "ok 21\n";
 
 $ok= (  $type == $vtype  &&  $data eq $vdata  );
 print $ok ? "" : "not ", "ok 22\n";
@@ -356,8 +358,8 @@ foreach $func ( @{$Win32API::Registry::EXPORT_TAGS{Func}} ) {
     print $ok ? "" : "not ", "ok ", ++$test, "\n";
 }
 
-foreach $func ( @{$Win32API::Registry::EXPORT_TAGS{FuncA}},
-                @{$Win32API::Registry::EXPORT_TAGS{FuncW}} ) {
+foreach $func ( @{$Win32API::Registry::EXPORT_TAGS{FuncW}},
+                @{$Win32API::Registry::EXPORT_TAGS{FuncA}} ) {
     $ok=  ! eval("$func()")  &&  $@ =~ /::_?${func}\(/;
     $Debug && !$ok && warn "$func: $@\n";
     print $ok ? "" : "not ", "ok ", ++$test, "\n";

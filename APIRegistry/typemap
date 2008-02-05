@@ -9,11 +9,15 @@ char *			T_BUF
 WCHAR *			T_BUF
 BYTE *			T_BUF
 void *			T_BUF
+VALENTA *		T_BUF
+VALENTW *		T_BUF
 SECURITY_DESCRIPTOR *	T_BUF
 SECURITY_ATTRIBUTES *	T_BUF
 LONG *			T_IVBUF
 DWORD *			T_UVBUF
 HKEY *			T_IVBUFP
+oDWORD *		O_UVBUF
+oHKEY *			O_IVBUFP
 FILETIME *		T_SBUF
 
 #############################################################################
@@ -21,8 +25,10 @@ INPUT
 T_BUF
 	if(  null_arg($arg)  )
 	    $var= NULL;
-	else
-	    $var= ($type) SvPV( $arg, na )
+	else {
+	    STRLEN n_a;
+	    $var= ($type) SvPV( $arg, n_a );
+	}
 T_SBUF
 	grow_buf( $var,$arg, $type )
 T_UV
@@ -32,6 +38,12 @@ T_UVBUF
 	    $var= NULL;
 	else
 	    *( $var= ($type) _alloca( sizeof(*($var)) ) )= SvUV($arg)
+O_UVBUF
+	if(  null_arg($arg)  )
+	    $var= NULL;
+	else
+	    *( $var= ($type) _alloca( sizeof(*($var)) ) )=
+	      SvOK($arg) ? SvUV($arg) : 0;
 T_IVBUF
 	if(  null_arg($arg)  )
 	    $var= NULL;
@@ -42,6 +54,12 @@ T_IVBUFP
 	    $var= NULL;
 	else
 	    *( $var= ($type) _alloca( sizeof(*($var)) ) )= (void *)SvIV($arg)
+O_IVBUFP
+	if(  null_arg($arg)  )
+	    $var= NULL;
+	else
+	    *( $var= ($type) _alloca( sizeof(*($var)) ) )=
+	      SvOK($arg) ? (void *)SvIV($arg) : NULL;
 
 #############################################################################
 OUTPUT
@@ -54,9 +72,15 @@ T_UV
 T_UVBUF
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
 	    sv_setuv( $arg, (UV)*($var) );
+O_UVBUF
+	if(  ! null_arg($arg)  )
+	    sv_setuv( $arg, (UV)*($var) );
 T_IVBUF
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
 	    sv_setiv( $arg, (IV)*($var) );
 T_IVBUFP
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
+	    sv_setiv( $arg, (IV)*($var) );
+O_IVBUFP
+	if(  ! null_arg($arg)  )
 	    sv_setiv( $arg, (IV)*($var) );
