@@ -34,6 +34,13 @@ NetResource/typemap
 NetResource/NetResource.pm
 NetResource/NetResource.xs
 NetResource/t/netresource.t
+OLE/Changes
+OLE/Makefile.PL
+OLE/MANIFEST
+OLE/README
+OLE/OLE.pm
+OLE/OLE.xs
+OLE/t/ole.t
 Registry/Changes
 Registry/Makefile.PL
 Registry/MANIFEST
