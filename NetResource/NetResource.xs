@@ -238,7 +238,7 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
 	RESOURCE_GLOBALNET,
         dwType,
         0,                 /* enumerate all resources                 */
-        lpnr,              /* NULL first time this function is called */
+        lpnr,              /* may be NULL first time this function is called */
         &hEnum);           /* handle to resource                      */
  
     if (dwResult != NO_ERROR){
@@ -373,12 +373,13 @@ OUTPUT:
     RETVAL
 
 BOOL
-_GetSharedResources(Resources,dwType)
+_GetSharedResources(Resources,dwType,lpNetResource = NULL)
     SV * Resources
     DWORD dwType
+    LPNETRESOURCEA    lpNetResource
 CODE:
     {
-        RETVAL = EnumerateFunc(Resources,NULL,dwType);
+        RETVAL = EnumerateFunc(Resources,lpNetResource,dwType);
     }
 OUTPUT:
     Resources

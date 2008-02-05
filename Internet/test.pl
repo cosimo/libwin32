@@ -4,7 +4,7 @@
 
 use Win32::Internet;
 
-print "\nWin32::Internet 0.08 TEST\n\n";
+print "\nWin32::Internet TEST\n\n";
 
 $I = new Win32::Internet();
 # [dada] technical info...
@@ -13,20 +13,20 @@ $I = new Win32::Internet();
 ($v_package, $v_dll) = $I->Version();
 
 print "Package Version: $v_package\n";
-if($v_package ne "0.08") {
-    print "*** WARNING: Your Win32::Internet package is outdated!\n".
-          "    The latest version is 0.08.\n".
-          "    Please download and install Win32Internet-0.08.zip\n".
-          "    from: http://www.divinf.it/dada/perl/internet...\n\n";
-}
+#if($v_package ne "0.08") {
+#    print "*** WARNING: Your Win32::Internet package is outdated!\n".
+#          "    The latest version is 0.08.\n".
+#          "    Please download and install Win32Internet-0.08.zip\n".
+#          "    from: http://www.divinf.it/dada/perl/internet...\n\n";
+#}
 
 print "DLL Version: $v_dll\n";
-if($v_dll ne "4.70.1215") {
-    print "*** WARNING: Your WININET.DLL is outdated!\n".
-          "    The latest version is 4.70.1215.\n".
-          "    Please download and install WinInet.zip\n".
-          "    from: http://www.divinf.it/dada/perl/internet...\n\n";
-}
+#if($v_dll ne "4.70.1215") {
+#    print "*** WARNING: Your WININET.DLL is outdated!\n".
+#          "    The latest version is 4.70.1215.\n".
+#          "    Please download and install WinInet.zip\n".
+#          "    from: http://www.divinf.it/dada/perl/internet...\n\n";
+#}
 
 print "\n--- CONNECTION INFO --------------------\n";
 

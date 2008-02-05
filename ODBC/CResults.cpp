@@ -69,13 +69,13 @@ CResults::CResults(ODBC_TYPE *h){
 		}
 	
 //	TESTING: multiply alloced data by dRowSetSize
-		if (dSize = new SDWORD [(sNumOfCols + 1) * dRowSetSize]){		//	Alloc array of sizes
-			memset(dSize, 0x00, (sizeof(SDWORD) * (sNumOfCols + 1) * dRowSetSize));
+		if (dSize = new SQLLEN [(sNumOfCols + 1) * dRowSetSize]){		//	Alloc array of sizes
+		    memset(dSize, 0x00, (sizeof(SQLLEN) * (sNumOfCols + 1) * dRowSetSize));
 		}
 	
 //	TESTING: multiply alloced data by dRowSetSize
-		if (dReturnSize = new SDWORD [(sNumOfCols + 1) * dRowSetSize]){	//	Alloc array of return sizes
-			memset(dReturnSize, 0x00, (sizeof(SDWORD) * (sNumOfCols + 1) * dRowSetSize));
+		if (dReturnSize = new SQLLEN [(sNumOfCols + 1) * dRowSetSize]){	//	Alloc array of return sizes
+		    memset(dReturnSize, 0x00, (sizeof(SQLLEN) * (sNumOfCols + 1) * dRowSetSize));
 		}
 
 		if(szColumn && dSize && dReturnSize){
@@ -111,7 +111,7 @@ CResults::CResults(ODBC_TYPE *h){
 
 					if (iTemp){
 						dColType = SQL_C_CHAR;
-						SQLDescribeCol(h->hstmt, iTemp, 0, 0, &sTemp, &sSQLType,(UDWORD *) &szBuff, &sTemp, &sTemp);
+						SQLDescribeCol(h->hstmt, iTemp, 0, 0, &sTemp, &sSQLType,(SQLULEN *) &szBuff, &sTemp, &sTemp);
 						if ((sSQLType == SQL_LONGVARBINARY) || (sSQLType == SQL_BINARY) || (sSQLType == SQL_VARBINARY)){
 							dColType = SQL_C_BINARY;
 						}

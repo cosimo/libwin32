@@ -111,7 +111,7 @@ correspond to what rights as viewed from File Manager.
 
 =head2 NOTE:
 
-All of the functions return FALSE (0) if they fail, unless otherwise noted.
+All of the functions return false if they fail, unless otherwise noted.
 Errors returned via $! containing both Win32 GetLastError() and a text message
 indicating Win32 function that failed.
 

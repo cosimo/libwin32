@@ -5,7 +5,7 @@
  * XS interface to the Win32 Internet Functions (WININET.DLL)
  * based on Registry.CPP written by Jesse Dougherty
  *
- * Version: 0.08 14 Feb 97
+ * Version: 0.082 4 Sep 2001
  *
  */
 
@@ -383,15 +383,13 @@ constant(char *name, int arg) {
 			}
 		if(strncmp(name, "INTERNET_", 9) == 0)
 			switch(name[9]) {
-			case 'C':
-				if(strEQ(name, "INTERNET_CONNECT_FLAG_PASSIVE"))
-					#ifdef INTERNET_CONNECT_FLAG_PASSIVE
-						return INTERNET_CONNECT_FLAG_PASSIVE;
+			case 'F':
+				if(strEQ(name, "INTERNET_FLAG_PASSIVE"))
+					#ifdef INTERNET_FLAG_PASSIVE
+						return INTERNET_FLAG_PASSIVE;
 					#else
 						goto not_there;
 					#endif
-				break;
-			case 'F':
 				if(strEQ(name, "INTERNET_FLAG_ASYNC"))
 					#ifdef INTERNET_FLAG_ASYNC
 						return INTERNET_FLAG_ASYNC;

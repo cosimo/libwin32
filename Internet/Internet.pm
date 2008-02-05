@@ -7,6 +7,7 @@
 #
 # Version: 0.08  (14 Feb 1997)
 # Version: 0.081 (25 Sep 1999)
+# Version: 0.082 (04 Sep 2001)
 #
 #######################################################################
 
@@ -61,7 +62,7 @@ require DynaLoader;     # to dynuhlode the module.
     ICU_NO_ENCODE
     ICU_NO_META
     ICU_USERNAME
-    INTERNET_CONNECT_FLAG_PASSIVE
+    INTERNET_FLAG_PASSIVE
     INTERNET_FLAG_ASYNC
     INTERNET_HYPERLINK
     INTERNET_FLAG_KEEP_CONNECTION
@@ -150,7 +151,7 @@ sub AUTOLOAD {
 #######################################################################
 # STATIC OBJECT PROPERTIES
 #
-$VERSION = "0.081";
+$VERSION = "0.082";
 
 %callback_code = ();
 %callback_info = ();
@@ -685,19 +686,16 @@ sub FTP {
         undef $server;
         $server      = $myserver;
     }
-  
+
     $server   = ""          unless defined($server);
     $username = "anonymous" unless defined($username);
     $password = ""          unless defined($password);
     $port     = 21          unless defined($port);
     $context  = 0           unless defined($context);
 
-    if(defined($pasv)) {
-        $pasv=constant("INTERNET_CONNECT_FLAG_PASSIVE",0) if $pasv ne 0;
-    } else {  
-        $pasv=$self->{'pasv'};
-    }
-  
+    $pasv = $self->{'pasv'} unless defined $pasv;
+    $pasv = $pasv ? constant("INTERNET_FLAG_PASSIVE",0) : 0;
+
     my $newhandle = InternetConnect($self->{'handle'}, $server, $port,
                                     $username, $password,
                                     constant("INTERNET_SERVICE_FTP", 0),
@@ -2736,7 +2734,7 @@ use, refer to the Microsoft Win32 Internet Functions document.
     ICU_NO_ENCODE
     ICU_NO_META
     ICU_USERNAME
-    INTERNET_CONNECT_FLAG_PASSIVE
+    INTERNET_FLAG_PASSIVE
     INTERNET_FLAG_ASYNC
     INTERNET_FLAG_HYPERLINK
     INTERNET_FLAG_KEEP_CONNECTION
@@ -2793,13 +2791,25 @@ use, refer to the Microsoft Win32 Internet Functions document.
 
 =over
 
+=item * 0.082 (4 Sep 2001)
+
+=over
+
+=item *
+
+Fix passive FTP mode.  INTERNET_FLAG_PASSIVE was misspelled in earlier
+versions (as INTERNET_CONNECT_FLAG_PASSIVE) and wouldn't work.  Found
+by Steve Raynesford <stever@evolvecomm.com>.
+
+=back
+
 =item * 0.081 (25 Sep 1999)
 
 =over
 
 =item *
 
-Documentation converted to pod format by Jan Dubois <jand@activestate.com>.
+Documentation converted to pod format by Jan Dubois <JanD@ActiveState.com>.
 
 =item *
 

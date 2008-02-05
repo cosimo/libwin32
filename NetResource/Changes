@@ -1,9 +1,12 @@
 Revision history for Perl extension Win32::NetResource.
 
-0.051 (unreleased)
+0.052 Mon Nov 12 23:21:52 2001
 	- NetShareGetInfo() didn't work when passed a hashref as \%share
 	- pointers to various stack variables were being used outside
 	  their scope
+	- Allow GetSharedResources() to accept an optional third argument
+	  that specifies a particular net resource to enumerate; fixes
+	  arbitrary failure of tests (patch from <Luc_St-Louis@lgs.ca>)
 
 0.05  Mon Jun 23 11:01:23 1999
 	- allow GetSharedResources() to continue when there are

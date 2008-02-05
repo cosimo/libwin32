@@ -376,7 +376,7 @@ This module allows to retrieve the performance counter of any computer
 
 =head2 NOTE
 
-All of the functions return FALSE (0) if they fail, unless otherwise noted.
+All of the functions return false if they fail, unless otherwise noted.
 If the $server argument is undef the local machine is assumed.
 
 =over 10

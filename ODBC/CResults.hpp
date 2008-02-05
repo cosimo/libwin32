@@ -1,5 +1,9 @@
 #define	NULL_VALUE	""
 
+#ifndef _WIN64
+#  define	SQLLEN	SDWORD
+#  define	SQLULEN	UDWORD
+#endif
 
 struct ODBC_Conn;
 
@@ -17,9 +21,9 @@ class CResults{
 
 	private:
 		void	RemoveBuffers();
-		SDWORD	*dSize;
+		SQLLEN  *dSize;
 		char	**szColumn;
-		SDWORD	*dReturnSize;
+		SQLLEN	*dReturnSize;
 		SWORD	sNumOfCols;
  		DWORD	dRowSetSize;
 		int		iODBC;

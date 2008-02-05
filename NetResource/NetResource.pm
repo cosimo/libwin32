@@ -4,7 +4,7 @@ require Exporter;
 require DynaLoader;
 require AutoLoader;
 
-$VERSION = '0.051';
+$VERSION = '0.052';
 
 @ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export
@@ -140,11 +140,11 @@ This hash represents the SHARE_INFO_502 struct.
 
 =head2 NOTE
 
-All of the functions return FALSE (0) if they fail.
+All of the functions return false if they fail.
 
 =over 10
 
-=item GetSharedResources(\@Resources,dwType)
+=item GetSharedResources(\@Resources,dwType,\%NetResource = NULL)
 
 Creates a list in @Resources of %NETRESOURCE hash references.
 
@@ -152,7 +152,10 @@ The return value indicates whether there was an error in accessing
 any of the shared resources.  All the shared resources that were
 encountered (until the point of an error, if any) are pushed into
 @Resources as references to %NETRESOURCE hashes.  See example
-below.
+below.  The \%NetResource argument is optional.  If it is not supplied,
+the root (that is, the topmost container) of the network is assumed,
+and all network resources available from the toplevel container will
+be enumerated.
 
 =item AddConnection(\%NETRESOURCE,$Password,$UserName,$Connection)
 
@@ -293,7 +296,22 @@ sub GetSharedResources
 
     # Get the shared resources.
 
-    my $ret = _GetSharedResources( $aref ,$_[1] );
+    my $ret;
+
+    if (@_ > 2 and $_[2]) {
+	my $netres = pack('i4 p4', @{$_[2]}{qw(Scope
+					       Type
+					       DisplayType
+					       Usage
+					       LocalName
+					       RemoteName
+					       Comment
+					       Provider)});
+	$ret = _GetSharedResources( $aref , $_[1], $netres );
+    }
+    else {
+	$ret = _GetSharedResources( $aref , $_[1] );
+    }
     
     # build the array of hashes in $_[0]
 #   print Dumper($aref);    

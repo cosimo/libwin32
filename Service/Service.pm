@@ -41,7 +41,7 @@ This module offers control over the administration of system services.
 
 =head2 NOTE:
 
-All of the functions return FALSE (0) if they fail, unless otherwise noted.
+All of the functions return false if they fail, unless otherwise noted.
 If hostName is an empty string, the local machine is assumed.
 
 =over 10

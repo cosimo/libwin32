@@ -28,6 +28,10 @@ extern "C" {
 }
 #endif
 
+#ifndef _WIN64
+#  define DWORD_PTR	DWORD
+#endif
+
 // Section for the constant definitions.
 #define CROAK croak
 #define MAX_LENGTH 2048
@@ -220,8 +224,8 @@ PPCODE:
 	IPersistFile* ifile;
 	hres = ilink->QueryInterface(IID_IPersistFile, (void **) &ifile);
 	if (SUCCEEDED(hres)) {
-	    ST(0)=sv_2mortal(newSViv((DWORD) ilink));
-	    ST(1)=sv_2mortal(newSViv((DWORD) ifile));
+	    ST(0)=sv_2mortal(newSViv((DWORD_PTR) ilink));
+	    ST(1)=sv_2mortal(newSViv((DWORD_PTR) ifile));
 	    XSRETURN(2);
 	}
 	XSRETURN_NO;

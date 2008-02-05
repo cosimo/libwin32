@@ -95,9 +95,20 @@ foreach (keys %$NewShare) {
 
 $Aref=[];
 
+my $host = {
+    Scope       => RESOURCE_GLOBALNET,
+    Type        => RESOURCETYPE_DISK,
+    DisplayType => RESOURCEDISPLAYTYPE_SHARE,
+    Usage       => RESOURCEUSAGE_CONNECTABLE,
+    LocalName   => '',
+    RemoteName  => '\\\\' . Win32::NodeName(),
+    Comment     => '',
+    Provider    => '',
+};
+
 deb("testing GetSharedResources");
 
-Win32::NetResource::GetSharedResources($Aref,0);
+Win32::NetResource::GetSharedResources($Aref,0,$host) or print "not ";
 print "ok 4\n";
 err();
 

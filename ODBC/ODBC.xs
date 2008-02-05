@@ -811,7 +811,7 @@ XS(XS_WIN32__ODBC_Fetch) // ODBC_Fetch($connection) returns (0,@dataelements) or
     DWORD   dRowSetSize = 1;
 
     UWORD   *rgfRowStatus = 0;
-    UDWORD  udCRow = 0;
+    SQLULEN  udCRow = 0;
     int     iTemp;  
 
     if(items < 1 || items > 3){
@@ -1333,7 +1333,7 @@ XS(XS_WIN32__ODBC_RowCount)
 {
     dXSARGS;
     ODBC_TYPE *h;
-    SDWORD  sdRows = 0L;    
+    SQLLEN  sdRows = 0L;
     RETCODE retcode;
 
     if(items != 1){
@@ -1930,7 +1930,7 @@ XS(XS_WIN32__ODBC_ColAttributes)
     UCHAR   *szName = 0;
     UCHAR   szBuff[ODBC_BUFF_SIZE];
     SWORD   dBuffLen = 0;
-    SDWORD  dValue = 0;
+    SQLLEN  dValue = 0;
     RETCODE rResult;
     STRLEN  n_a;
 
@@ -1948,7 +1948,7 @@ XS(XS_WIN32__ODBC_ColAttributes)
     if (!h->Error->ErrNum){
         if (iCol = ColNameToNum(h, (char *)szName)){
             memset(szBuff, '\0', ODBC_BUFF_SIZE);
-            rResult = SQLColAttributes(h->hstmt, iCol, iType, szBuff, ODBC_BUFF_SIZE, (short *) &dBuffLen, (SDWORD *) &dValue);
+            rResult = SQLColAttributes(h->hstmt, iCol, iType, szBuff, ODBC_BUFF_SIZE, (short *) &dBuffLen, (SQLLEN *) &dValue);
             if (rResult == SQL_SUCCESS || rResult == SQL_SUCCESS_WITH_INFO){
                 if (dBuffLen){
                     XPUSHs(sv_2mortal(newSVnv((double)0)));
