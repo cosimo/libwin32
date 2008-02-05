@@ -1168,7 +1168,7 @@ _RegQueryValueExW( hKey, sValueName, pNull, piType, pValueData, plValueData )
 	    piType= (DWORD *) _alloca( sizeof(DWORD) );
 	iErr= RegQueryValueExW(
 	  hKey, sValueName, pNull, piType, pValueData, plValueData );
-	if(  ERROR_MORE_DATA == RETVAL  &&  autosize(ST(5))  ) {
+	if(  ERROR_MORE_DATA == iErr  &&  autosize(ST(5))  ) {
 	    grow_buf_pl( pValueData,ST(4), plValueData,ST(5) );
 	    iErr= RegQueryValueExW(
 	      hKey, sValueName, pNull, piType, pValueData, plValueData );

@@ -1,6 +1,9 @@
 Revision history for Perl extension Win32::Registry.
 
 
+0.06  Sat Nov 14 23:05:24 1998
+	- missing SetPrivilege() in UnLoadKey()
+
 0.05  Tue Sep 15 12:29:06 1998
 	- support setting REG_NONE
 	- clean up the perl (somewhat)

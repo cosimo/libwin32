@@ -33,3 +33,6 @@ Revision history for Perl extension Win32API::Registry.
 
 0.15  Thu Sep 17 14:58:20 1998
 	- Don't treat unsigned types (eg. DWORD) as signed.
+
+0.151 Sat Nov 14 23:04:14 1998
+	- Typo in _RegQueryValueExW()

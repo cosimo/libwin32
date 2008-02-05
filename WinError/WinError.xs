@@ -1,4 +1,6 @@
+#ifndef __MINGW32__
 #include <wtypes.h>
+#endif
 #include <WinError.h>
 
 #include "EXTERN.h"

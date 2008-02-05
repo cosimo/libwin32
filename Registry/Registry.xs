@@ -887,7 +887,12 @@ RegUnLoadKey(hkey, subkey)
 	HKEY hkey
 	char *subkey
     CODE:
-	RETVAL = SUCCESS(RegUnLoadKey(hkey, subkey));
+       DWORD               dwLastError;
+       if (!SetPrivilege(SE_RESTORE_NAME, TRUE))
+           XSRETURN_NO;
+       dwLastError = RegUnLoadKey(hkey, subkey);
+       SetPrivilege(SE_RESTORE_NAME, FALSE);
+       RETVAL = SUCCESS(dwLastError);
     OUTPUT:
 	RETVAL
 

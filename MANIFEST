@@ -4,14 +4,16 @@ APINet/Makefile.PL
 APINet/Net.html
 APINet/Net.pm
 APINet/Net.xs
+APINet/mingw32.exc
 APINet/t/test.t
 APIRegistry/Changes
-APIRegistry/Makefile.PL
 APIRegistry/MANIFEST
+APIRegistry/Makefile.PL
 APIRegistry/README
 APIRegistry/Registry.pm
 APIRegistry/Registry.xs
 APIRegistry/buffers.h
+APIRegistry/mingw32.exc
 APIRegistry/test.pl
 APIRegistry/typemap
 ChangeNotify/ChangeNotify.pm
@@ -66,6 +68,7 @@ FileSecurity/FileSecurity.pm
 FileSecurity/FileSecurity.xs
 FileSecurity/MANIFEST
 FileSecurity/Makefile.PL
+FileSecurity/mingw32.exc
 FileSecurity/test.pl
 IPC/Changes
 IPC/IPC.pm
@@ -86,6 +89,7 @@ Internet/docs/intro.html
 Internet/docs/license.html
 Internet/docs/reference.html
 Internet/docs/toc.html
+Internet/mingw32.exc
 Internet/test-async.pl
 Internet/test.pl
 Internet/typemap
@@ -103,12 +107,14 @@ NetAdmin/MANIFEST
 NetAdmin/Makefile.PL
 NetAdmin/NetAdmin.pm
 NetAdmin/NetAdmin.xs
+NetAdmin/mingw32.exc
 NetAdmin/t/netadmin.t
 NetResource/Changes
 NetResource/MANIFEST
 NetResource/Makefile.PL
 NetResource/NetResource.pm
 NetResource/NetResource.xs
+NetResource/mingw32.exc
 NetResource/t/netresource.t
 NetResource/typemap
 ODBC/CMom.cpp
@@ -131,36 +137,39 @@ ODBC/ROADMAP.TXT
 ODBC/Test.pl
 ODBC/docs/object.html
 ODBC/docs/odbc.html
+ODBC/mingw32.exc
 ODBC/resource.h
 OLE/Changes
-OLE/Compat.pm		Compatibility layer: old toplevel OLE.pm
-OLE/Const.pm		Win32::OLE::Const module: TypeLib constants
-OLE/Enum.pm		Win32::OLE::Enum module: Collection objects
+OLE/Compat.pm			Compatibility layer: old toplevel OLE.pm
+OLE/Const.pm			Win32::OLE::Const module: TypeLib constants
+OLE/Enum.pm			Win32::OLE::Enum module: Collection objects
 OLE/MANIFEST
 OLE/Makefile.PL
-OLE/NLS.pm		Win32::OLE::NLS module: National Language Support
+OLE/NLS.pm			Win32::OLE::NLS module: National Language Support
 OLE/OLE.pm
 OLE/OLE.xs
 OLE/README
 OLE/ToDo
-OLE/Variant.pm		The Win32::OLE::Variant module: VARIANT variables
-OLE/eg/constants.pl	Sample script prints all Excel defined constants
-OLE/eg/properties.pl	Sample script prints all Excel application properties
-OLE/eg/typelibs.pl	Sample script prints all registered typelib names
-OLE/eg/word2pod.pl	Prototype of a Word -> POD translator
-OLE/eg/word2xxx.pl	Sample file type converter
-OLE/t/1_nls.t		Regression tests for Win32::OLE::NLS module
-OLE/t/2_variant.t	Regression tests for the Win32::OLE::Variant module
-OLE/t/3_ole.t		Regression tests for Win32::OLE using Excel 7 and above
-OLE/t/4_compat.t	Regression tests for OLE compatibility module
-OLE/t/5_unicode.t	Regression tests using the Unicode::String module
+OLE/Variant.pm			The Win32::OLE::Variant module: VARIANT variables
+OLE/eg/constants.pl		Sample script prints all Excel defined constants
+OLE/eg/properties.pl		Sample script prints all Excel application properties
+OLE/eg/typelibs.pl		Sample script prints all registered typelib names
+OLE/eg/word2pod.pl		Prototype of a Word -> POD translator
+OLE/eg/word2xxx.pl		Sample file type converter
+OLE/mingw32.exc
+OLE/t/1_nls.t			Regression tests for Win32::OLE::NLS module
+OLE/t/2_variant.t		Regression tests for the Win32::OLE::Variant module
+OLE/t/3_ole.t			Regression tests for Win32::OLE using Excel 7 and above
+OLE/t/4_compat.t		Regression tests for OLE compatibility module
+OLE/t/5_unicode.t		Regression tests using the Unicode::String module
 PerfLib/Changes
-PerfLib/Makefile.PL
 PerfLib/MANIFEST
+PerfLib/Makefile.PL
 PerfLib/PerfLib.mak
 PerfLib/PerfLib.pm
 PerfLib/PerfLib.xs
 PerfLib/calc.html
+PerfLib/mingw32.exc
 PerfLib/test.pl
 PerfLib/typemap
 Pipe/Client.pl
@@ -173,6 +182,7 @@ Pipe/Pipe.pm
 Pipe/Pipe.xs
 Pipe/README
 Pipe/Server.pl
+Pipe/mingw32.exc
 Pipe/test.bat
 Process/Changes
 Process/MANIFEST
@@ -180,6 +190,7 @@ Process/Makefile.PL
 Process/Process.hpp
 Process/Process.pm
 Process/Process.xs
+Process/mingw32.exc
 Process/test.pl
 Process/typemap
 README
@@ -216,6 +227,7 @@ Shortcut/docs/license.html
 Shortcut/docs/reference.html
 Shortcut/docs/toc.html
 Shortcut/ln32.bat
+Shortcut/mingw32.exc
 Shortcut/test.pl
 Shortcut/typemap
 Sound/MANIFEST
@@ -223,14 +235,15 @@ Sound/Makefile.PL
 Sound/README
 Sound/Sound.pm
 Sound/Sound.xs
+Sound/mingw32.exc
 Sound/test.pl
 Sound/welcome.wav
 TieRegistry/Changes
-TieRegistry/Makefile.PL
 TieRegistry/MANIFEST
+TieRegistry/Makefile.PL
 TieRegistry/README
-TieRegistry/TieRegistry.pm
 TieRegistry/Tie/Registry.pm
+TieRegistry/TieRegistry.pm
 Win32.pm
 Win32.xs
 WinError/Changes

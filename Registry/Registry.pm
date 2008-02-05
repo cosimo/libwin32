@@ -21,7 +21,7 @@ require Exporter;
 require DynaLoader;
 use Win32::WinError;
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT = qw(

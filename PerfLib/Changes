@@ -7,4 +7,7 @@ Revision history for Perl extension Win32::PerfLib.
 0.03  Wed Aug 19 22:03:00 1998
         - fixed: counter without instances didn't return correct values
         - added: makefile for AS Perl build 316 and support in PerfLib.xs
-
+0.04  Sat Nov 14 23:05:05 1998
+	- memory leak fixes from Artur Silveira da Cunha
+	  <Artur.Silveira@rezo.com>
+	- allocate space on a mortal SV for auto-cleanup
