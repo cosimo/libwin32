@@ -6,7 +6,7 @@ package Win32;
 #  included with the latest builds of the ActivePerl distribution.)
 #
 
-$VERSION = $VERSION = '0.172';
+$VERSION = $VERSION = '0.173';
 
 require Exporter;
 require DynaLoader;

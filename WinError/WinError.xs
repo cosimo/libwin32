@@ -1,4 +1,4 @@
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) || !(defined(__BORLANDC__) && __BORLANDC__ >= 0x0550)
 #include <wtypes.h>
 #endif
 #include <WinError.h>

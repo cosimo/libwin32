@@ -484,7 +484,7 @@ PPCODE:
 
 
 void
-_ReadConsoleOutputAttribute(handle,charbuf,len,x,y)
+_ReadConsoleOutputAttribute(handle,len,x,y)
     HANDLE handle
     DWORD len
     SHORT x

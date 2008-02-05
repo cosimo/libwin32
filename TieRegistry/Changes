@@ -1,6 +1,11 @@
 Revision history for Perl extension Win32::TieRegistry.
 
-0.23  Sat Jul  3 00:06:20 1999
+0.24  2001-02-06 19:00
+	- Silenced error that could appear "at random" during "cleanup":
+		(Can't call method "FETCH" on an undefined value)
+	- Added a nearly trivial test suite.
+
+0.23  1999-07-03 00:06
 	- Fixed two embarrassing typographical errors.
 	- Using invalid REG_* or KEY_* constant as string now detected.
 	- With ArrayValues(1), $key->{NonExistantValueName} used to return
@@ -11,7 +16,7 @@ Revision history for Perl extension Win32::TieRegistry.
 	- All implicit C<return>s made explicit [C<$val;> to C<return $val;>].
 	- Simplified C<return wantarray ? () : undef> to C<return ()>.
 
-0.22  Fri Apr  9 22:13:52 1999
+0.22  1999-04-09 22:13
 	- C<new Win32::TieRegistry> and "Win32::TieRegistry->new" now work.
 	- CreateKey()'s "disposition" argument now can get its string value
 	  set to "REG_CREATED_NEW_KEY" or "REG_OPENED_EXISTING_KEY".
@@ -21,10 +26,10 @@ Revision history for Perl extension Win32::TieRegistry.
 	- New documentation section on probable future directions.
 	- Minor documentation fixes.
 
-0.21  Thu Sep 17 14:49:26 1998
+0.21  1998-09-17 14:49
 	- Remove a few "harmless" warnings reported by C<-w>.
 
-0.20  Tue Jul 14 14:14:54 1998
+0.20  1998-07-14 14:14
 	- Renamed to Win32::TieRegistry.
 	- Added options:  SplitMultis, FixSzNulls,
 	    DWordToHex, DualBinVals, and DualTypes.
@@ -45,20 +50,20 @@ Revision history for Perl extension Win32::TieRegistry.
 	    to load into _local_ LMachine.
 	- Finished POD.
 
-0.15  Tue Jul 14 14:14:54 1998
+0.15  1998-07-14 14:14
 	- "Stub" version of Tie::Registry for backward compatibility only.
 
 0.14  Never released
 	- Added Install.bat for people without a version of "make".
 	- Report key path when STORE fails.
 
-0.13  Tue Mar 31 20:50:28 1998
+0.13  1998-03-31 20:50
 	- "Delimiter" now spelled correctly throughout (sigh).
 	- SetValue now translates "REG_*" strings to numeric constants.
 	- Removed dependance on $^E being tied to Win32::GetLastError().
 
-0.12  Mon Dec 29 10:11:30 1997
+0.12  1997-12-29 10:11
 	- misc.
 
-0.10  Fri Nov 21 15:08:55 1997
+0.10  1997-11-21 15:08
 	- original, limited install, named Tie::Registry.
