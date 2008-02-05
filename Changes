@@ -1,0 +1,26 @@
+Revision history for Perl extension Win32API::Net
+
+0.04	Sun Sep 14th 1998
+	- use Perl's malloc API instead of calloc/free
+	- eliminate hardcoded module names in messages etc
+	- minor formatting fixes
+	- convert HTML doc to POD, but distribute original (better) HTML
+	- eliminate use of file statics
+
+0.03	Sun Sep 13th 1998
+	- changed EXPORT lists to be something sane (EXPORT is null list,
+	  EXPORT_TAGS has tags for each function group (User, Group etc) and
+	  EXPORT_OK is join of EXPORT_TAGS entries)
+	- Changed name of GetPDC to GetDCName to bring it in line with MS
+	  function NetGetDCName()
+	- Updated documentation and test script
+		  
+0.02    Thu Sep 10th 1998
+        - second version - renamed as Win32API::Net
+        - fixed indentation in Net.xs to be in Perl Sytle
+        - Removed GetLastError() function - now availble as Win32::GetLastError
+          and $^E (if you're running 5.005+)
+        - Added @EXPORT, @EXPORT_OK and $EXPORT_TAGS{ALL} in Net.pm
+
+0.01    Sun Apr 19th
+        - first version - named Win32::AccNT
