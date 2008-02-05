@@ -1035,13 +1035,10 @@ InternetSetOption(handle,option,value)
 PPCODE:
     DWORD mysize;
     void *mybuf;
-    long mybufsz = 16000;
     BOOL myquerystatus;
     DWORD mynum;
     BOOL myretval;
     STRLEN len;
-
-    mybuf = (void *)safemalloc(mybufsz);
 
     switch (option) {
     case INTERNET_OPTION_CONNECT_TIMEOUT:
@@ -1066,7 +1063,6 @@ PPCODE:
 	myretval = InternetSetOption(handle, option, mybuf, mysize);
 	break;
     }
-    safefree((char *)mybuf);
     if (myretval)
 	XSRETURN_YES;
     else
@@ -1521,8 +1517,31 @@ HttpOpenRequest(handle,verb,object,version,referer,accept,flags,context)
     DWORD context
 PPCODE:
     HINTERNET myhandle;
+    LPCTSTR buf[10];
+    LPCTSTR *accept_ary = buf;
+    LPCTSTR ptr = accept;
+    size_t i = 0;
+    size_t accept_ary_size = sizeof(buf)/sizeof(buf[0]);
+
+    while (*ptr) {
+	if (i >= accept_ary_size-1) {
+	    if (accept_ary != buf) {
+		New(0, accept_ary, accept_ary_size*2, LPCTSTR);
+		Copy(buf, accept_ary, 1, buf);
+	    }
+	    else {
+		Renew(accept_ary, accept_ary_size*2, LPCTSTR);
+	    }
+	    accept_ary_size *= 2;
+	}
+	accept_ary[i++] = ptr;
+	ptr += strlen(ptr)+1;
+    }
+    accept_ary[i] = NULL;
     myhandle = HttpOpenRequest(handle,verb,object,version,referer,
-				(LPCTSTR FAR *)accept,flags,context);
+				accept_ary,flags,context);
+    if (accept_ary != buf)
+        Safefree(accept_ary);
     if (myhandle)
 	XSRETURN_IV((long) myhandle);
     else

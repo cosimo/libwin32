@@ -264,7 +264,7 @@ spawn(self, svexe, args, ...)
 	DWORD			createflags = (CREATE_SUSPENDED |
 					       CREATE_BREAKAWAY_FROM_JOB);
 	char pbuf[_MAX_PATH];   /* static buffer for 'exe' */
-
+	void *env = NULL;
     CODE:
 	files = (AV*)sv_2mortal((SV*)newAV());
 
@@ -299,11 +299,11 @@ spawn(self, svexe, args, ...)
 	if (exe && !strchr(exe, '/') && !strchr(exe, '\\')) {
 	    char *exts[] = { ".exe", ".com", ".bat", NULL };
 	    char *ext = strchr(exe, '.'); /* is there an extension? */
-	    char *path = getenv("PATH");
+	    char *path = PerlEnv_getenv("PATH");
 	    char *curr = path;
 	    char *endp = strchr(curr, ';');
 	    int len;
-	    struct stat sbuf;
+	    Stat_t sbuf;
 	    while (endp) {
 		len = (int)(endp - curr);
 		strncpy(pbuf, curr, len);
@@ -314,7 +314,7 @@ spawn(self, svexe, args, ...)
 
 		/* If the extension was given, check it */
 		if (ext) {
-		    if (stat(pbuf, &sbuf) == 0) {
+		    if (PerlLIO_stat(pbuf, &sbuf) == 0) {
 			exe = pbuf;
 			goto exe_found; /* break */
 		    }
@@ -326,7 +326,7 @@ spawn(self, svexe, args, ...)
 		    for (i = 0; exts[i]; ++i) {
 			strcpy(pbuf + len, exts[i]);
 			/* check for file existence */
-			if (stat(pbuf, &sbuf) == 0) {
+			if (PerlLIO_stat(pbuf, &sbuf) == 0) {
 			    exe = pbuf;
 			    goto exe_found; /* break; break */
 			}
@@ -443,7 +443,9 @@ exe_found:
 				     HANDLE_FLAG_INHERIT);
 	    }
 	}
-
+#if PERL_VERSION > 5
+	env = PerlEnv_get_childenv();
+#endif
 	ok = CreateProcess(
 	    exe,		/* search PATH to find executable */
 	    args,		/* executable, and its arguments  */
@@ -451,11 +453,14 @@ exe_found:
 	    NULL,		/* thread security     */
 	    TRUE,		/* inherit handles     */
 	    createflags,	/* creation flags      */
-	    NULL,		/* inherit environment */
+	    env,		/* inherit environment */
 	    cwd,		/* current directory   */
 	    &st,
 	    procinfo
 	);
+#if PERL_VERSION > 5
+	PerlEnv_free_childenv(env);
+#endif
 	if (!ok)
 	    XSRETURN_UNDEF;
 
@@ -527,7 +532,7 @@ watch(self, callback, interval, ...)
 	    which = 0;     /* wait for ANY process to complete */
 	if (!interval)
 	    XSRETURN_UNDEF; /* you suck, programmer! */
-	dwInterval = interval * 1000;
+	dwInterval = (DWORD)interval * 1000;
 	for (i = 0; i < imax; i++) {
 	    STRLEN l;
 	    SV *tmp = *av_fetch(self->procs, i, 0);

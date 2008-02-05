@@ -11,6 +11,14 @@ my $job;
 # You can do this to run sub{} every 50 seconds until the process dies. This
 # is one way to implement your own timeout, for example. The watchdog is passed
 # the $job object.
+
+my $pid;
+if ($pid = fork()) {
+    waitpid($pid,0);
+    exit($? >> 8);
+}
+$ENV{xxyyzz} = 'fOo';
+
 $job = Win32::Job->new;
 $job->spawn($Config{perlpath}, "perl child.t", {
 	stdin => 'NUL',
@@ -43,4 +51,3 @@ $job = Win32::Job->new;
 $job->spawn($Config{perlpath}, "perl child.t");
 $job->run(1);
 print Dumper $job->status;
-

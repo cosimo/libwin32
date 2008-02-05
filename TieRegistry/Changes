@@ -1,5 +1,9 @@
 Revision history for Perl extension Win32::TieRegistry.
 
+0.25  2003-10-07 00:00
+	- Applied fix from http://perlmonks.org/index.pl?node_id=283307
+	  to Flush() method
+
 0.24  2001-02-06 19:00
 	- Silenced error that could appear "at random" during "cleanup":
 		(Can't call method "FETCH" on an undefined value)

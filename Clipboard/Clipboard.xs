@@ -3,7 +3,7 @@
 #
 # Win32::Clipboard - Interaction with the Windows clipboard
 #
-# Version: 0.51
+# Version: 0.5101
 # Created: 19 Nov 96
 # Author: Aldo Calpini <dada@divinf.it>
 #
@@ -635,15 +635,15 @@ PPCODE:
     HANDLE myhandle;
     HGLOBAL hGlobal;
     LPTSTR szString;
-    STRLEN n_a;
-    int leng;
+    char *str;
+    STRLEN leng;
     if (items > 1)
         text = ST(1);
 
-    leng = SvCUR(text);
+    str = SvPV(text, leng);
     if (hGlobal = GlobalAlloc(GMEM_DDESHARE, (leng+1)*sizeof(char))) {
         szString = (char *) GlobalLock(hGlobal);
-        memcpy(szString, (char *) SvPV(text, n_a), leng*sizeof(char));
+        memcpy(szString, str, leng*sizeof(char));
         szString[leng] = (char) 0;
         GlobalUnlock(hGlobal);
 

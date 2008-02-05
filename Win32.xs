@@ -9,6 +9,12 @@
 #define SE_SHUTDOWN_NAMEA   "SeShutdownPrivilege"
 #define SE_SHUTDOWN_NAMEW   L"SeShutdownPrivilege"
 
+typedef BOOL (WINAPI *PFNSHGetSpecialFolderPath)(HWND, char*, int, BOOL);
+typedef HRESULT (WINAPI *PFNSHGetFolderPath)(HWND, int, HANDLE, DWORD, LPTSTR);
+#ifndef CSIDL_FLAG_CREATE
+#   define CSIDL_FLAG_CREATE               0x8000
+#endif
+
 XS(w32_ExpandEnvironmentStrings)
 {
     dXSARGS;
@@ -33,6 +39,132 @@ XS(w32_ExpandEnvironmentStrings)
 	dwDataLen = ExpandEnvironmentStringsA(lpSource, (char*)buffer, sizeof(buffer));
 
     XSRETURN_PV((char*)buffer);
+}
+
+XS(w32_IsAdminUser)
+{
+    dXSARGS;
+    HINSTANCE                   hAdvApi32;
+    BOOL (__stdcall *pfnOpenThreadToken)(HANDLE hThr, DWORD dwDesiredAccess,
+                                BOOL bOpenAsSelf, PHANDLE phTok);
+    BOOL (__stdcall *pfnOpenProcessToken)(HANDLE hProc, DWORD dwDesiredAccess,
+                                PHANDLE phTok);
+    BOOL (__stdcall *pfnGetTokenInformation)(HANDLE hTok,
+                                TOKEN_INFORMATION_CLASS TokenInformationClass,
+                                LPVOID lpTokInfo, DWORD dwTokInfoLen,
+                                PDWORD pdwRetLen);
+    BOOL (__stdcall *pfnAllocateAndInitializeSid)(
+                                PSID_IDENTIFIER_AUTHORITY pIdAuth,
+                                BYTE nSubAuthCount, DWORD dwSubAuth0,
+                                DWORD dwSubAuth1, DWORD dwSubAuth2,
+                                DWORD dwSubAuth3, DWORD dwSubAuth4,
+                                DWORD dwSubAuth5, DWORD dwSubAuth6,
+                                DWORD dwSubAuth7, PSID pSid);
+    BOOL (__stdcall *pfnEqualSid)(PSID pSid1, PSID pSid2);
+    PVOID (__stdcall *pfnFreeSid)(PSID pSid);
+    HANDLE                      hTok;
+    DWORD                       dwTokInfoLen;
+    TOKEN_GROUPS                *lpTokInfo;
+    SID_IDENTIFIER_AUTHORITY    NtAuth = SECURITY_NT_AUTHORITY;
+    PSID                        pAdminSid;
+    int                         iRetVal;
+    unsigned int                i;
+    OSVERSIONINFO               osver;
+
+    if (items)
+        croak("usage: Win32::IsAdminUser()");
+
+    /* There is no concept of "Administrator" user accounts on Win9x systems,
+       so just return true. */
+    memset(&osver, 0, sizeof(OSVERSIONINFO));
+    osver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&osver);
+    if (osver.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+        XSRETURN_YES;
+
+    hAdvApi32 = LoadLibrary("advapi32.dll");
+    if (!hAdvApi32) {
+        warn("Cannot load advapi32.dll library");
+        XSRETURN_UNDEF;
+    }
+
+    pfnOpenThreadToken = (BOOL (__stdcall *)(HANDLE, DWORD, BOOL, PHANDLE))
+        GetProcAddress(hAdvApi32, "OpenThreadToken");
+    pfnOpenProcessToken = (BOOL (__stdcall *)(HANDLE, DWORD, PHANDLE))
+        GetProcAddress(hAdvApi32, "OpenProcessToken");
+    pfnGetTokenInformation = (BOOL (__stdcall *)(HANDLE,
+        TOKEN_INFORMATION_CLASS, LPVOID, DWORD, PDWORD))
+        GetProcAddress(hAdvApi32, "GetTokenInformation");
+    pfnAllocateAndInitializeSid = (BOOL (__stdcall *)(
+        PSID_IDENTIFIER_AUTHORITY, BYTE, DWORD, DWORD, DWORD, DWORD, DWORD,
+        DWORD, DWORD, DWORD, PSID))
+        GetProcAddress(hAdvApi32, "AllocateAndInitializeSid");
+    pfnEqualSid = (BOOL (__stdcall *)(PSID, PSID))
+        GetProcAddress(hAdvApi32, "EqualSid");
+    pfnFreeSid = (PVOID (__stdcall *)(PSID))
+        GetProcAddress(hAdvApi32, "FreeSid");
+
+    if (!(pfnOpenThreadToken && pfnOpenProcessToken &&
+          pfnGetTokenInformation && pfnAllocateAndInitializeSid &&
+          pfnEqualSid && pfnFreeSid))
+    {
+        warn("Cannot load functions from advapi32.dll library");
+        FreeLibrary(hAdvApi32);
+        XSRETURN_UNDEF;
+    }
+
+    if (!pfnOpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &hTok)) {
+        if (!pfnOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hTok)) {
+            warn("Cannot open thread token or process token");
+            FreeLibrary(hAdvApi32);
+            XSRETURN_UNDEF;
+        }
+    }
+
+    pfnGetTokenInformation(hTok, TokenGroups, NULL, 0, &dwTokInfoLen);
+    if (!New(1, lpTokInfo, dwTokInfoLen, TOKEN_GROUPS)) {
+        warn("Cannot allocate token information structure");
+        CloseHandle(hTok);
+        FreeLibrary(hAdvApi32);
+        XSRETURN_UNDEF;
+    }
+
+    if (!pfnGetTokenInformation(hTok, TokenGroups, lpTokInfo, dwTokInfoLen,
+            &dwTokInfoLen))
+    {
+        warn("Cannot get token information");
+        Safefree(lpTokInfo);
+        CloseHandle(hTok);
+        FreeLibrary(hAdvApi32);
+        XSRETURN_UNDEF;
+    }
+
+    if (!pfnAllocateAndInitializeSid(&NtAuth, 2, SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &pAdminSid))
+    {
+        warn("Cannot allocate administrators' SID");
+        Safefree(lpTokInfo);
+        CloseHandle(hTok);
+        FreeLibrary(hAdvApi32);
+        XSRETURN_UNDEF;
+    }
+
+    iRetVal = 0;
+    for (i = 0; i < lpTokInfo->GroupCount; ++i) {
+        if (pfnEqualSid(lpTokInfo->Groups[i].Sid, pAdminSid)) {
+            iRetVal = 1;
+            break;
+        }
+    }
+
+    pfnFreeSid(pAdminSid);
+    Safefree(lpTokInfo);
+    CloseHandle(hTok);
+    FreeLibrary(hAdvApi32);
+
+    EXTEND(SP, 1);
+    ST(0) = sv_2mortal(newSViv(iRetVal));
+    XSRETURN(1);
 }
 
 XS(w32_LookupAccountName)
@@ -141,7 +273,7 @@ XS(w32_LookupAccountSID)
 	if (bResult) {
 	    sv_setpv(ST(2), Account);
 	    sv_setpv(ST(3), Domain);
-	    sv_setiv(ST(4), (double) snu);
+	    sv_setiv(ST(4), (IV)snu);
 	    XSRETURN_YES;
 	}
 	else {
@@ -452,6 +584,50 @@ XS(w32_GuidGen)
 	XSRETURN_UNDEF;
 }
 
+XS(w32_GetFolderPath)
+{
+    dXSARGS;
+    char path[MAX_PATH+1];
+    int folder;
+    int create = 0;
+    HMODULE module;
+
+    if (items != 1 && items != 2)
+	croak("usage: Win32::GetFolderPath($csidl [, $create])\n");
+
+    folder = SvIV(ST(0));
+    if (items == 2)
+        create = SvTRUE(ST(1)) ? CSIDL_FLAG_CREATE : 0;
+
+    /* We are not bothering with USING_WIDE() anymore,
+     * because this is not how Unicode works with Perl.
+     * Nobody seems to use "perl -C" anyways.
+     */
+    module = LoadLibrary("shfolder.dll");
+    if (module) {
+        PFNSHGetFolderPath pfn;
+        pfn = (PFNSHGetFolderPath)GetProcAddress(module, "SHGetFolderPathA");
+        if (pfn && SUCCEEDED(pfn(NULL, folder|create, NULL, 0, path))) {
+            FreeLibrary(module);
+            XSRETURN_PV(path);
+        }
+        FreeLibrary(module);
+    }
+
+    module = LoadLibrary("shell32.dll");
+    if (module) {
+        PFNSHGetSpecialFolderPath pfn;
+        pfn = (PFNSHGetSpecialFolderPath)
+            GetProcAddress(module, "SHGetSpecialFolderPathA");
+        if (pfn && pfn(NULL, path, folder, !!create)) {
+            FreeLibrary(module);
+            XSRETURN_PV(path);
+        }
+        FreeLibrary(module);
+    }
+    XSRETURN_UNDEF;
+}
+
 XS(boot_Win32)
 {
     dXSARGS;
@@ -471,6 +647,8 @@ XS(boot_Win32)
     newXS("Win32::GetArchName", w32_GetArchName, file);
     newXS("Win32::GetChipName", w32_GetChipName, file);
     newXS("Win32::GuidGen", w32_GuidGen, file);
+    newXS("Win32::GetFolderPath", w32_GetFolderPath, file);
+    newXS("Win32::IsAdminUser", w32_IsAdminUser, file);
 
     XSRETURN_YES;
 }

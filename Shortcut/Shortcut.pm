@@ -105,7 +105,7 @@ sub Load {
   
     my $result = _Load($self->{'ilink'}, $self->{'ifile'}, $file);
 
-    if(defined($result)) {
+    if ($result) {
   
         # fill the properties of $self
         $self->{'File'} = $file;
@@ -324,16 +324,10 @@ sub DESTROY {
 #============
     my($self) = @_;
 
-    if(not $self->{'released'}) {
+    if (not $self->{'released'}) {
         _Release($self->{'ilink'}, $self->{'ifile'});
+	$self->{'released'} = 1;
     }
-}
-
-#======== ### PACKAGE DESTRUCTOR
-sub END { 
-#========
-    # print "Exiting...\n";
-    _Exit(); 
 }
 
 #######################################################################

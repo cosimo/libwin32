@@ -991,6 +991,7 @@ sub AUTOLOAD {
     ($constname = $AUTOLOAD) =~ s/.*:://;
     #reset $! to zero to reset any current errors.
     local $! = 0;
+    local $^E = 0;
     my $val = constant($constname, @_ ? $_[0] : 0);
     if ($! != 0) {
 	if ($! =~ /Invalid/) {

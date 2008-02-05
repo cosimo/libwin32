@@ -79,9 +79,9 @@ print "\n";
 ##############################################################################
 # FTP STUFF
 
-$host = "ftp.activeware.com";
+$host = "ftp.activestate.com";
 $user = "anonymous";
-$pass = "dada\@divinf.it";
+$pass = "libwin32\@automated-tests.com";
 
 # [dada] for my LAN testing
 # $host = "192.2.3.1";

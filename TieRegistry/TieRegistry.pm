@@ -14,7 +14,7 @@ use strict;
 use vars qw( $PACK $VERSION @ISA @EXPORT @EXPORT_OK );
 
 $PACK= "Win32::TieRegistry";	# Used in error messages.
-$VERSION= '0.24';		# Released 2001-02-06
+$VERSION= '0.25';		# Released 2003-10-07
 
 
 use Carp;
@@ -525,7 +525,7 @@ sub Clone
     {
 	my $self= shift(@_);
 	$self= tied(%$self)   if  tied(%$self);
-	my( $flush )= @_;
+	my( $flush )= shift(@_);
 	@_  and  croak "Usage:  \$key->Flush( \$bFlush );";
 	return 0   if  "NONE" eq $self->Handle;
 	@flush= qw( VALUES SUBKEYS SUBCLASSES SUBTIMES MEMBERS Class

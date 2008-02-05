@@ -1121,7 +1121,7 @@ sub HTTP {
 
     $server   = ""          unless defined($server);
     $username = "anonymous" unless defined($username);
-    $password = ""          unless defined($username);
+    $password = ""          unless defined($password);
     $port     = 80          unless defined($port);
     $flags    = 0           unless defined($flags);
     $context  = 0           unless defined($context);
@@ -1137,7 +1137,7 @@ sub HTTP {
         $_[1]->{'username'} = $username;
         $_[1]->{'password'} = $password;
         $_[1]->{'server'}   = $server;
-        $_[1]->{'accept'}   = "text/*\0image/gif\0image/jpeg";
+        $_[1]->{'accept'}   = "text/*\0image/gif\0image/jpeg\0\0";
         return $newhandle;
     } else {
         return undef;
@@ -1181,6 +1181,8 @@ sub OpenRequest {
     $context = 0                 unless defined($context);
   
     $path = "/".$path if substr($path,0,1) ne "/";  
+    # accept string list needs to be terminated by double-NULL
+    $accept .= "\0\0" unless $accept =~ /\0\0\z/;
   
     my $newhandle = HttpOpenRequest($self->{'handle'},
                                     $method,
@@ -1292,7 +1294,9 @@ sub Request {
     $postdata = ""                unless defined($postdata);
 
     $path = "/".$path if substr($path,0,1) ne "/";  
-  
+    # accept string list needs to be terminated by double-NULL
+    $accept .= "\0\0" unless $accept =~ /\0\0\z/;
+
     my $newhandle = HttpOpenRequest($self->{'handle'},
                                     $method,
                                     $path,
@@ -2505,8 +2509,9 @@ obtained.  Default: I<none>
 
 =item * accept
 
-The content types accepted.  They must be separated by a "\0" (ASCII
-zero).  Default: text/* image/gif image/jpeg
+A single string with "\0" (ASCII zero) delimited list of content
+types accepted.  The string must be terminated by "\0\0".
+Default: "text/*\0image/gif\0image/jpeg\0\0"
 
 =item * flags
 
