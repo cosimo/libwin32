@@ -1,7 +1,13 @@
+use strict;
 use ExtUtils::MakeMaker;
+
+my @libs;
+push @libs, '-L/lib/w32api -lnetapi32' if $^O eq "cygwin";
+
 WriteMakefile(
     'NAME'		=> 'Win32API::Net',
-    'VERSION_FROM'	=> 'Net.pm', # finds $VERSION
+    'LIBS'		=> \@libs,
+    'VERSION_FROM'	=> 'Net.pm',
     ($] < 5.005 ? () :
       (
 	'AUTHOR'	=> 'Bret Giddings <bret@essex.ac.uk>',

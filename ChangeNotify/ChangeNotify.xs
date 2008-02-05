@@ -16,6 +16,7 @@
 #include "../ppport.h"
 
 #define WIN32_LEAN_AND_MEAN
+#define TRUEFALSE bool
 #include <windows.h>
 
 static DWORD
@@ -94,17 +95,10 @@ HANDLE
 _new(className,path,watchsubtree,filter)
     char*  className
     LPCSTR path
-    BOOL   watchsubtree
+    TRUEFALSE   watchsubtree
     DWORD  filter
 CODE:
-    if (USING_WIDE()) {
-        WCHAR wbuffer[MAX_PATH+1];
-	A2WHELPER(path, wbuffer, sizeof(wbuffer));
-	RETVAL = FindFirstChangeNotificationW(wbuffer, watchsubtree, filter);
-    }
-    else {
-	RETVAL = FindFirstChangeNotificationA(path, watchsubtree, filter);
-    }
+    RETVAL = FindFirstChangeNotificationA(path, watchsubtree, filter);
     if (RETVAL == INVALID_HANDLE_VALUE)
       XSRETURN_UNDEF;
 OUTPUT:

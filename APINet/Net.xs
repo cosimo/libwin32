@@ -1,5 +1,7 @@
 #include <windows.h>
-#include <winsock.h>
+#ifndef __CYGWIN__
+#   include <winsock.h>
+#endif
 #include <lmcons.h>    /* LAN Manager common definitions */
 #include <lmerr.h>    /* LAN Manager network error definitions */
 #include <lmUseFlg.h>
@@ -485,7 +487,7 @@ MBTWC(char* name)
     if (name != NULL) { // && *name != '\0') {
 	length = strlen(name)+1;
 	Newz(0, lpPtr, length, WCHAR);
-	MultiByteToWideChar(CP_ACP, NULL, name, -1, lpPtr,
+	MultiByteToWideChar(CP_ACP, 0, name, -1, lpPtr,
 				length * sizeof(WCHAR));
     }
     return lpPtr;
@@ -530,7 +532,7 @@ MBTWC(char* name)
 	    croak("Value in logonHours should be an array reference,");	\
 	while (i < n) {							\
 	    if ((svTmp = av_fetch((AV*)svPtrIndirect, i, 0)) != NULL)	\
-		(BYTE)(((CAST)uiX)->field)[i] = SvIV(*svTmp);		\
+		(BYTE)(((CAST)uiX)->field)[i] = (BYTE)SvIV(*svTmp);	\
 	    else							\
 		(BYTE)(((CAST)uiX)->field)[i] = 0;			\
 	    i++;							\
@@ -893,7 +895,7 @@ int
 WCTMB(LPWSTR lpwStr, LPSTR lpStr, int size)
 {
     *lpStr = '\0';
-    return WideCharToMultiByte(CP_ACP, NULL, lpwStr, -1, lpStr, size,
+    return WideCharToMultiByte(CP_ACP, 0, lpwStr, -1, lpStr, size,
 			       NULL, NULL);
 }
 
@@ -1225,7 +1227,7 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	PUSER_INFO_0 pwzUsers = NULL;
 	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
-	int index;
+	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
 
@@ -1274,7 +1276,8 @@ CODE:
 	LPWSTR lpwUser = MBTWC(user);
 	PGROUP_INFO_0 pwzGroups;
 	DWORD entriesRead = 0, totalEntries = 0;
-	int index, len = PREFLEN;
+        DWORD index;
+	int len = PREFLEN;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
 
@@ -1367,7 +1370,8 @@ CODE:
 	LPWSTR lpwUser = MBTWC(user);
 	LPLOCALGROUP_USERS_INFO_0 pwzLocalGroupUsers=NULL;
 	DWORD entriesRead = 0, totalEntries = 0;
-	int index, len = PREFLEN;
+        DWORD index;
+	int len = PREFLEN;
 	char tmpBuf[UNLEN+1];
 	DWORD lastError = 0;
 
@@ -1457,7 +1461,6 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwUser = MBTWC(user);
 	LPBYTE *uiX = NULL;
-	SV        **svPtr;
 	DWORD lastError = 0;
 
 	if (!(hash && SvROK(hash) &&
@@ -1591,7 +1594,7 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	PGROUP_INFO_0 pwzGroups;
 	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
-	int index, len;
+        DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
 	
@@ -1668,7 +1671,7 @@ CODE:
 	LPWSTR lpwGroup = MBTWC(group);
 	PGROUP_USERS_INFO_0 pwzGroupUsers;
 	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
-	int index, len;
+        DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
 	
@@ -1932,7 +1935,7 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	PLOCALGROUP_INFO_0 pwzLocalGroups;
 	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
-	int index;
+	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
 
@@ -2014,7 +2017,7 @@ CODE:
 	LPWSTR lpwGroup = MBTWC(group);
 	PLOCALGROUP_MEMBERS_INFO_1 pwzMembersInfo;
 	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
-	int index;
+	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
 

@@ -35,9 +35,9 @@ T_BUF
 T_SBUF
 	grow_buf( $var,$arg, $type )
 T_IV
-	$var= null_arg($arg) ? ($type)0 : ($type)SvIV($arg)
+	$var= null_arg($arg) ? ($type)0 : INT2PTR($type, SvIV($arg))
 T_UV
-	$var= null_arg($arg) ? ($type)0 : ($type)SvUV($arg)
+	$var= null_arg($arg) ? ($type)0 : INT2PTR($type, SvUV($arg))
 O_IV
 	$var= optIV($arg)
 O_UV
@@ -68,24 +68,24 @@ T_IVBUFP
 	if(  null_arg($arg)  )
 	    $var= NULL;
 	else
-	    *( $var= ($type) TempAlloc( sizeof(*($var)) ) )= (void *)SvIV($arg)
+	    *( $var= ($type) TempAlloc( sizeof(*($var)) ) )= INT2PTR(void *, SvIV($arg))
 T_UVBUFP
 	if(  null_arg($arg)  )
 	    $var= NULL;
 	else
-	    *( $var= ($type) TempAlloc( sizeof(*($var)) ) )= (void *)SvUV($arg)
+	    *( $var= ($type) TempAlloc( sizeof(*($var)) ) )= INT2PTR(void *, SvUV($arg))
 O_IVBUFP
 	if(  null_arg($arg)  )
 	    $var= NULL;
 	else
 	    *( $var= ($type) TempAlloc( sizeof(*($var)) ) )=
-	      SvOK($arg) ? (void *)SvIV($arg) : 0;
+	      SvOK($arg) ? INT2PTR(void *, SvIV($arg)) : 0;
 O_UVBUFP
 	if(  null_arg($arg)  )
 	    $var= NULL;
 	else
 	    *( $var= ($type) TempAlloc( sizeof(*($var)) ) )=
-	      SvOK($arg) ? (void *)SvUV($arg) : 0;
+	      SvOK($arg) ? INT2PTR(void *, SvUV($arg)) : 0;
 
 #############################################################################
 OUTPUT
@@ -103,37 +103,37 @@ T_SBUF
 	trunc_buf( RETVAL, $var,$arg );
 T_IV
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
-	    sv_setiv( $arg, (IV)$var );
+	    sv_setiv( $arg, PTR2IV($var) );
 T_UV
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
-	    sv_setuv( $arg, (UV)$var );
+	    sv_setuv( $arg, PTR2UV($var) );
 O_IV
 	if(  ! null_arg($arg)  )
-	    sv_setiv( $arg, (IV)$var );
+	    sv_setiv( $arg, PTR2IV($var) );
 O_UV
 	if(  ! null_arg($arg)  )
-	    sv_setuv( $arg, (UV)$var );
+	    sv_setuv( $arg, PTR2UV($var) );
 T_IVBUF
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
-	    sv_setiv( $arg, (IV)*($var) );
+	    sv_setiv( $arg, PTR2IV(*($var)) );
 T_UVBUF
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
-	    sv_setuv( $arg, (UV)*($var) );
+	    sv_setuv( $arg, PTR2UV(*($var)) );
 O_IVBUF
 	if(  ! null_arg($arg)  )
-	    sv_setiv( $arg, (IV)*($var) );
+	    sv_setiv( $arg, PTR2IV(*($var)) );
 O_UVBUF
 	if(  ! null_arg($arg)  )
-	    sv_setuv( $arg, (UV)*($var) );
+	    sv_setuv( $arg, PTR2UV(*($var)) );
 T_IVBUFP
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
-	    sv_setiv( $arg, (IV)*($var) );
+	    sv_setiv( $arg, PTR2IV(*($var)) );
 T_UVBUFP
 	if(  ! null_arg($arg)  &&  ! SvREADONLY($arg)  )
-	    sv_setuv( $arg, (UV)*($var) );
+	    sv_setuv( $arg, PTR2UV(*($var)) );
 O_IVBUFP
 	if(  ! null_arg($arg)  )
-	    sv_setiv( $arg, (IV)*($var) );
+	    sv_setiv( $arg, PTR2IV(*($var)) );
 O_UVBUFP
 	if(  ! null_arg($arg)  )
-	    sv_setuv( $arg, (UV)*($var) );
+	    sv_setuv( $arg, PTR2UV(*($var)) );

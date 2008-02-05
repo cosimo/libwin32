@@ -13,7 +13,7 @@ BEGIN {
     require DynaLoader;
 
     @ISA = qw|Exporter DynaLoader|;
-    $VERSION = '0.24';
+    $VERSION = '0.25';
 
     @EXPORT = qw(
 	NULL
@@ -200,7 +200,7 @@ sub GetOSName {
 		    90 => "Me"
 		},
 		2 => {
-		    0  => "2000",
+		    0  => "NT4",
 		    1  => "XP/.Net",
                     2  => "2003",
 		    51 => "NT3.51"
@@ -217,9 +217,9 @@ sub GetOSName {
 
         my $tag = "";
 
-        # But distinguising W2k from NT4 requires looking at the major version
-        if ($os eq "2000" && $major != 5) {
-            $os = "NT4";
+        # But distinguising W2k and Vista from NT4 requires looking at the major version
+        if ($os eq "NT4") {
+	    $os = {5 => "2000", 6 => "Vista"}->{$major} || "NT4";
         }
 
         # For the rest we take a look at the build numbers and try to deduce

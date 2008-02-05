@@ -5,7 +5,7 @@
  * XS interface to the Win32 Console API
  * based on Registry.CPP written by Jesse Dougherty
  *
- * Version: 0.03 07 Apr 97
+ * Version: 0.05 06 Jun 03
  *
  */
 
@@ -24,6 +24,35 @@
 // Section for the constant definitions.
 #define CROAK croak
 
+/*------------------------------------------------------------------*/
+#define SMALL_ICON_SIZE 16
+#define TITLE_SIZE     128
+
+static HANDLE  wndBigIcon   = NULL;
+static HANDLE  wndSmallIcon = NULL;
+
+/* Return a handle to the current console window */
+static HWND GetConsoleHwnd(void)
+{
+  HWND hwnd;
+  char tmpTitle[TITLE_SIZE];
+  char oldTitle[TITLE_SIZE];
+
+  sprintf(tmpTitle, "SeArChInG FoR WiNdOw %ld", GetCurrentThreadId());
+
+  if (!GetConsoleTitle(oldTitle, TITLE_SIZE) ||
+      !SetConsoleTitle(tmpTitle))
+    return NULL;
+
+  Sleep(40);                /* Ensure window title has been updated */
+
+  hwnd = FindWindow("ConsoleWindowClass", tmpTitle);
+  SetConsoleTitle(oldTitle);
+
+  return hwnd;
+} /* end GetConsoleHwnd */
+
+/*------------------------------------------------------------------*/
 
 DWORD
 constant(char *name, int arg)
@@ -423,7 +452,7 @@ _WriteConsoleOutputAttribute(handle, string,x,y)
     SHORT x
     SHORT y
 PPCODE:
-    int i;
+    DWORD i;
     COORD coords;
     DWORD written;
     unsigned short buffer[80*999*sizeof(unsigned short)];
@@ -490,7 +519,7 @@ _ReadConsoleOutputAttribute(handle,len,x,y)
     SHORT x
     SHORT y
 PPCODE:
-    int i;
+    DWORD i;
     COORD coords;
     DWORD nofread;
     unsigned short abuffer[80*999*sizeof(unsigned short)];
@@ -753,24 +782,24 @@ PPCODE:
     event.EventType = type;
     switch(event.EventType) {
     case KEY_EVENT:
-	kevent=(KEY_EVENT_RECORD *)&(event.Event);
-	kevent->bKeyDown=(BOOL)SvIV(ST(2));
-	kevent->wRepeatCount=SvIV(ST(3));
-	kevent->wVirtualKeyCode=SvIV(ST(4));
-	kevent->wVirtualScanCode=SvIV(ST(5));
+	kevent = (KEY_EVENT_RECORD *)&(event.Event);
+        kevent->bKeyDown          = (BOOL)SvIV(ST(2));
+        kevent->wRepeatCount      = (WORD)SvIV(ST(3));
+        kevent->wVirtualKeyCode   = (WORD)SvIV(ST(4));
+        kevent->wVirtualScanCode  = (WORD)SvIV(ST(5));
 #ifdef UNICODE
-	kevent->uChar.UnicodeChar=SvIV(ST(6));
+        kevent->uChar.UnicodeChar = (WCHAR)SvIV(ST(6));
 #else
-	kevent->uChar.AsciiChar=SvIV(ST(7));
+        kevent->uChar.AsciiChar   = (CHAR)SvIV(ST(7));
 #endif
 	break;
     case MOUSE_EVENT:
-	mevent=(MOUSE_EVENT_RECORD *)&(event.Event);
-	mevent->dwMousePosition.X=SvIV(ST(2));
-	mevent->dwMousePosition.Y=SvIV(ST(3));
-	mevent->dwButtonState=SvIV(ST(4));
-	mevent->dwControlKeyState=SvIV(ST(5));
-	mevent->dwEventFlags=SvIV(ST(6));
+	mevent = (MOUSE_EVENT_RECORD *)&(event.Event);
+        mevent->dwMousePosition.X = (SHORT)SvIV(ST(2));
+        mevent->dwMousePosition.Y = (SHORT)SvIV(ST(3));
+        mevent->dwButtonState     = SvIV(ST(4));
+        mevent->dwControlKeyState = SvIV(ST(5));
+        mevent->dwEventFlags      = SvIV(ST(6));
 	break;
     default:
 	XSRETURN_NO;
@@ -856,7 +885,6 @@ PPCODE:
         XSRETURN_YES;
     else
         XSRETURN_NO;
- 
 
 void
 _GetConsoleScreenBufferInfo(handle)
@@ -1079,4 +1107,28 @@ PPCODE:
 	XSRETURN_NO;
 
 
+void
+_SetConsoleIcon(iconfile)
+    LPCSTR  iconfile
+PPCODE:
+    HANDLE  oldBigIcon   = wndBigIcon;
+    HANDLE  oldSmallIcon = wndSmallIcon;
+    HWND    wnd = GetConsoleHwnd();
 
+    if (!wnd) XSRETURN_NO;
+
+    wndBigIcon = LoadImage(NULL, iconfile, IMAGE_ICON,
+                           0,0, LR_DEFAULTSIZE | LR_LOADFROMFILE);
+    if (!wndBigIcon) XSRETURN_NO;
+    wndSmallIcon = LoadImage(NULL, iconfile, IMAGE_ICON,
+                             SMALL_ICON_SIZE, SMALL_ICON_SIZE,
+                             LR_LOADFROMFILE);
+    if (!wndSmallIcon) XSRETURN_NO;
+
+    SendMessage(wnd, WM_SETICON, (WPARAM) ICON_BIG, (LPARAM) wndBigIcon);
+    SendMessage(wnd, WM_SETICON, (WPARAM) ICON_SMALL, (LPARAM) wndSmallIcon);
+
+    if (oldBigIcon)   DestroyIcon(oldBigIcon);
+    if (oldSmallIcon) DestroyIcon(oldSmallIcon);
+
+    XSRETURN_YES;

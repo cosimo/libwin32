@@ -145,7 +145,8 @@ I32
 MakeMask(...)
     CODE:
     {
-	unsigned int i, j, len ;
+	int i, j ;
+	STRLEN len ;
 	char *name ;
 	I32 Mask = 0 ;
 	
@@ -172,7 +173,7 @@ EnumerateRights(Mask,av)
 	SV *av
     CODE:
 	{
-	    int j, Ok ;
+	    int j ;
 	    if (!(av && SvROK(av) && (av = SvRV(av)) && SvTYPE(av) == SVt_PVAV))
     		croak( "second arg must be ARRAYREF" ) ;
 
@@ -201,7 +202,6 @@ Get(filename, hv)
 	{
 	    SV*  sv;
 	    SV** psv;
-	    AV*  av;
 	    PSECURITY_DESCRIPTOR pSecDesc = NULL;
 	    SECURITY_DESCRIPTOR_CONTROL Control = 0;
 	    BOOL bDaclPresent, bDaclDefaulted ;
@@ -213,7 +213,7 @@ Get(filename, hv)
 		bName = MAXIMUM_NAME_LENGTH, bDName = MAXIMUM_NAME_LENGTH;
 	    SID_NAME_USE eUse ;
 	    DWORD nLength = 0, nLengthNeeded = 1, tries = 2, Revision = 0 ;
-	    DWORD error, i, j ;
+	    DWORD error, i ;
 	    BOOL bResult;
 
 	    RETVAL = FALSE;
@@ -227,26 +227,13 @@ Get(filename, hv)
 	    while ( nLengthNeeded && tries ) {
 		tries-- ;
 
-		if (USING_WIDE()) {
-		    WCHAR wbuffer[MAX_PATH+1];
-		    A2WHELPER(filename, wbuffer, sizeof(wbuffer));
-		    bResult = GetFileSecurityW(
-			wbuffer,			/* address of string for file name */
-			DACL_SECURITY_INFORMATION,	/* requested information */
-			pSecDesc,                   /* address of security descriptor */
-			nLength,                    /* size of security descriptor buffer */
-			&nLengthNeeded              /* address of required size of buffer */
-			);
-		}
-		else {
-		    bResult = GetFileSecurityA(
-			filename,			/* address of string for file name */
-			DACL_SECURITY_INFORMATION,	/* requested information */
-			pSecDesc,                   /* address of security descriptor */
-			nLength,                    /* size of security descriptor buffer */
-			&nLengthNeeded              /* address of required size of buffer */
-			);
-		}
+                bResult = GetFileSecurityA(
+                    filename,			/* address of string for file name */
+                    DACL_SECURITY_INFORMATION,	/* requested information */
+                    pSecDesc,                   /* address of security descriptor */
+                    nLength,                    /* size of security descriptor buffer */
+                    &nLengthNeeded              /* address of required size of buffer */
+                    );
 
 		if (bResult) {
 		    break ;
@@ -320,35 +307,16 @@ Get(filename, hv)
 		case ACCESS_ALLOWED_ACE_TYPE :
 		    pAllAce = (PACCESS_ALLOWED_ACE) pAce ;
 		    bName = bDName = MAXIMUM_NAME_LENGTH ;
-		    
-		    if (USING_WIDE()) {
-			WCHAR wName[MAXIMUM_NAME_LENGTH+1];
-			WCHAR wDName[MAXIMUM_NAME_LENGTH+1];
-			bResult = LookupAccountSidW(
-			    NULL,		/* CHANGE address of string for system name */
-			    (PSID) &(pAllAce->SidStart),/* address of security identifier */
-			    wName,		/* address of string for account name */
-			    &bName,		/* address of size account string */
-			    wDName,		/* address of string for referenced domain */
-			    &bDName,		/* address of size domain string */
-			    &eUse		/* address of structure for SID type */
-			    );
-			if (bResult) {
-			    W2AHELPER(wName, Name, bName);
-			    W2AHELPER(wDName, DName, bDName);
-			}
-		    }
-		    else {
-			bResult = LookupAccountSidA(
-			    NULL,		/* CHANGE address of string for system name */
-			    (PSID) &(pAllAce->SidStart),/* address of security identifier */
-			    Name,		/* address of string for account name */
-			    &bName,		/* address of size account string */
-			    DName,		/* address of string for referenced domain */
-			    &bDName,		/* address of size domain string */
-			    &eUse		/* address of structure for SID type */
-			    );
-		    }
+
+                    bResult = LookupAccountSidA(
+                        NULL,		/* CHANGE address of string for system name */
+                        (PSID) &(pAllAce->SidStart),/* address of security identifier */
+                        Name,		/* address of string for account name */
+                        &bName,		/* address of size account string */
+                        DName,		/* address of string for referenced domain */
+                        &bDName,		/* address of size domain string */
+                        &eUse		/* address of structure for SID type */
+                        );
 
 		    if (!bResult) {
 			Name = NoName ;
@@ -422,7 +390,7 @@ Set(filename, hv)
 	    /* Initialize a new security descriptor. */
  
 	    /* SECURITY_DESCRIPTOR_MIN_LENGTH defined in WINNT.H */
-	    Newc( 4, pSD, SECURITY_DESCRIPTOR_MIN_LENGTH, char, PSECURITY_DESCRIPTOR );
+	    Newc( 4, pSD, SECURITY_DESCRIPTOR_MIN_LENGTH, char, SECURITY_DESCRIPTOR );
 	    if (pSD == NULL) { 
 		ErrorHandler( "Newc SECURITY_DESCRIPTOR"); 
 		goto SetCleanup ;
@@ -499,34 +467,14 @@ Set(filename, hv)
 		    }
 		}
 
-		if (USING_WIDE()) {
-		    WCHAR wServer[MAX_PATH+1];
-		    WCHAR wAccount[MAX_PATH+1];
-		    WCHAR wDomain[MAX_PATH+1];
-		    A2WHELPER(lpszServer, wServer, sizeof(wServer));
-		    A2WHELPER(lpszAccount, wAccount, sizeof(wAccount));
-		    bResult = LookupAccountNameW(
-			    wServer,
-			    wAccount, 
-			    pSID, 
-			    &cbSID, 
-			    wDomain, 
-			    &cchDomainName, 
-			    psnuType);
-		    if(bResult) {
-			W2AHELPER(wDomain, lpszDomain, cchDomainName);
-		    }
-		}
-		else {
-		    bResult = LookupAccountNameA(
-			    (LPCSTR) lpszServer,
-			    (LPCSTR) lpszAccount, 
-			    pSID, 
-			    &cbSID, 
-			    lpszDomain, 
-			    &cchDomainName, 
-			    psnuType);
-		}
+                bResult = LookupAccountNameA((LPCSTR) lpszServer,
+                                             (LPCSTR) lpszAccount,
+                                             pSID,
+                                             &cbSID,
+                                             lpszDomain,
+                                             &cchDomainName,
+                                             psnuType);
+
 		if (!bResult) { 
 		    printf( "%s\\%s\n", lpszServer ? lpszServer : "", lpszAccount ) ;
 		    ErrorHandler( "LookupAccountName"); 
@@ -596,18 +544,9 @@ Set(filename, hv)
 	    }
 	    
 	    /* Apply the new security descriptor to the file.  */
-	    if (USING_WIDE()) {
-		WCHAR wbuffer[MAX_PATH+1];
-		A2WHELPER(filename, wbuffer, sizeof(wbuffer));
-		bResult = SetFileSecurityW(wbuffer,
-				      DACL_SECURITY_INFORMATION,
-				      pSD);
-	    }
-	    else {
-		bResult = SetFileSecurityA(filename,
-				      DACL_SECURITY_INFORMATION,
-				      pSD);
-	    }
+            bResult = SetFileSecurityA(filename,
+                                       DACL_SECURITY_INFORMATION,
+                                       pSD);
 
 	    if (!bResult) { 
 		ErrorHandler( "SetFileSecurity"); 

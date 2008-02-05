@@ -148,15 +148,7 @@ GetAttributes(filename,attribs)
 	char *filename
 	DWORD attribs = NO_INIT
     CODE:
-	if (USING_WIDE()) {
-	    WCHAR wbuffer[MAX_PATH+1];
-	    A2WHELPER(filename, wbuffer, sizeof(wbuffer));
-	    attribs = GetFileAttributesW(wbuffer);
-	}
-	else {
-	    attribs = GetFileAttributesA(filename);
-	}
-	attribs = GetFileAttributes(filename);
+        attribs = GetFileAttributesA(filename);
 	RETVAL = (attribs != 0xffffffff);
     OUTPUT:
 	attribs
@@ -167,14 +159,7 @@ SetAttributes(filename,attribs)
 	char *filename
 	DWORD attribs
     CODE:
-	if (USING_WIDE()) {
-	    WCHAR wbuffer[MAX_PATH+1];
-	    A2WHELPER(filename, wbuffer, sizeof(wbuffer));
-	    RETVAL = SetFileAttributesW(wbuffer, attribs);
-	}
-	else {
-	    RETVAL = SetFileAttributesA(filename, attribs);
-	}
+        RETVAL = SetFileAttributesA(filename, attribs);
     OUTPUT:
 	RETVAL
 

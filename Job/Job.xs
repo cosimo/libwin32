@@ -5,6 +5,10 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#ifdef __CYGWIN__
+#   define win32_get_osfhandle _get_osfhandle
+#endif
+
 #define NEWZ_CONST_INT 413
 #define KILL_EXITCODE  293
 
@@ -73,7 +77,7 @@ static SV*
 new_handle(pTHX_ HANDLE file)
 {
 	SV* rv = newSViv(0); /* blank SV */
-	sv_setref_iv(rv, "Win32::Job::_handle", (IV)file);
+	sv_setref_iv(rv, "Win32::Job::_handle", PTR2IV(file));
 	return rv;
 }
 
@@ -208,7 +212,7 @@ DESTROY(SV* self)
 	HANDLE h;
     CODE:
 	iv = SvIV(SvRV(self));
-	h  = (HANDLE)iv;
+	h  = INT2PTR(HANDLE, iv);
 	if (h) CloseHandle(h);
 
 MODULE = Win32::Job	PACKAGE = Win32::Job
@@ -263,7 +267,7 @@ spawn(self, svexe, args, ...)
 	SV *			ary_entry;
 	DWORD			createflags = (CREATE_SUSPENDED |
 					       CREATE_BREAKAWAY_FROM_JOB);
-	char pbuf[_MAX_PATH];   /* static buffer for 'exe' */
+	char pbuf[MAX_PATH];   /* static buffer for 'exe' */
 	void *env = NULL;
     CODE:
 	files = (AV*)sv_2mortal((SV*)newAV());
@@ -443,7 +447,7 @@ exe_found:
 				     HANDLE_FLAG_INHERIT);
 	    }
 	}
-#if PERL_VERSION > 5
+#ifdef PERL_IMPLICIT_SYS
 	env = PerlEnv_get_childenv();
 #endif
 	ok = CreateProcess(
@@ -458,7 +462,7 @@ exe_found:
 	    &st,
 	    procinfo
 	);
-#if PERL_VERSION > 5
+#ifdef PERL_IMPLICIT_SYS
 	PerlEnv_free_childenv(env);
 #endif
 	if (!ok)

@@ -10,7 +10,7 @@ use Win32::Registry;
 $bug = 1;
 
 open( ME, $0 ) || die $!;
-$bugs = grep( /^\$bug\+\+;\n$/, <ME> );
+$bugs = grep( /^\$bug\+\+;\s*\n$/, <ME> );
 close( ME );
 
 print "1..$bugs\n";

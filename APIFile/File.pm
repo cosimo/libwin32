@@ -3,13 +3,31 @@
 package Win32API::File;
 
 use strict;
+use integer;
 use Carp;
+use Config qw( %Config );
 use Fcntl qw( O_RDONLY O_RDWR O_WRONLY O_APPEND O_BINARY O_TEXT );
 use vars qw( $VERSION @ISA );
 use vars qw( @EXPORT @EXPORT_OK @EXPORT_FAIL %EXPORT_TAGS );
-$VERSION= '0.09';
 
-use base qw( Exporter DynaLoader );
+$VERSION= '0.10';
+
+use base qw( Exporter DynaLoader Tie::Handle IO::File );
+
+# Math::BigInt optimizations courtesy of Tels
+BEGIN {
+	require Math::BigInt;
+	if (defined($Math::BigInt::VERSION) && $Math::BigInt::VERSION >= 1.60) {
+	    Math::BigInt->import(lib => 'GMP');
+	}
+}
+
+my $_64BITINT  = defined $Config{use64bitint} &&
+		 $Config{use64bitint} eq 'define';
+
+my $THIRTY_TWO = $_64BITINT ? 32 : new Math::BigInt 32;
+
+my $FFFFFFFF   = $_64BITINT ? 0xFFFFFFFF : new Math::BigInt 0xFFFFFFFF;
 
 @EXPORT= qw();
 %EXPORT_TAGS= (
@@ -17,21 +35,22 @@ use base qw( Exporter DynaLoader );
     	fileConstant		fileLastError		getLogicalDrives
 	CloseHandle		CopyFile		CreateFile
 	DefineDosDevice		DeleteFile		DeviceIoControl
-	FdGetOsFHandle		GetDriveType		GetFileType
+	FdGetOsFHandle		GetDriveType		GetFileAttributes		GetFileType
 	GetHandleInformation	GetLogicalDrives	GetLogicalDriveStrings
 	GetOsFHandle		GetVolumeInformation	IsRecognizedPartition
 	IsContainerPartition	MoveFile		MoveFileEx
 	OsFHandleOpen		OsFHandleOpenFd		QueryDosDevice
 	ReadFile		SetErrorMode		SetFilePointer
-	SetHandleInformation	WriteFile )],
+	SetHandleInformation	WriteFile		GetFileSize
+	getFileSize		setFilePointer		GetOverlappedResult)],
     FuncA =>	[qw(
 	CopyFileA		CreateFileA		DefineDosDeviceA
-	DeleteFileA		GetDriveTypeA		GetLogicalDriveStringsA
+	DeleteFileA		GetDriveTypeA		GetFileAttributesA		GetLogicalDriveStringsA
 	GetVolumeInformationA	MoveFileA		MoveFileExA
 	QueryDosDeviceA )],
     FuncW =>	[qw(
 	CopyFileW		CreateFileW		DefineDosDeviceW
-	DeleteFileW		GetDriveTypeW		GetLogicalDriveStringsW
+	DeleteFileW		GetDriveTypeW		GetFileAttributesW		GetLogicalDriveStringsW
 	GetVolumeInformationW	MoveFileW		MoveFileExW
 	QueryDosDeviceW )],
     Misc =>		[qw(
@@ -56,15 +75,20 @@ use base qw( Exporter DynaLoader );
 	FILE_ALL_ACCESS			FILE_GENERIC_READ
 	FILE_GENERIC_WRITE		FILE_GENERIC_EXECUTE )],
     FILE_ATTRIBUTE_ =>	[qw(
-	FILE_ATTRIBUTE_ARCHIVE		FILE_ATTRIBUTE_COMPRESSED
-	FILE_ATTRIBUTE_HIDDEN		FILE_ATTRIBUTE_NORMAL
-	FILE_ATTRIBUTE_OFFLINE		FILE_ATTRIBUTE_READONLY
-	FILE_ATTRIBUTE_SYSTEM		FILE_ATTRIBUTE_TEMPORARY )],
+    INVALID_FILE_ATTRIBUTES
+    FILE_ATTRIBUTE_DEVICE        FILE_ATTRIBUTE_DIRECTORY
+    FILE_ATTRIBUTE_ENCRYPTED     FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
+    FILE_ATTRIBUTE_REPARSE_POINT FILE_ATTRIBUTE_SPARSE_FILE
+	FILE_ATTRIBUTE_ARCHIVE		 FILE_ATTRIBUTE_COMPRESSED
+	FILE_ATTRIBUTE_HIDDEN		 FILE_ATTRIBUTE_NORMAL
+	FILE_ATTRIBUTE_OFFLINE		 FILE_ATTRIBUTE_READONLY
+	FILE_ATTRIBUTE_SYSTEM		 FILE_ATTRIBUTE_TEMPORARY )],
     FILE_FLAG_ =>	[qw(
 	FILE_FLAG_BACKUP_SEMANTICS	FILE_FLAG_DELETE_ON_CLOSE
 	FILE_FLAG_NO_BUFFERING		FILE_FLAG_OVERLAPPED
 	FILE_FLAG_POSIX_SEMANTICS	FILE_FLAG_RANDOM_ACCESS
-	FILE_FLAG_SEQUENTIAL_SCAN	FILE_FLAG_WRITE_THROUGH )],
+	FILE_FLAG_SEQUENTIAL_SCAN	FILE_FLAG_WRITE_THROUGH
+	FILE_FLAG_OPEN_REPARSE_POINT )],
     FILE_SHARE_ =>	[qw(
 	FILE_SHARE_DELETE	FILE_SHARE_READ		FILE_SHARE_WRITE )],
     FILE_TYPE_ =>	[qw(
@@ -74,6 +98,9 @@ use base qw( Exporter DynaLoader );
 	FS_CASE_IS_PRESERVED		FS_CASE_SENSITIVE
 	FS_UNICODE_STORED_ON_DISK	FS_PERSISTENT_ACLS 
 	FS_FILE_COMPRESSION		FS_VOL_IS_COMPRESSED )],
+	FSCTL_ => [qw(
+	FSCTL_SET_REPARSE_POINT		FSCTL_GET_REPARSE_POINT
+	FSCTL_DELETE_REPARSE_POINT )],
     HANDLE_FLAG_ =>	[qw(
 	HANDLE_FLAG_INHERIT		HANDLE_FLAG_PROTECT_FROM_CLOSE )],
     IOCTL_STORAGE_ =>	[qw(
@@ -179,18 +206,43 @@ sub constant
     return 0;
 }
 
-BEGIN {
-    my $code= 'return _fileLastError(@_)';
-    local( $!, $^E )= ( 1, 1 );
-    if(  $! ne $^E  ) {
-	$code= '
-	    local( $^E )= _fileLastError(@_);
-	    my $ret= $^E;
-	    return $ret;
-	';
-    }
-    eval "sub fileLastError { $code }";
-    die "$@"   if  $@;
+# BEGIN {
+#     my $code= 'return _fileLastError(@_)';
+#     local( $!, $^E )= ( 1, 1 );
+#     if(  $! ne $^E  ) {
+# 	$code= '
+# 	    local( $^E )= _fileLastError(@_);
+# 	    my $ret= $^E;
+# 	    return $ret;
+# 	';
+#     }
+#     eval "sub fileLastError { $code }";
+#     die "$@"   if  $@;
+# }
+
+package Win32API::File::_error;
+
+use overload
+    '""' => sub {
+	require Win32 unless defined &Win32::FormatMessage;
+	$_ = Win32::FormatMessage(Win32API::File::_fileLastError());
+	tr/\r\n//d;
+	return $_;
+    },
+    '0+' => sub { Win32API::File::_fileLastError() },
+    'fallback' => 1;
+
+sub new { return bless {}, shift }
+sub set { Win32API::File::_fileLastError($_[1]); return $_[0] }
+
+package Win32API::File;
+
+my $_error = new Win32API::File::_error;
+
+sub fileLastError {
+    croak 'Usage: ',__PACKAGE__,'::fileLastError( [$setWin32ErrCode] )'	if @_ > 1;
+    $_error->set($_[0]) if defined $_[0];
+    return $_error;
 }
 
 # Since we ISA DynaLoader which ISA AutoLoader, we ISA AutoLoader so we
@@ -211,6 +263,7 @@ sub CreateFile			{ &CreateFileA; }
 sub DefineDosDevice		{ &DefineDosDeviceA; }
 sub DeleteFile			{ &DeleteFileA; }
 sub GetDriveType		{ &GetDriveTypeA; }
+sub GetFileAttributes	{ &GetFileAttributesA; }
 sub GetLogicalDriveStrings	{ &GetLogicalDriveStringsA; }
 sub GetVolumeInformation	{ &GetVolumeInformationA; }
 sub MoveFile			{ &MoveFileA; }
@@ -259,8 +312,11 @@ sub OsFHandleOpen {
 	$mode |= $o_text;
     }
     $mode |= O_BINARY   if  $access =~ /b/i;
-    my $fd= OsFHandleOpenFd( $osfh, $mode );
-    return  undef   if  $fd < 0;
+    my $fd = eval { OsFHandleOpenFd( $osfh, $mode ) };
+    if ($@) {
+	return tie *{$fh}, __PACKAGE__, $osfh;
+    }
+    return  undef if  $fd < 0;
     return  open( $fh, $pref."&=".$fd );
 }
 
@@ -274,7 +330,16 @@ sub GetOsFHandle {
 	    $file= caller() . "::" . $file;
 	}
 	no strict "refs";
-	$file= \*{$file};
+	# The eval "" is necessary in Perl 5.6, avoid it otherwise.
+	my $tied = !defined($^]) || $^] < 5.008
+                       ? eval "tied *{$file}"
+                       : tied *{$file};
+
+	if (UNIVERSAL::isa($tied => __PACKAGE__)) {
+		return $tied->win32_handle;
+	}
+
+	$file= *{$file};
     }
     my( $fd )= fileno($file);
     if(  ! defined( $fd )  ) {
@@ -291,6 +356,52 @@ sub GetOsFHandle {
 	$h= "0 but true";
     }
     return $h;
+}
+
+sub getFileSize {
+    croak 'Win32API::File Usage:  $size= getFileSize($hNativeHandle)'
+	if @_ != 1;
+
+    my $handle    = shift;
+    my $high_size = 0;
+
+    my $low_size = GetFileSize($handle, $high_size);
+
+    my $retval = $_64BITINT ? $high_size : new Math::BigInt $high_size;
+
+    $retval <<= $THIRTY_TWO;
+    $retval +=  $low_size;
+
+    return $retval;
+}
+
+sub setFilePointer {
+    croak 'Win32API::File Usage:  $pos= setFilePointer($hNativeHandle, $posl, $from_where)'
+	if @_ != 3;
+
+    my ($handle, $pos, $from_where) = @_;
+
+    my ($pos_low, $pos_high) = ($pos, 0);
+
+    if ($_64BITINT) {
+	$pos_low  = ($pos & $FFFFFFFF);
+	$pos_high = (($pos >> $THIRTY_TWO) & $FFFFFFFF);
+    }
+    elsif (UNIVERSAL::isa($pos => 'Math::BigInt')) {
+	$pos_low  = ($pos & $FFFFFFFF)->numify();
+	$pos_high = (($pos >> $THIRTY_TWO) & $FFFFFFFF)->numify();
+    }
+
+    my $retval = SetFilePointer($handle, $pos_low, $pos_high, $from_where);
+
+    if (defined $pos_high && $pos_high != 0) {
+	$retval   = new Math::BigInt $retval   unless $_64BITINT;
+	$pos_high = new Math::BigInt $pos_high unless $_64BITINT;
+
+	$retval += $pos_high << $THIRTY_TWO;
+    }
+
+    return $retval;
 }
 
 sub attrLetsToBits
@@ -443,6 +554,253 @@ sub getLogicalDrives
     return $ref;
 }
 
+###############################################################################
+#   Experimental Tied Handle and Object Oriented interface.                   #
+###############################################################################
+
+sub new {
+	my $class = shift;
+	$class = ref $class || $class;
+
+	my $self = IO::File::new($class);
+	tie *$self, __PACKAGE__;
+
+	$self->open(@_) if @_;
+
+	return $self;
+}
+
+sub TIEHANDLE {
+	my ($class, $win32_handle) = @_;
+	$class = ref $class || $class;
+
+	return bless {
+		_win32_handle => $win32_handle,
+		_binmode      => 0,
+		_buffered     => 0,
+		_buffer       => '',
+		_eof          => 0,
+		_fileno       => undef,
+		_access       => 'r',
+		_append       => 0,
+	}, $class;
+}
+
+# This is called for getting the tied object from hard refs to glob refs in
+# some cases, for reasons I don't quite grok.
+
+sub FETCH { return $_[0] }
+
+# Public accessors
+
+sub win32_handle{ $_[0]->{_win32_handle}||= $_[1] }
+
+# Protected accessors
+
+sub _buffer	{ $_[0]->{_buffer}	||= $_[1] }
+sub _binmode	{ $_[0]->{_binmode}	||= $_[1] }
+sub _fileno	{ $_[0]->{_fileno}	||= $_[1] }
+sub _access	{ $_[0]->{_access}	||= $_[1] }
+sub _append	{ $_[0]->{_append}	||= $_[1] }
+
+# Tie interface
+
+sub OPEN {
+	my $self  = shift;
+	my $expr  = shift;
+	croak "Only the two argument form of open is supported at this time" if @_;
+# FIXME: this needs to parse the full Perl open syntax in $expr
+
+	my ($mixed, $mode, $path) =
+		($expr =~ /^\s* (\+)? \s* (<|>|>>)? \s* (.*?) \s*$/x);
+
+	croak "Unsupported open mode" if not $path;
+
+	my $access = 'r';
+	my $append = $mode eq '>>' ? 1 : 0;
+
+	if ($mixed) {
+		$access = 'rw';
+	} elsif($mode eq '>') {
+		$access = 'w';
+	}
+
+	my $w32_handle = createFile($path, $access);
+
+	$self->win32_handle($w32_handle);
+
+	$self->seek(1,2) if $append;
+
+	$self->_access($access);
+	$self->_append($append);
+
+	return 1;
+}
+
+sub BINMODE {
+	$_[0]->_binmode(1);
+}
+
+sub WRITE {
+	my ($self, $buf, $len, $offset, $overlap) = @_;
+
+	if ($offset) {
+		$buf = substr($buf, $offset);
+		$len = length($buf);
+	}
+
+	$len       = length($buf) if not defined $len;
+
+	$overlap   = [] if not defined $overlap;;
+
+	my $bytes_written = 0;
+
+	WriteFile (
+		$self->win32_handle, $buf, $len,
+		$bytes_written, $overlap
+	);
+
+	return $bytes_written;
+}
+
+sub PRINT {
+	my $self = shift;
+
+	my $buf = join defined $, ? $, : "" => @_;
+
+	$buf =~ s/\012/\015\012/sg unless $self->_binmode();
+
+	$buf .= $\ if defined $\;
+
+	$self->WRITE($buf, length($buf), 0);
+}
+
+sub READ {
+	my $self = shift;
+	my $into = \$_[0]; shift;
+	my ($len, $offset, $overlap) = @_;
+
+	my $buffer     = defined $self->_buffer ? $self->_buffer : "";
+	my $buf_length = length($buffer);
+	my $bytes_read = 0;
+	my $data;
+	$offset        = 0 if not defined $offset;
+
+	if ($buf_length >= $len) {
+		$data       = substr($buffer, 0, $len => "");
+		$bytes_read = $len;
+		$self->_buffer($buffer);
+	} else {
+		if ($buf_length > 0) {
+			$len -= $buf_length;
+			substr($$into, $offset) = $buffer;
+			$offset += $buf_length;
+		}
+
+		$overlap ||= [];
+
+		ReadFile (
+			$self->win32_handle, $data, $len,
+			$bytes_read, $overlap
+		);
+	}
+
+	$$into = "" if not defined $$into;
+
+	substr($$into, $offset) = $data;
+
+	return $bytes_read;
+}
+
+sub READLINE {
+	my $self = shift;
+	my $line = "";
+
+	while ((index $line, $/) == $[-1) { # read until end of line marker
+		my $char = $self->GETC();
+
+		last if !defined $char || $char eq '';
+
+		$line .= $char;
+	}
+
+	return undef if $line eq '';
+
+	return $line;
+}
+
+
+sub FILENO {
+	my $self = shift;
+
+	return $self->_fileno() if defined $self->_fileno();
+
+	return -1 if $^O eq 'cygwin';
+
+# FIXME: We don't always open the handle, better to query the handle or to set
+# the right access info at TIEHANDLE time.
+
+	my $access = $self->_access();
+	my $mode   = $access eq 'rw' ? O_RDWR :
+		$access eq 'w' ? O_WRONLY : O_RDONLY;
+
+	$mode |= O_APPEND if $self->_append();
+
+	$mode |= O_TEXT   if not $self->_binmode();
+
+	return $self->_fileno ( OsfHandleOpenFd (
+		$self->win32_handle, $mode
+	));
+}
+
+sub SEEK {
+	my ($self, $pos, $whence) = @_;
+
+	$whence = 0 if not defined $whence;
+	my @file_consts = map {
+		fileConstant($_)
+	} qw(FILE_BEGIN FILE_CURRENT FILE_END);
+
+	my $from_where = $file_consts[$whence];
+
+	return setFilePointer($self->win32_handle, $pos, $from_where);
+}
+
+sub TELL {
+# SetFilePointer with position 0 at FILE_CURRENT will return position.
+	return $_[0]->SEEK(0, 1);
+}
+
+sub EOF {
+	my $self = shift;
+
+	my $current = $self->TELL() + 0;
+	my $end     = getFileSize($self->win32_handle) + 0;
+
+	return $current == $end;
+}
+
+sub CLOSE {
+	my $self = shift;
+
+	my $retval = 1;
+	
+	if (defined $self->win32_handle) {
+		$retval = CloseHandle($self->win32_handle);
+
+		$self->win32_handle(undef);
+	}
+
+	return $retval;
+}
+
+# Only close the handle on explicit close, too many problems otherwise.
+sub UNTIE {}
+
+sub DESTROY {}
+
+# End of Tie/OO Interface
+
 # Autoload methods go after =cut, and are processed by the autosplit program.
 
 1;
@@ -476,31 +834,54 @@ handles smart buffer allocation and translation of return codes.
 All functions, unless otherwise noted, return a true value for success
 and a false value for failure and set C<$^E> on failure.
 
+=head2 Object Oriented/Tied Handle Interface
+
+WARNING: this is new code, use at your own risk.
+
+This version of C<Win32API::File> can be used like an C<IO::File> object:
+
+  my $file = new Win32API::File "+> foo";
+  binmode $file;
+  print $file "hello there\n";
+  seek $file, 0, 0;
+  my $line = <$file>;
+  $file->close;
+
+It also supports tying via a win32 handle (for example, from C<createFile()>):
+
+  tie FILE, 'Win32API::File', $win32_handle;
+  print FILE "...";
+
+It has not been extensively tested yet and buffered I/O is not yet implemented.
+
 =head2 Exports
 
 Nothing is exported by default.  The following tags can be used to
 have large sets of symbols exported:  C<":Func">, C<":FuncA">,
 C<":FuncW">, C<":Misc">, C<":DDD_">, C<":DRIVE_">, C<":FILE_">,
 C<":FILE_ATTRIBUTE_">, C<":FILE_FLAG_">, C<":FILE_SHARE_">,
-C<":FILE_TYPE_">, C<":FS_">, C<":HANDLE_FLAG_">, C<":IOCTL_STORAGE_">,
-C<":IOCTL_DISK_">, C<":GENERIC_">, C<":MEDIA_TYPE">, C<":MOVEFILE_">,
-C<":SECURITY_">, C<":SEM_">, and C<":PARTITION_">.
+C<":FILE_TYPE_">, C<":FS_">, C<":FSCTL_">, C<":HANDLE_FLAG_">,
+C<":IOCTL_STORAGE_">, C<":IOCTL_DISK_">, C<":GENERIC_">,
+C<":MEDIA_TYPE">, C<":MOVEFILE_">, C<":SECURITY_">, C<":SEM_">,
+and C<":PARTITION_">.
 
 =over
 
 =item C<":Func">
 
-The basic function names: C<attrLetsToBits>,       C<createFile>,
-C<fileConstant>,          C<fileLastError>,        C<getLogicalDrives>,
-C<CloseHandle>,           C<CopyFile>,             C<CreateFile>,
-C<DefineDosDevice>,       C<DeleteFile>,           C<DeviceIoControl>,
-C<FdGetOsFHandle>,        C<GetDriveType>,         C<GetFileType>,
-C<GetHandleInformation>,  C<GetLogicalDrives>,     C<GetLogicalDriveStrings>,
-C<GetOsFHandle>,          C<GetVolumeInformation>, C<IsRecognizedPartition>,
-C<IsContainerPartition>,  C<MoveFile>,             C<MoveFileEx>,
-C<OsFHandleOpen>,         C<OsFHandleOpenFd>,      C<QueryDosDevice>,
-C<ReadFile>,              C<SetErrorMode>,         C<SetFilePointer>,
-C<SetHandleInformation>,  and                      C<WriteFile>.
+The basic function names:  C<attrLetsToBits>,         C<createFile>,
+C<fileConstant>,           C<fileLastError>,          C<getLogicalDrives>,
+C<setFilePointer>,         C<getFileSize>,
+C<CloseHandle>,            C<CopyFile>,               C<CreateFile>,
+C<DefineDosDevice>,        C<DeleteFile>,             C<DeviceIoControl>,
+C<FdGetOsFHandle>,         C<GetDriveType>,           C<GetFileAttributes>,
+C<GetFileSize>,            C<GetFileType>,            C<GetHandleInformation>,
+C<GetLogicalDrives>,       C<GetLogicalDriveStrings>, C<GetOsFHandle>,
+C<GetOverlappedResult>,    C<GetVolumeInformation>,   C<IsContainerPartition>,
+C<IsRecognizedPartition>,  C<MoveFile>,               C<MoveFileEx>,
+C<OsFHandleOpen>,          C<OsFHandleOpenFd>,        C<QueryDosDevice>,
+C<ReadFile>,               C<SetErrorMode>,           C<SetFilePointer>,
+C<SetHandleInformation>,   and C<WriteFile>.
 
 =over
 
@@ -1064,8 +1445,8 @@ C<regLastError()>] on failure.
 C<$hDevice> is a Win32 native file handle to a device [return value
 from C<CreateFile>].
 
-C<$uIoControlCode> is an unsigned value [a C<IOCTL_*> constant]
-indicating the type query or other operation to be performed.
+C<$uIoControlCode> is an unsigned value [a C<IOCTL_*> or C<FSCTL_*>
+constant] indicating the type query or other operation to be performed.
 
 C<$pInBuf> is C<[]> [for C<NULL>] or a data structure packed into a
 string.  The type of data structure depends on the C<$uIoControlCode>
@@ -1151,10 +1532,7 @@ Just like C<$^E>, in a numeric context C<fileLastError()> returns
 the numeric error value while in a string context it returns a
 text description of the error [actually it returns a Perl scalar
 that contains both values so C<$x= fileLastError()> causes C<$x>
-to give different values in string vs. numeric contexts].  On old
-versions of Perl where C<$^E> isn't tied to C<GetLastError()>,
-C<fileLastError> simply returns the number of the error and you'll
-need to use <Win32::FormatMessage> to get the error string.
+to give different values in string vs. numeric contexts].
 
 The last form sets the error returned by future calls to
 C<fileLastError()> and should not be used often.  C<$uError> must
@@ -1206,6 +1584,91 @@ access to small amounts of temporary file space.
 
 =back
 
+=item GetFileAttributes
+
+=item C<$uAttrs = GetFileAttributes( $sPath )>
+
+Takes a path string and returns an unsigned value with attribute flags.
+If it fails, it returns INVALID_FILE_ATTRIBUTES, otherwise it can be
+one or more of the following values:
+
+=over
+
+=item C<FILE_ATTRIBUTE_ARCHIVE>
+
+The file or directory is an archive file or directory. Applications use
+this attribute to mark files for backup or removal.
+
+=item C<FILE_ATTRIBUTE_COMPRESSED>
+
+The file or directory is compressed. For a file, this means that all of
+the data in the file is compressed. For a directory, this means that
+compression is the default for newly created files and subdirectories. 
+
+=item C<FILE_ATTRIBUTE_DEVICE>
+
+Reserved; do not use. 
+
+=item C<FILE_ATTRIBUTE_DIRECTORY>
+
+The handle identifies a directory. 
+
+=item C<FILE_ATTRIBUTE_ENCRYPTED>
+
+The file or directory is encrypted. For a file, this means that all data
+streams in the file are encrypted. For a directory, this means that
+encryption is the default for newly created files and subdirectories. 
+
+=item C<FILE_ATTRIBUTE_HIDDEN>
+
+The file or directory is hidden. It is not included in an ordinary directory
+listing. 
+
+=item C<FILE_ATTRIBUTE_NORMAL>
+
+The file or directory has no other attributes set. This attribute is valid
+only if used alone. 
+
+=item C<FILE_ATTRIBUTE_NOT_CONTENT_INDEXED>
+
+The file will not be indexed by the content indexing service. 
+
+=item C<FILE_ATTRIBUTE_OFFLINE>
+
+The data of the file is not immediately available. This attribute indicates
+that the file data has been physically moved to offline storage. This
+attribute is used by Remote Storage, the hierarchical storage management
+software. Applications should not arbitrarily change this attribute. 
+
+=item C<FILE_ATTRIBUTE_READONLY>
+
+The file or directory is read-only. Applications can read the file but cannot
+write to it or delete it. In the case of a directory, applications cannot
+delete it. 
+
+=item C<FILE_ATTRIBUTE_REPARSE_POINT>
+
+The file or directory has an associated reparse point. 
+
+=item C<FILE_ATTRIBUTE_SPARSE_FILE>
+
+The file is a sparse file. 
+
+=item C<FILE_ATTRIBUTE_SYSTEM>
+
+The file or directory is part of, or is used exclusively by, the operating
+system. 
+
+=item C<FILE_ATTRIBUTE_TEMPORARY>
+
+The file is being used for temporary storage. File systems avoid writing
+data back to mass storage if sufficient cache memory is available, because
+often the application deletes the temporary file shortly after the handle is
+closed. In that case, the system can entirely avoid writing the data.
+Otherwise, the data will be written after the handle is closed. 
+
+=back
+
 =item GetFileType
 
 =item C<$uFileType= GetFileType( $hFile )>
@@ -1233,6 +1696,39 @@ works on character streams such as a printer port or a console.
 Either a named or anonymous pipe.
 
 =back
+
+=item getFileSize
+
+=item C<$size= getFileSize( $hFile )>
+
+This is a Perl-friendly wrapper for the C<GetFileSize> (below) API call.
+
+It takes a Win32 native file handle and returns the size in bytes. Since the
+size can be a 64 bit value, on non 64 bit integer Perls the value returned will
+be an object of type C<Math::BigInt>.
+
+=item GetFileSize
+
+=item C<$iSizeLow= GetFileSize($win32Handle, $iSizeHigh)>
+
+Returns the size of a file pointed to by C<$win32Handle>, optionally storing
+the high order 32 bits into C<$iSizeHigh> if it is not C<[]>. If $iSizeHigh is
+C<[]>, a non-zero value indicates success. Otherwise, on failure the return
+value will be C<0xffffffff> and C<fileLastError()> will not be C<NO_ERROR>.
+
+=item GetOverlappedResult
+
+=item C<$bRetval= GetOverlappedResult( $win32Handle, $pOverlapped,
+ $numBytesTransferred, $bWait )>
+
+Used for asynchronous IO in Win32 to get the result of a pending IO operation,
+such as when a file operation returns C<ERROR_IO_PENDING>. Returns a false
+value on failure. The C<$overlapped> structure and C<$numBytesTransferred>
+will be modified with the results of the operation.
+
+As far as creating the C<$pOverlapped> structure, you are currently on your own.
+
+See L<http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/getoverlappedresult.asp> for more information.
 
 =item GetLogicalDrives
 
@@ -1505,12 +2001,11 @@ from the Perl DLL which doesn't have this restriction.
 Opens a file descriptor [C<$ivFD>] based on an already open Win32
 native file handle, C<$hNativeHandle>.  This just calls the
 Win32-specific C routine C<_open_osfhandle()> or Perl's "improved"
-version called C<win32_open_osfhandle()>.  Prior to Perl5.005, C's
-C<_open_osfhandle()> is called which will fail if
-C<GetFileType($hNativeHandle)> would return C<FILE_TYPE_UNKNOWN>.  
-For Perl5.005 and later, C<OsFHandleOpenFd> calls
-C<win32_open_osfhandle()> from the Perl DLL which doesn't have this
-restriction.
+version called C<win32_open_osfhandle()>.  Prior to Perl5.005 and in Cygwin
+Perl, C's C<_open_osfhandle()> is called which will fail if
+C<GetFileType($hNativeHandle)> would return C<FILE_TYPE_UNKNOWN>.  For
+Perl5.005 and later, C<OsFHandleOpenFd> calls C<win32_open_osfhandle()> from
+the Perl DLL which doesn't have this restriction.
 
 C<$uMode> the logical combination of zero or more C<O_*> constants
 exported by the C<Fcntl> module.  Currently only C<O_APPEND> and
@@ -1632,9 +2127,18 @@ This affects the C<ReadFile> and C<WriteFile> calls.
 
 =back
 
+=item setFilePointer
+
+=item C<$uNewPos = setFilePointer( $hFile, $ivOffset, $uFromWhere )>
+
+This is a perl-friendly wrapper for the SetFilePointer API (below).
+C<$ivOffset> can be a 64 bit integer or C<Math::BigInt> object if your Perl
+doesn't have 64 bit integers. The return value is the new offset and will
+likewise be a 64 bit integer or a C<Math::BigInt> object.
+
 =item SetFilePointer
 
-=item C<$uNewPos= SetFilePointer( $hFile, $ivOffset, $ioivOffsetHigh, $uFromWhere )>
+=item C<$uNewPos = SetFilePointer( $hFile, $ivOffset, $ioivOffsetHigh, $uFromWhere )>
 
 The native Win32 version of C<seek()>.  C<SetFilePointer> sets the
 position within a file where the next read or write operation will
@@ -1742,6 +2246,7 @@ version without the trailing "A".
 	DefineDosDeviceA
 	DeleteFileA
 	GetDriveTypeA
+	GetFileAttributesA
 	GetLogicalDriveStringsA
 	GetVolumeInformationA
 	MoveFileA
@@ -1786,6 +2291,12 @@ C<$swFileName> is Unicode.
 =item C<$uDriveType= GetDriveTypeW( $swRootPath )>
 
 C<$swRootPath> is Unicode.
+
+=item GetFileAttributesW
+
+=item C<$uAttrs= GetFileAttributesW( $swPath )>
+
+C<$swPath> is Unicode.
 
 =item GetLogicalDriveStringsW
 
@@ -1871,10 +2382,17 @@ C<$uAccess> argument to C<CreateFile>.
 File attribute constants.  Returned by C<attrLetsToBits> and used in
 the C<$uFlags> argument to C<CreateFile>.
 
-	FILE_ATTRIBUTE_ARCHIVE		FILE_ATTRIBUTE_COMPRESSED
-	FILE_ATTRIBUTE_HIDDEN		FILE_ATTRIBUTE_NORMAL
-	FILE_ATTRIBUTE_OFFLINE		FILE_ATTRIBUTE_READONLY
-	FILE_ATTRIBUTE_SYSTEM		FILE_ATTRIBUTE_TEMPORARY
+	FILE_ATTRIBUTE_ARCHIVE			FILE_ATTRIBUTE_COMPRESSED
+	FILE_ATTRIBUTE_HIDDEN			FILE_ATTRIBUTE_NORMAL
+	FILE_ATTRIBUTE_OFFLINE			FILE_ATTRIBUTE_READONLY
+	FILE_ATTRIBUTE_SYSTEM			FILE_ATTRIBUTE_TEMPORARY
+
+In addition, C<GetFileAttributes> can return these constants (or
+INVALID_FILE_ATTRIBUTES in case of an error).
+
+	FILE_ATTRIBUTE_DEVICE			FILE_ATTRIBUTE_DIRECTORY
+	FILE_ATTRIBUTE_ENCRYPTED		FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
+	FILE_ATTRIBUTE_REPARSE_POINT	FILE_ATTRIBUTE_SPARSE_FILE
 
 =item C<":FILE_FLAG_">
 
@@ -1885,6 +2403,7 @@ C<CreateFile>.
 	FILE_FLAG_NO_BUFFERING		FILE_FLAG_OVERLAPPED
 	FILE_FLAG_POSIX_SEMANTICS	FILE_FLAG_RANDOM_ACCESS
 	FILE_FLAG_SEQUENTIAL_SCAN	FILE_FLAG_WRITE_THROUGH
+	FILE_FLAG_OPEN_REPARSE_POINT
 
 =item C<":FILE_SHARE_">
 
@@ -2361,13 +2880,37 @@ No documentation on this IOCTL operation was found.
 
 =back
 
+=item C<":FSCTL_">
+
+File system control operations.  Used in the C<$uIoControlCode>
+argument to C<DeviceIoControl>.
+
+Includes C<FSCTL_SET_REPARSE_POINT>, C<FSCTL_GET_REPARSE_POINT>,
+C<FSCTL_DELETE_REPARSE_POINT>.
+
+=over
+
+=item C<FSCTL_SET_REPARSE_POINT>
+
+Sets reparse point data to be associated with $hDevice.
+
+=item C<FSCTL_GET_REPARSE_POINT>
+
+Retrieves the reparse point data associated with $hDevice.
+
+=item C<FSCTL_DELETE_REPARSE_POINT>
+
+Deletes the reparse point data associated with $hDevice.
+
+=back
+
 =item C<":GENERIC_">
 
 Constants specifying generic access permissions that are not specific
 to one type of object.
 
 	GENERIC_ALL			GENERIC_EXECUTE
-	GENERIC_READ			GENERIC_WRITE
+	GENERIC_READ		GENERIC_WRITE
 
 =item C<":MEDIA_TYPE">
 

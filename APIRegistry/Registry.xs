@@ -1,7 +1,7 @@
 /* Win32API/Registry.xs */
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 #include "EXTERN.h"
@@ -17,7 +17,7 @@ extern "C" {
 #include <windows.h>
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 /*CONSTS_DEFINED*/
@@ -140,7 +140,7 @@ AllowPriv( sPrivName, bEnable )
 	) {
 	    SetLastError( ERROR_SUCCESS );
 	    AdjustTokenPrivileges( hToken, FALSE, &tokPrivNew,
-	      NULL, NULL, NULL );
+	      0, NULL, NULL );
 	    if(  ERROR_SUCCESS == GetLastError()  ) {
 		RETVAL= TRUE;
 	    }
@@ -350,6 +350,10 @@ bool
 RegDeleteValueW( hKey, swValueName )
 	HKEY	hKey
 	WCHAR *	swValueName
+    CODE:
+	RETVAL= ErrorRet(  RegDeleteValueW( hKey, swValueName )  );
+    OUTPUT:
+	RETVAL
 
 
 bool
@@ -484,7 +488,7 @@ _RegEnumValueA(hKey,uIndex,osName,iolName,pNull,ouType,opData,iolData)
 	}
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing '\0' from REG*_SZ values if iolData was C<[]>: */
-	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType  &&  *iolData
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(7))  &&  '\0' == opData[*iolData-1]  )
 	    --*iolData;
@@ -529,7 +533,6 @@ _RegEnumValueW(hKey,uIndex,oswName,iolwName,pNull,ouType,opData,iolData)
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing L'\0' from REG*_SZ values if iolData was C<[]>: */
 	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
-	 &&  *iolData >= sizeof(WCHAR)
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(7))
 	 &&  L'\0' == ((WCHAR *)opData)[(*iolData/sizeof(WCHAR))-1]  )
@@ -902,7 +905,7 @@ _RegQueryValueExA( hKey, sName, pNull, ouType, opData, iolData )
 	}
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing '\0' from REG*_SZ values if iolData was C<[]>: */
-	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType  &&  *iolData
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(5))  &&  '\0' == opData[*iolData-1]  )
 	    --*iolData;
@@ -939,7 +942,6 @@ _RegQueryValueExW( hKey, swName, pNull, ouType, opData, iolData )
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing L'\0' from REG*_SZ vals if iolData was C<[]>: */
 	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
-	 &&  *iolData >= sizeof(WCHAR)
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(5))
 	 &&  L'\0' == ((WCHAR *)opData)[(*iolData/sizeof(WCHAR))-1]  )

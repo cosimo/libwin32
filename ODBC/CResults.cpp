@@ -28,9 +28,9 @@
 
 #include <stdio.h>
 
-#include <SQL.H>
-#include <SQLEXT.H>
-#include <ODBCINST.H>
+#include <sql.h>
+#include <sqlext.h>
+#include <odbcinst.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -45,8 +45,8 @@ extern "C" {
 #endif
 
 #include "ODBCbuild.h"
-#include "odbc.h"	
-#include "cresults.hpp"
+#include "ODBC.h"
+#include "CResults.hpp"
 
 CResults::CResults(ODBC_TYPE *h){
 	char szBuff[100];
@@ -82,7 +82,7 @@ CResults::CResults(ODBC_TYPE *h){
 			SWORD	dColType;
 
 			for(iTemp = 1; iTemp <= sNumOfCols; iTemp++){
-				if (SQLColAttributes(h->hstmt, iTemp, SQL_COLUMN_DISPLAY_SIZE, NULL, NULL, NULL, &dSize[iTemp]) == SQL_SUCCESS){
+				if (SQLColAttributes(h->hstmt, iTemp, SQL_COLUMN_DISPLAY_SIZE, NULL, 0, NULL, &dSize[iTemp]) == SQL_SUCCESS){
 						//	If we cant resolve the size define it as the MAX Buffer
 						//	size. Later we can change this if needed.
 

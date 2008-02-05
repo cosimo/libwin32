@@ -1,7 +1,12 @@
 use ExtUtils::MakeMaker;
+
+my @libs;
+push @libs, '-L/lib/w32api -lole32 -luuid' if $^O eq "cygwin";
+
 WriteMakefile(
     'NAME'		=> 'Win32::Shortcut',
-    'VERSION_FROM'	=> 'Shortcut.pm', # finds $VERSION
+    'LIBS'		=> \@libs,
+    'VERSION_FROM'	=> 'Shortcut.pm',
     'XS'		=> { 'Shortcut.xs' => 'Shortcut.cpp' },
     'dist'		=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
     ($] < 5.005 ? () :

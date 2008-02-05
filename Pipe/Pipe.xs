@@ -57,13 +57,19 @@ static long constant(char *name)
 {
     errno = 0;
     switch (*name) {
-	    case 'A':
+        case 'A':
 			break;
     	case 'B':
 			break;
     	case 'C':
 			break;
     	case 'D':
+            if (strEQ(name, "DEFAULT_WAIT_TIME"))
+#ifdef DEFAULT_WAIT_TIME
+                return DEFAULT_WAIT_TIME;
+#else
+            goto not_there;
+#endif
 			break;
     	case 'E':
 			break;
@@ -193,7 +199,7 @@ XS(XS_WIN32__Pipe_Close)
 	if(items != 1){
 		CROAK("usage: Close($PipeHandle);\n");
 	}
-	Pipe = (class CPipe *)SvIV(ST(0));
+	Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 
 	PUSHMARK(sp);
 	
@@ -216,7 +222,7 @@ XS(XS_WIN32__Pipe_Write)
 	if(items != 2){
 		CROAK("usage: Write($PipeHandle, $Data);\n");
 	}
-	Pipe = (class CPipe *)SvIV(ST(0));
+	Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 	vpData = (void *)SvPV(ST(1), dDataLen);
 
 	PUSHMARK(sp);
@@ -240,7 +246,7 @@ XS(XS_WIN32__Pipe_Read)
 	if(items != 1){
 		CROAK("usage: Read($PipeHandle);\n");
 	}
-	Pipe = (class CPipe *)SvIV(ST(0));
+	Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 
 	PUSHMARK(sp);
 	
@@ -275,7 +281,7 @@ XS(XS_WIN32__Pipe_Connect)
 	if(items != 1){
 		CROAK("usage: Connect($PipeHandle);\n");
 	}
-	Pipe = (class CPipe *)SvIV(ST(0));
+	Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 
 	PUSHMARK(sp);
 	
@@ -297,7 +303,7 @@ XS(XS_WIN32__Pipe_Disconnect)
 	if(items > 0 && items < 3){
 		CROAK("usage: Disconnect($PipeHandle [, $iPurge]);\n");
 	}
-	Pipe = (class CPipe *)SvIV(ST(0));
+	Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 	if (items == 2){
 		iPurge = (int) SvIV(ST(1));
 	}
@@ -322,7 +328,7 @@ XS(XS_WIN32__Pipe_ResizeBuffer)
 	if(items != 2){
 		CROAK("usage: ResizeBuffer($PipeHandle, $Size);\n");
 	}
-	Pipe = (class CPipe *)SvIV(ST(0));
+	Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 	dSize = (DWORD)SvIV(ST(1));
 
 	PUSHMARK(sp);
@@ -344,7 +350,7 @@ XS(XS_WIN32__Pipe_BufferSize)
 	if(items != 1){
 		CROAK("usage: BufferSize($PipeHandle);\n");
 	}
-	Pipe = (class CPipe *)SvIV(ST(0));
+	Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 
 	PUSHMARK(sp);
 	
@@ -369,7 +375,7 @@ XS(XS_WIN32__Pipe_Error)
 		CROAK("usage: Error([$PipeHandle]);\n");
 	}
 	if (items == 1){
-		Pipe = (class CPipe *)SvIV(ST(0));
+		Pipe = INT2PTR(class CPipe *, SvIV(ST(0)));
 	}
 
 	PUSHMARK(sp);
@@ -417,7 +423,6 @@ XS(boot_Win32__Pipe)
 {
 	dXSARGS;
 	char* file = __FILE__;
-	int i;
 
 	giError = 0;
 	memset((void *)gszError, 0, ERROR_TEXT_SIZE);

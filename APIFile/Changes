@@ -1,11 +1,28 @@
 Revision history for Perl extension Win32API::File.
 
-0.09
-	- Add AUTHOR and ABSTRACT_FROM to Makefile.PL [from libwin32].
-	- Trivial speed improvements [from libwin32].
+0.10 2005-09-09
+	- Added GetFileAttributes() function and corresponding constants.
+	  (Patches from Kenneth Olwing from 2004-11-12).
+	- cygwin patches from Rafael Kitover and Reini Urban.
+	  This includes the addition of the GetFileSize(), getFileSize()
+	  setFilePointer() and GetOverlappedResult() methods and the
+	  experimental new object oriented interface.  All file position
+	  operations use either Math::BigInt objects or 8 byte integers
+	  (cygwin) for file offsets.
+
+0.0901 2005-08-30
+	- increased version number to show difference to standalone
+	  CPAN release of Win32API-File-0.09.zip
+
+0.09 2005-02-18
+        - Support 5.007+
+
+0.09 [libwin32 version only]
+	- Add AUTHOR and ABSTRACT_FROM to Makefile.PL.
+	- Trivial speed improvements.
 	- Fixed F<test.pl> if Z: is a valid drive letter.
 
-0.08 Fri Apr  7 22:36:06 2000
+0.08 2000-04-07
 	- C<GetOsFHandle> now returns false for failure.
 	- New F<buffers.h> supports C++ compilers.
 	- Read-only output-only parameters now generate an error.
@@ -16,7 +33,7 @@ Revision history for Perl extension Win32API::File.
 	- Added IOCTL_DISK_GET_MEDIA_TYPES since *_STORAGE_* fails for floppy.
 	- Added several example scripts.
 
-0.07  Tue Aug 17 13:04:54 1999
+0.07 1999-08-17
 	- Added DeleteFile().
 	- Removed prototypes from OsFHandleOpen() and GetOsFHandle() since
 	  the C<*> doesn't prevent warnings about bareword file handles and
@@ -28,7 +45,7 @@ Revision history for Perl extension Win32API::File.
 	- Turned on C<CAPI> in C<Makefile.PL> for certain versions of Perl.
 	- Updated C<README>.
 
-0.06  Tue Aug 10 20:50:21 1999
+0.06 1999-08-10
 	- Switch to new buffers.h and "Hungarian" notation!
 	- Added full documentation!
 	- ReadFile() no longer tries to read more bytes than asked for
@@ -49,14 +66,14 @@ Revision history for Perl extension Win32API::File.
 	- Added ":PARTITION_" export class for partition types.
 	- Seriously bulked up the test suite.
 
-0.05  Fri Aug 21 11:01:49 1998
+0.05 1998-08-21
 	- "-w" no longer warns that a buffer size of "=99" "isn't numeric".
 	  nor if pass undef var for buffer size or output-only parameter.
 	- Added SetErrorMode() and :SEM_.
 	- createFile() sharing now defaults to "rw" to match C RTL.
 	- createFile() was ignoring "r" and "w" in access masks.
 
-0.04  Thu Aug 13 17:05:16 1998
+0.04 1998-08-13
 	- Added GetLogicalDrives and GetLogicalDriveStrings.
 	- Added GetDriveType and GetVolumeInformation.
 	- Added DRIVE_* for GetDriveType().
@@ -66,17 +83,17 @@ Revision history for Perl extension Win32API::File.
 	- More standardized "Hungarian" notation and uses buffers.h.
 	- Large unsigned values no longer made negative.
 
-0.03  Sat Apr 25 19:58:19 1998
+0.03 1998-04-25
 	- Added DDD_* constants to File.pm and moved codes mistakenly
 	  exported for :DDD_ to be exported for :Misc.
 	- Split large group of constants to increase efficiency.
 	- Minor cosmetic fixes.
 
-0.02  Tue Mar 03 12:37:09 1998
+0.02 1998-03-03
 	- Added DeviceIoControl().
 	- Added some IOCTL_STORAGE_* and IOCTL_DISK_* constants
 	- Taught test.pl to verify all exported functions and constants.
 
-0.01  Mon Dec 08 12:54:10 1997
+0.01 1997-12-08
 	- original version; based on Win32API::Registry.
 	- release to partner

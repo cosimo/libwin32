@@ -141,7 +141,7 @@ class _const2perl {
 };
 
 #define START_CONSTS( sModName )	_const2perl const2( sModName );
-#define const2perl( const )		const2.mkconst( #const, const )
+#define mkperlconst( name, val )	const2.mkconst( name, val )
 
 #else	/* __cplusplus */
 
@@ -161,16 +161,18 @@ class _const2perl {
 #  define START_CONSTS( sModName )	/* Nothing */
 # endif
 
-#define const2perl( const )	do {	 				\
-	if(  const < 0  ) {						\
-	    newconst( #const, "%"IVdf, const, newSViv((IV)const) );	\
+#define mkperlconst( name, val )	do {				\
+	if(  val < 0  ) {						\
+	    newconst( name, "%"IVdf, val, newSViv((IV)val) );		\
 	} else {							\
-	    setuv( (UV)const );						\
-	    newconst( #const, "0x%"UVxf, const, mpSvNew ); 		\
+	    setuv( (UV)val );						\
+	    newconst( name, "0x%"UVxf, val, mpSvNew ); 			\
 	}								\
     } while( 0 )
 
 #endif	/* __cplusplus */
+
+#define const2perl( const )		mkperlconst( #const, const )
 
 
 //Example use:

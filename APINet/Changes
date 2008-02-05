@@ -1,5 +1,9 @@
 Revision history for Perl extension Win32API::Net
 
+0.10	Sep 09 2005
+	- Fix tests to work on non-English Windows versions (Reini Urban).
+	- cygwin compatibility changes.
+
 0.09	Tue Sep 05 2000
 	- fixed yet another memory leak pointed out again by Eamon Doyle.
 	  Macro HV_STORE_AV used newRV_inc instead of newRV_noinc

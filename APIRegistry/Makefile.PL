@@ -12,10 +12,19 @@ WriteMakefile(
 	( 'AUTHOR'		=> 'Tye McQueen <tye@metronet.com>',
 	  'ABSTRACT_FROM'	=> 'Registry.pm' )
     ),
-    'postamble' => { IMPORT_LIST => [qw(/._/ !/[a-z]/)],
+    (	# 5.008 <= $]  ?  'CONST2PERL'  :	# Will this ever work? /:
+        'postamble'
+    )		=> { IMPORT_LIST => [qw(/._/ !/[a-z]/)],
 		     IFDEF => q{ /^SE_/ ? '__cplusplus' : /REG_/ },
 		     CPLUSPLUS => 1,
 		     WRITE_PERL => 1,
+		     VALUES => {
+			KEY_DELETE => 'DELETE',
+			KEY_READ_CONTROL => 'READ_CONTROL',
+			KEY_WRITE_DAC => 'WRITE_DAC',
+			KEY_WRITE_OWNER => 'WRITE_OWNER',
+			KEY_SYNCHRONIZE => 'SYNCHRONIZE', # (not used)
+		     },
 		     # Comment out next line to rebuild constants defs:
 		     NO_REBUILD => 1,
 		   },
@@ -119,9 +128,9 @@ ${_final}_to_blib: $final
 
     push @m, "
 clean ::
-    $self->{RM_F} @clean\n"   if  @clean;
+	$self->{RM_F} @clean\n"   if  @clean;
     push @m, "
 realclean ::
-    $self->{RM_F} @realclean\n"   if  @realclean;
+	$self->{RM_F} @realclean\n"   if  @realclean;
     return join('',@m);
 }

@@ -3,7 +3,8 @@
 # Win32::Clipboard - Interaction with the Windows clipboard
 #
 # Author: Aldo Calpini <dada@perl.it>
-# Version: 0.5101
+# Modified by: Hideyo Imazu <h@imazu.net>
+# Version: 0.52
 # Info:
 #       http://dada.perl.it
 #       http://www.perl.com/CPAN/authors/Aldo_Calpini

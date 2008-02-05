@@ -1,7 +1,9 @@
 #define	NULL_VALUE	""
 
-#ifndef _WIN64
+#ifndef SQLLEN
 #  define	SQLLEN	SDWORD
+#endif
+#ifndef SQLULEN
 #  define	SQLULEN	UDWORD
 #endif
 

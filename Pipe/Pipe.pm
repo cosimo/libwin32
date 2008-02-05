@@ -40,7 +40,7 @@ sub new
     my ($Type, $Name, $Time) = @_;
 
     if (! $Time){
-        $Time = DEFAULT_WAIT_TIME;
+        $Time = DEFAULT_WAIT_TIME();
     }
     $Pipe = PipeCreate($Name, $Time);
     if ($Pipe){
@@ -82,6 +82,7 @@ sub Error{
 sub Close{
     my ($self) = shift;
     PipeClose($self->{'Pipe'});
+    $self->{'Pipe'} = 0;
 }
 
 sub Connect{

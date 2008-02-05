@@ -611,7 +611,8 @@ sub Error {
 #==========
     my($self) = @_;
     return undef unless ref($self);
-  
+
+    require Win32 unless defined &Win32::GetLastError;
     my $errtext = "";
     my $tmp     = "";
     my $errnum  = Win32::GetLastError();

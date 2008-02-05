@@ -194,26 +194,14 @@ StartService(lpHostName, lpServiceName)
     CODE:
 	{
 	    SC_HANDLE hSCManager, hSCService;
-	    WCHAR wbuffer[MAX_PATH+1];
 	    RETVAL = FALSE;
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
-		if(lpHostName && USING_WIDE()) {
-		    A2WHELPER(lpHostName, wbuffer, sizeof(wbuffer));
-		    hSCManager = OpenSCManagerW(wbuffer, NULL, SC_MANAGER_CONNECT);
-		}
-		else
-		    hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
+                hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
 
 		if (hSCManager != NULL)	{
-		    if(USING_WIDE()) {
-			A2WHELPER(lpServiceName, wbuffer, sizeof(wbuffer));
-			hSCService = OpenServiceW(hSCManager, wbuffer, SERVICE_START);
-		    }
-		    else
-			hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_START);
-
+                    hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_START);
 		    if (hSCService != NULL)  {
 			RETVAL = StartService(hSCService, 0, NULL);
 			CloseServiceHandle(hSCService);
@@ -233,27 +221,15 @@ StopService(lpHostName, lpServiceName)
     CODE:
 	{
 	    SERVICE_STATUS serviceStatus;
-	    WCHAR wbuffer[MAX_PATH+1];
 	    SC_HANDLE hSCManager, hSCService;
 	    RETVAL = FALSE;
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
-		if(lpHostName && USING_WIDE()) {
-		    A2WHELPER(lpHostName, wbuffer, sizeof(wbuffer));
-		    hSCManager = OpenSCManagerW(wbuffer, NULL, SC_MANAGER_CONNECT);
-		}
-		else
-		    hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
+                hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
 
 		if (hSCManager != NULL)	{
-		    if(USING_WIDE()) {
-			A2WHELPER(lpServiceName, wbuffer, sizeof(wbuffer));
-			hSCService = OpenServiceW(hSCManager, wbuffer, SERVICE_STOP);
-		    }
-		    else
-			hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_STOP);
-
+                    hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_STOP);
 		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_STOP,
 						&serviceStatus);
@@ -274,7 +250,6 @@ GetStatus(lpHostName,lpServiceName,status)
     CODE:
 	{
 	    SERVICE_STATUS serviceStatus;
-	    WCHAR wbuffer[MAX_PATH+1];
 	    SC_HANDLE hSCManager, hSCService;
 
 	    RETVAL = FALSE;
@@ -285,20 +260,10 @@ GetStatus(lpHostName,lpServiceName,status)
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
-		if(lpHostName && USING_WIDE()) {
-		    A2WHELPER(lpHostName, wbuffer, sizeof(wbuffer));
-		    hSCManager = OpenSCManagerW(wbuffer, NULL, SC_MANAGER_CONNECT);
-		}
-		else
-		    hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
+                hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
 
 		if (hSCManager != NULL)	{
-		    if(USING_WIDE()) {
-			A2WHELPER(lpServiceName, wbuffer, sizeof(wbuffer));
-			hSCService = OpenServiceW(hSCManager, wbuffer, SERVICE_INTERROGATE);
-		    }
-		    else
-			hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_INTERROGATE);
+                    hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_INTERROGATE);
 
 		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_INTERROGATE,
@@ -347,26 +312,15 @@ PauseService(lpHostName,lpServiceName)
     CODE:
 	{
 	    SERVICE_STATUS serviceStatus;
-	    WCHAR wbuffer[MAX_PATH+1];
 	    SC_HANDLE hSCManager, hSCService;
 	    RETVAL = FALSE;
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
-		if(lpHostName && USING_WIDE()) {
-		    A2WHELPER(lpHostName, wbuffer, sizeof(wbuffer));
-		    hSCManager = OpenSCManagerW(wbuffer, NULL, SC_MANAGER_CONNECT);
-		}
-		else
-		    hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
+                hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
 
 		if (hSCManager != NULL)	{
-		    if(USING_WIDE()) {
-			A2WHELPER(lpServiceName, wbuffer, sizeof(wbuffer));
-			hSCService = OpenServiceW(hSCManager, wbuffer, SERVICE_PAUSE_CONTINUE);
-		    }
-		    else
-			hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_PAUSE_CONTINUE);
+                    hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_PAUSE_CONTINUE);
 
 		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_PAUSE, &serviceStatus);
@@ -386,27 +340,15 @@ ResumeService(lpHostName,lpServiceName)
     CODE:
 	{
 	    SERVICE_STATUS serviceStatus;
-	    WCHAR wbuffer[MAX_PATH+1];
 	    SC_HANDLE hSCManager, hSCService;
 	    RETVAL = FALSE;
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
-		if(lpHostName && USING_WIDE()) {
-		    A2WHELPER(lpHostName, wbuffer, sizeof(wbuffer));
-		    hSCManager = OpenSCManagerW(wbuffer, NULL, SC_MANAGER_CONNECT);
-		}
-		else
-		    hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
+                hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT);
 
 		if (hSCManager != NULL)	{
-		    if(USING_WIDE()) {
-			A2WHELPER(lpServiceName, wbuffer, sizeof(wbuffer));
-			hSCService = OpenServiceW(hSCManager, wbuffer, SERVICE_PAUSE_CONTINUE);
-		    }
-		    else
-			hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_PAUSE_CONTINUE);
-
+                    hSCService = OpenServiceA(hSCManager, lpServiceName, SERVICE_PAUSE_CONTINUE);
 		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_CONTINUE,
 						&serviceStatus);
@@ -427,12 +369,9 @@ GetServices(lpHostName, hv)
 	{
 	    DWORD dwBytesNeeded, dwServicesReturned, dwResumeHandle, dwIndex;
 	    ENUM_SERVICE_STATUSA essA[1000];
-	    ENUM_SERVICE_STATUSW essW[1000];
-	    WCHAR wbuffer[MAX_PATH+1];
 	    char szService[MAX_PATH+1];
 	    char szDisplay[MAX_PATH+1];
 	    LPSTR lpDisplayName, lpServiceName;
-	    BOOL bUsingWide = USING_WIDE();
 	    SC_HANDLE hSCManager;
 	    SV *sv;
 
@@ -444,41 +383,23 @@ GetServices(lpHostName, hv)
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 
-	    if(lpHostName && bUsingWide) {
-		A2WHELPER(lpHostName, wbuffer, sizeof(wbuffer));
-		hSCManager = OpenSCManagerW(wbuffer, NULL, SC_MANAGER_CONNECT|SC_MANAGER_ENUMERATE_SERVICE);
-	    }
-	    else
-		hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT|SC_MANAGER_ENUMERATE_SERVICE);
-
+            hSCManager = OpenSCManagerA(lpHostName, NULL, SC_MANAGER_CONNECT|SC_MANAGER_ENUMERATE_SERVICE);
 	    if (hSCManager != NULL) {
 		dwResumeHandle = 0;
 		dwBytesNeeded = 0;
 		dwServicesReturned = 0;
-		while ((bUsingWide
-		    ? EnumServicesStatusW(hSCManager, SERVICE_WIN32,
-					 SERVICE_ACTIVE | SERVICE_INACTIVE,
-					 essW, sizeof(essW), &dwBytesNeeded,
-					 &dwServicesReturned,
-					 &dwResumeHandle)
-		    : EnumServicesStatusA(hSCManager, SERVICE_WIN32,
-					 SERVICE_ACTIVE | SERVICE_INACTIVE,
-					 essA, sizeof(essA), &dwBytesNeeded,
-					 &dwServicesReturned,
-					 &dwResumeHandle)) == TRUE
+		while (EnumServicesStatusA(hSCManager, SERVICE_WIN32,
+                                           SERVICE_ACTIVE | SERVICE_INACTIVE,
+                                           essA, sizeof(essA), &dwBytesNeeded,
+                                           &dwServicesReturned,
+                                           &dwResumeHandle) == TRUE
 		       || GetLastError() == ERROR_MORE_DATA)
 		{
 		    lpServiceName = szService;
 		    lpDisplayName = szDisplay;
 		    for (dwIndex = 0; dwIndex < dwServicesReturned; ++dwIndex) {
-			if (bUsingWide) {
-			    W2AHELPER(essW[dwIndex].lpServiceName, szService, sizeof(szService));
-			    W2AHELPER(essW[dwIndex].lpDisplayName, szDisplay, sizeof(szDisplay));
-			}
-			else {
-			    lpServiceName = essA[dwIndex].lpServiceName;
-			    lpDisplayName = essA[dwIndex].lpDisplayName;
-			}
+                        lpServiceName = essA[dwIndex].lpServiceName;
+                        lpDisplayName = essA[dwIndex].lpDisplayName;
 
 			sv = newSVpv(lpServiceName, 0);
 			hv_store((HV*)hv, lpDisplayName,

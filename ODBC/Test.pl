@@ -49,8 +49,7 @@
 
     $DriverType = "Microsoft Access Driver (*.mdb)";
     $Desc = "Description=The Win32::ODBC Test DSN for Perl";
-    $Dir = `cd`;
-    chop $Dir;
+    $Dir = Win32::GetCwd();
     $DBase = "ODBCTest.mdb";
 
     $iWidth=60;

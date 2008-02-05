@@ -1,4 +1,16 @@
-DWORD                   T_IV
-REGSAM                  T_IV
-HKEY                    T_IV
-HANDLE                  T_IV
+DWORD                   T_HANDLE
+REGSAM                  T_HANDLE
+HKEY                    T_HANDLE
+HANDLE                  T_HANDLE
+
+#############################################################################
+INPUT
+
+T_HANDLE
+	$var = INT2PTR($type, SvIV($arg))
+
+#############################################################################
+OUTPUT
+
+T_HANDLE
+	sv_setiv($arg, PTR2IV($var));

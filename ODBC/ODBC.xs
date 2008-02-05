@@ -30,9 +30,9 @@
 #include <stdio.h>
     
     //  ODBC Stuff
-#include <SQL.H>
-#include <SQLEXT.H>
-#include <ODBCINST.H>
+#include <sql.h>
+#include <sqlext.h>
+#include <odbcinst.h>
 
     //  Win32 Perl Stuff
 #if defined(__cplusplus)
@@ -50,11 +50,11 @@ extern "C" {
 
 
     //  Win32::ODBC Stuff                       
-#include "ODBCBuild.h"
+#include "ODBCbuild.h"
 #include "CResults.hpp" 
 #include "CMom.hpp"
-#include "odbc.h"
-#include "constant.h"
+#include "ODBC.h"
+#include "Constant.h"
 
 #undef  __WIN32_ODBC__
 
@@ -91,10 +91,9 @@ ODBC_TYPE *NewODBC(){
     ODBC_TYPE *h = 0;
     int iResult = 0;
     CMom    *cmDaughter;
-    int iTemp;
 
 
-#ifdef _Debug
+#ifdef _DEBUG
     if (ghDebug){
         DebugConnection("Creating a new ODBC object.", 0);
     }
@@ -104,7 +103,7 @@ ODBC_TYPE *NewODBC(){
     }
     if (cmDaughter){ 
 
-#ifdef _Debug
+#ifdef _DEBUG
         DEBUG_DUMP("NewODBC: Entering Critical Section gCS")
 #endif
         EnterCriticalSection(&gCS);
@@ -113,7 +112,7 @@ ODBC_TYPE *NewODBC(){
         }
         LeaveCriticalSection(&gCS);
 
-#ifdef _Debug
+#ifdef _DEBUG
         DEBUG_DUMP("NewODBC: Left Critical Section gCS    ")
 #endif
 
@@ -127,7 +126,7 @@ ODBC_TYPE *NewODBC(){
                         CleanODBC(h);
                             //  Add these values AFTER cleaning the ODBC Object
                         h->conn = cmDaughter->operator[]((void *)h);
-#ifdef _Debug
+#ifdef _DEBUG
                         DebugConnection("...created ODBC object.", h);
 #endif
                         h->henv = ghEnv;
@@ -142,7 +141,7 @@ ODBC_TYPE *NewODBC(){
             }
         }
     }
-#ifdef _Debug
+#ifdef _DEBUG
     else{
         DebugConnection("...failed with new ODBC object: Could not find or create daughter.", h);
     }
@@ -190,8 +189,9 @@ ODBC_TYPE *CleanODBC(ODBC_TYPE *h){
 int FreeODBC(ODBC_TYPE *h){
     int iResult = 1;
 
-#ifdef _Debug
+#ifdef _DEBUG
     if (ghDebug){
+        char szBuff[1000];
         DebugConnection("FreeODBC has been called.\n", h);
     }
 #endif
@@ -235,14 +235,14 @@ int FreeODBC(ODBC_TYPE *h){
     
     if (h->iDebug){
 
-#ifdef _Debug
+#ifdef _DEBUG
         DebugConnection("Setting Debug Mode off for connection\n\t\t(due to object destuction).", h);
 #endif
 
         RemoveDebug(h);
     }
 
-#ifdef _Debug
+#ifdef _DEBUG
     if (ghDebug){
         char szBuff[30];
         sprintf(szBuff, "FreeODBC was %s.\n", (iResult)? "successful":"unsuccessful");
@@ -269,7 +269,7 @@ void AddDebug(ODBC_TYPE *h){
             AllocConsole();
             SetConsoleTitle("DEBUG: ODBC.PLL");
             ghDebug = GetStdHandle(STD_ERROR_HANDLE);
-#endif _DEBUG
+#endif
         }
         h->iDebug = 1;
     }
@@ -286,7 +286,7 @@ void RemoveDebug(ODBC_TYPE *h){
 //          giDebugGlobal = 0;
         }
         if (!(giDebug + giDebugGlobal)){
-#ifdef _Debug
+#ifdef _DEBUG
             DebugConnection("Closing Debug Output File.", h);
 #endif
             DEBUG_DUMP("RemoveDebug: Entering Critical Section gDCS")
@@ -377,7 +377,7 @@ void _NT_ODBC_Error(ODBC_TYPE * h, char *szFunction, char *szFunctionLevel){
     strcpy(h->Error->szFunction, szFunction);
     strcpy(h->Error->szFunctionLevel, szFunctionLevel);
 
-#ifdef _Debug
+#ifdef _DEBUG
     if (giDebug){
         DebugDumpError(h);
     }
@@ -402,7 +402,7 @@ ODBC_TYPE *ODBCError(char *szString, ODBC_TYPE *h, char *szFunction, char * szFu
         strcpy(h->Error->szFunctionLevel, szFunctionLevel);
     }
 
-#ifdef _Debug
+#ifdef _DEBUG
     if (giDebug){
         DebugDumpError(h);
     }
@@ -608,7 +608,6 @@ XS(XS_WIN32__ODBC_Connect) // ODBC_Connect(Connection string: input) returns con
 
     char      szDSN[DSN_LENGTH]; // string to hold datasource name
     ODBC_TYPE * h;
-    int         con_num; //connection #
     char        *szIn = 0;
     int         iTemp = 0;
 
@@ -669,7 +668,7 @@ XS(XS_WIN32__ODBC_Connect) // ODBC_Connect(Connection string: input) returns con
                 char    szError[100];
 
                 while (iTemp > 1){
-                    uType= SvIV(ST(iTemp - 1));
+                    uType = (UWORD)SvIV(ST(iTemp - 1));
                     if (SvIOKp(ST(iTemp)) || SvNOKp(ST(iTemp))){
                         udValue = SvIV(ST(iTemp));
                     }else{
@@ -736,14 +735,11 @@ XS(XS_WIN32__ODBC_Execute) // ODBC_Execute($connection, $sql_text) returns (0,@f
 {
     dXSARGS;
     ODBC_TYPE * h;
-    int        con_num; // Connection #
     RETCODE retcode;          //ODBC gunk
     UCHAR  buff2[ODBC_BUFF_SIZE];
     SDWORD bufflenout;
-    int lenn;
     UWORD  x;
     char * szSQL; 
-    int len;
     STRLEN n_a;
 
     if(items < 2){
@@ -803,7 +799,6 @@ XS(XS_WIN32__ODBC_Fetch) // ODBC_Fetch($connection) returns (0,@dataelements) or
 {
     dXSARGS;
     ODBC_TYPE * h;
-    int        con_num;
 
     RETCODE retcode;         // yet more ODBC garbage
     UWORD   uType = SQL_FETCH_NEXT;
@@ -826,7 +821,7 @@ XS(XS_WIN32__ODBC_Fetch) // ODBC_Fetch($connection) returns (0,@dataelements) or
 //      uType = SQL_FETCH_RELATIVE;
     }
     if (items > 2){
-        uType = SvIV(ST(2));
+        uType = (UWORD)SvIV(ST(2));
     }
                      
     PUSHMARK(sp);
@@ -859,7 +854,7 @@ XS(XS_WIN32__ODBC_Fetch) // ODBC_Fetch($connection) returns (0,@dataelements) or
              // everything is happy
         XPUSHs(sv_2mortal(newSVnv((double)0))); 
         if(items > 1){
-            for(iTemp = 0; iTemp < udCRow; iTemp++){
+            for(iTemp = 0; iTemp < (int)udCRow; iTemp++){
                 XPUSHs(sv_2mortal(newSVnv((double)rgfRowStatus[iTemp])));   
             }
         }else{
@@ -913,7 +908,7 @@ XS(XS_WIN32__ODBC_Disconnect) // usage: ODBC_Disconnect($conn) or ODBC_Disconnec
     if (!(iResult = DeleteConn(conn))){
         h = ODBCError("No such connection", (ODBC_TYPE*) 0, "ODBC_Disconnect", "1");
     
-#ifdef _Debug
+#ifdef _DEBUG
         if (h){
             if(h->iDebug){
                 char szBuff[40];
@@ -961,7 +956,7 @@ XS(XS_WIN32__ODBC_ColumnList)
 RETCODE TableColList(pTHX_ int iType){
     dXSARGS;
     ODBC_TYPE * h;
-    int        con_num, iTemp;
+    int    iTemp;
     UCHAR  buff2[ODBC_BUFF_SIZE];
     SDWORD bufflenout;
     UWORD  x;
@@ -1383,7 +1378,6 @@ XS(XS_WIN32__ODBC_GetStmtCloseType)
 {
     dXSARGS;
     ODBC_TYPE * h;
-    long    iSize;
     char    *szType;
 
     if(items != 1){
@@ -1420,7 +1414,7 @@ XS(XS_WIN32__ODBC_SetStmtCloseType)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    uType = SvIV(ST(1));
+    uType = (UWORD)SvIV(ST(1));
     PUSHMARK(sp);
 
     switch(uType){
@@ -1466,7 +1460,7 @@ XS(XS_WIN32__ODBC_SetConnectOption)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    uType= SvIV(ST(1));
+    uType = (UWORD)SvIV(ST(1));
     if (SvIOKp(ST(2)) || SvNOKp(ST(2))){
         udValue = SvIV(ST(2));
     }else{
@@ -1508,7 +1502,7 @@ XS(XS_WIN32__ODBC_GetConnectOption)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    uOption = SvIV(ST(1));
+    uOption = (UWORD)SvIV(ST(1));
     PUSHMARK(sp);
 
     if(!h->Error->ErrNum){
@@ -1557,7 +1551,6 @@ XS(XS_WIN32__ODBC_StmtOption)
     DWORD   *dValue = (DWORD *)ucValue;
     UWORD   uOption;
     UDWORD  udValue;
-    UCHAR   uType;
     RETCODE rResult = 0;
     STRLEN  n_a;
 
@@ -1567,7 +1560,7 @@ XS(XS_WIN32__ODBC_StmtOption)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    uOption = SvIV(ST(1));
+    uOption = (UWORD)SvIV(ST(1));
     if (items > 2){
         if (SvIOKp(ST(2)) || SvNOKp(ST(2))){
             udValue = SvIV(ST(2));
@@ -1652,7 +1645,7 @@ XS(XS_WIN32__ODBC_GetFunctions)
         iTotal = 100;
         items = 1;
     }else{
-        uOption = SvIV(ST(1));
+        uOption = (UWORD)SvIV(ST(1));
     }
 
     while(items--){
@@ -1670,7 +1663,7 @@ XS(XS_WIN32__ODBC_GetFunctions)
         iTemp++;
         if (items){     //  If there are no more stack elements we will screw up
                         //  trying to access ST(1 + iTemp)
-            uOption = SvIV(ST(1 + iTemp));
+            uOption = (UWORD)SvIV(ST(1 + iTemp));
         }
     }
     if (!h->Error->ErrNum){
@@ -1704,7 +1697,7 @@ XS(XS_WIN32__ODBC_Transact)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    uType = SvIV(ST(1));
+    uType = (UWORD)SvIV(ST(1));
     PUSHMARK(sp);
 
     if(!h->Error->ErrNum){
@@ -1751,7 +1744,7 @@ XS(XS_WIN32__ODBC_ConfigDSN)
     h = _NT_ODBC_Verify(SvIV(ST(iStack)));
     CleanError(h->Error);
     iStack++;
-    uType = SvIV(ST(iStack));
+    uType = (UWORD)SvIV(ST(iStack));
     iStack++;
     szDriver = SvPV(ST(iStack), n_a);
     if (strlen(szDriver) == 0){
@@ -1845,7 +1838,7 @@ XS(XS_WIN32__ODBC_GetInfo)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    uType = SvIV(ST(1));
+    uType = (UWORD)SvIV(ST(1));
     PUSHMARK(sp);
 
     if(!h->Error->ErrNum){
@@ -1870,7 +1863,7 @@ XS(XS_WIN32__ODBC_GetInfo)
                 iFlag = 0;
                 CleanError(h->Error);
             }
-        } while (iSize <= (int) swBytes);
+        }
     }
 
     if (!h->Error->ErrNum){
@@ -1926,7 +1919,6 @@ XS(XS_WIN32__ODBC_ColAttributes)
     ODBC_TYPE * h;
     UWORD   iCol = 0;
     UWORD   iType = 0;
-    int     iTemp;
     UCHAR   *szName = 0;
     UCHAR   szBuff[ODBC_BUFF_SIZE];
     SWORD   dBuffLen = 0;
@@ -1940,7 +1932,7 @@ XS(XS_WIN32__ODBC_ColAttributes)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     szName = (unsigned char *) SvPV(ST(1), n_a);
-    iType = SvIV(ST(2));
+    iType = (UWORD)SvIV(ST(2));
     
     PUSHMARK(sp);
    
@@ -1980,8 +1972,6 @@ XS(XS_WIN32__ODBC_ColAttributes)
     ODBC_TYPE * h;
     int iDebug = 0;
     char    *szFile = 0;
-    char    szBuff[286];
-    DWORD   dCount;
     STRLEN  n_a;
 
     if(items < 1 || items > 3){
@@ -2002,7 +1992,8 @@ XS(XS_WIN32__ODBC_ColAttributes)
             EnterCriticalSection(&gDCS);
             if (ghFile){
             
-#ifdef _Debug   
+#ifdef _DEBUG
+                char szBuff[1000];
                 sprintf(szBuff, "Closing debug file \"%s\"", (gszFile)? gszFile:"none opened");
                 DebugConnection(szBuff, h);
 #endif
@@ -2026,8 +2017,9 @@ XS(XS_WIN32__ODBC_ColAttributes)
         if (iDebug){
             AddDebug(h);
             
-#ifdef _Debug
+#ifdef _DEBUG
             if(ghDebug){
+                char szBuff[1000];
                 sprintf(szBuff, "Debug mode set on by connection %i.\n", h->conn);
                 DebugConnection(szBuff, h);
             }
@@ -2035,8 +2027,9 @@ XS(XS_WIN32__ODBC_ColAttributes)
 
         }else{
         
-#ifdef _Debug
+#ifdef _DEBUG
             if (ghDebug){
+                char szBuff[1000];
                 sprintf(szBuff, "Debug mode set off by connection %i.\n", h->conn);
                 DebugConnection(szBuff, h);
             }
@@ -2075,12 +2068,12 @@ XS(XS_WIN32__ODBC_SetPos)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    uRow    = SvIV(ST(1));
+    uRow    = (UWORD)SvIV(ST(1));
     if (items > 2){
-        uOption = SvIV(ST(2));
+        uOption = (UWORD)SvIV(ST(2));
     }
     if (items > 3){
-        uLock   = SvIV(ST(3));
+        uLock   = (UWORD)SvIV(ST(3));
     }
     PUSHMARK(sp);
 
@@ -2109,17 +2102,9 @@ XS(XS_WIN32__ODBC_GetData)
 {
     dXSARGS;
     ODBC_TYPE * h;
-    RETCODE retcode;         // yet more ODBC garbage
-    UCHAR  buff2[ODBC_BUFF_SIZE];
     UCHAR   *szBuf = 0;
     SDWORD  iBuf = DEFAULTCOLSIZE;
-    SDWORD  bufflenout;
-    SWORD   sSQLType;
-    SWORD   sTemp;
-    int lenn, iTotalPushed, iTemp;
-    UWORD  x;
-    int len;
-    DWORD   dTemp;
+    int iTemp;
     
     if(items != 1){
         CROAK("usage: ($Err, $Type) = ODBC_GetData($Connection)\n");
@@ -2201,7 +2186,7 @@ XS(XS_WIN32__ODBC_DropCursor)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     if (items > 1){
-        uCloseSpecified = SvIV(ST(1));  
+        uCloseSpecified = (UWORD)SvIV(ST(1));  
     }
     CleanError(h->Error);
     PUSHMARK(sp);
@@ -2462,7 +2447,7 @@ XS(XS_WIN32__ODBC_GetTypeInfo)
 
     h = _NT_ODBC_Verify(SvIV(ST(0)));
     CleanError(h->Error);
-    sType = SvIV(ST(1));
+    sType = (SWORD)SvIV(ST(1));
     PUSHMARK(sp);
 
     if(!h->Error->ErrNum){
@@ -2511,12 +2496,12 @@ XS(XS_WIN32__ODBC_ShutDown)
 }
 
 void TerminateThread(){
-    char    szBuff[100];
     CMom    *cmDaughter;
 
     DEBUG_DUMP("TerminateThread(): Entering Critical Section gDCS")
-#ifdef _Debug
+#ifdef _DEBUG
     EnterCriticalSection(&gDCS);
+    char szBuff[1000];
     sprintf(szBuff, "Thread %05i (total threads: %03i) terminating.\n", GetCurrentThreadId(), giThread);
         //  Entered Debug CS so no other debug messages interrupt us...
         //  ...since we are in DCS we *MUST* use DebugPrint() not DebugDump()
@@ -2528,25 +2513,25 @@ void TerminateThread(){
     if (::cMom){
         if (cmDaughter = (CMom *) ::cMom->operator[](GetCurrentThreadId())){
         
-#ifdef _Debug
+#ifdef _DEBUG
             DebugPrint("\t--> Thread daughter about to be deleted...\n");
 #endif
 
             delete cmDaughter;
         
-#ifdef _Debug
+#ifdef _DEBUG
             DebugPrint("\t--> Thread daughter has been deleted.\n\n");    
 #endif
 
         }
-#ifdef _Debug
+#ifdef _DEBUG
         else{
             DebugPrint("\t--> No daughter on this thread.\n\n");
         }
 #endif
     }
 
-#ifdef _Debug
+#ifdef _DEBUG
     LeaveCriticalSection(&gDCS);
 #endif
 
@@ -2564,6 +2549,12 @@ int InitExtension(){
     ODBC_TYPE   *h = 0;
     int iRetCode = 1;
 
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+//  Otherwise, this is done in DllMain
+    InitializeCriticalSection(&gDCS);
+    InitializeCriticalSection(&gCS);
+#endif
+
     if (! ::cMom){
         ::cMom = new CMom;
     }
@@ -2575,7 +2566,7 @@ int InitExtension(){
         }
         if(!h || !cmDaughter){
             
-#ifdef _Debug
+#ifdef _DEBUG
             DebugConnection("     =========> Creating Gratuitous ODBC structure...", 0);
 #endif
             if (!(h = NewODBC())){
@@ -2584,7 +2575,7 @@ int InitExtension(){
                 strcpy(h->szUserDSN, "Gratuitous ODBC Structure");
             }
 
-#ifdef _Debug
+#ifdef _DEBUG
             DebugConnection("     =========> Finished creating gratuitous ODBC structure.", 0);
 #endif
 
@@ -2600,10 +2591,9 @@ XS(boot_Win32__ODBC)
 {
     dXSARGS;
     char* file = __FILE__;
-    int i;
     RETCODE iRetCode = 1;
 
-#ifdef _Debug
+#ifdef _DEBUG
     DebugConnection("==============\n\tRunning bootstrap code.", 0);
 #endif
         //  This will force the creation of a daughter Mom and populate it with a
@@ -2657,7 +2647,7 @@ XS(boot_Win32__ODBC)
         newXS("Win32::ODBC::ODBCInit",              XS_WIN32__ODBC_InitExtension, file);
 
     }
-#ifdef _Debug
+#ifdef _DEBUG
     DebugConnection("Finished bootstrap code.\n\t==============", 0);
 #endif
 
@@ -2681,47 +2671,37 @@ XS(boot_Win32__ODBC)
         switch(fdwReason){
             case DLL_PROCESS_ATTACH:
             {
-            
-#ifdef _Debug
-                char    szBuff[100];
-#endif
                 ghDLL    = hinstDLL;
                 giDebug  = 0;
                 ghDebug  = 0;
                 giThread++;
-                
-                        //  The Debug CS
+
+                //  The Debug CS
                 InitializeCriticalSection(&gDCS);
 
-                        //  The Global CS
+                //  The Global CS
                 InitializeCriticalSection(&gCS);
 
-#ifdef _Debug
+#ifdef _DEBUG
                 DebugDump("DLL attaching to process.\n");
 #endif
-            
                 break;
             }
             case DLL_THREAD_ATTACH:
             {
-            
-#ifdef _Debug
-                char    szBuff[100];
-#endif
-            
-                    /*  
-                        We will create a new CMom for this thread in the bootstrap
-                        function. This way we are not creating CMom & primary
-                        ODBC objects for every thread without reason
-                    */
-
+                /*
+                    We will create a new CMom for this thread in the bootstrap
+                    function. This way we are not creating CMom & primary
+                    ODBC objects for every thread without reason
+                */
                 giThread++;
-                
-                    //  Since we moved the code to create the threads ODBC object there should
-                    //  no longer be a need to enter the critical section gCS so let's remark
-                    //  it out for now.
+
+                //  Since we moved the code to create the threads ODBC object there should
+                //  no longer be a need to enter the critical section gCS so let's remark
+                //  it out for now.
 //              EnterCriticalSection(&gCS);
-#ifdef _Debug               
+#ifdef _DEBUG
+                char    szBuff[100];
                 DEBUG_DUMP("DLL_THREAD_ATTACH: Entering Critical Section gCS")
                 sprintf(szBuff, "Thread %05i (total threads: %03i) starting.\n", GetCurrentThreadId(), giThread);
                 DebugPrint(szBuff);
@@ -2735,10 +2715,9 @@ XS(boot_Win32__ODBC)
             case DLL_THREAD_DETACH:
             {
                 
-#ifdef _Debug
+#ifdef _DEBUG
                 char    szBuff[100];
-            
-                    //  Is there a need for this section go enter the critical section gCS?
+                //  Is there a need for this section go enter the critical section gCS?
                 DEBUG_DUMP("DLL_THREAD_DETACH: Entering Critical Section gCS")
                 EnterCriticalSection(&gCS);
                 sprintf(szBuff, "Thread %05i (total threads: %03i) stopping.\n", GetCurrentThreadId(), giThread);
@@ -2754,7 +2733,7 @@ XS(boot_Win32__ODBC)
             case DLL_PROCESS_DETACH:
             {
             
-#ifdef _Debug
+#ifdef _DEBUG
                 DebugDump("Unloading DLL.\n");
 #endif
 

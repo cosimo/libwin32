@@ -4,7 +4,7 @@ package Win32API::Registry;
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS); #@EXPORT_FAIL);
-$VERSION= '0.22';
+$VERSION= '0.24';
 
 require Exporter;
 require DynaLoader;
@@ -13,7 +13,7 @@ require DynaLoader;
 @EXPORT= qw();
 %EXPORT_TAGS= (
     Func =>	[qw(		regConstant		regLastError
-    	AllowPriv		AbortSystemShutdown	InitiateSystemShutdown
+	AllowPriv		AbortSystemShutdown	InitiateSystemShutdown
 	RegCloseKey		RegConnectRegistry	RegCreateKey
 	RegCreateKeyEx		RegDeleteKey		RegDeleteValue
 	RegEnumKey		RegEnumKeyEx		RegEnumValue
@@ -49,7 +49,13 @@ require DynaLoader;
 	KEY_QUERY_VALUE		KEY_SET_VALUE		KEY_CREATE_SUB_KEY
 	KEY_ENUMERATE_SUB_KEYS	KEY_NOTIFY		KEY_CREATE_LINK
 	KEY_READ		KEY_WRITE		KEY_EXECUTE
-	KEY_ALL_ACCESS )],
+	KEY_ALL_ACCESS),
+	'KEY_DELETE',		# DELETE          (0x00010000L)
+	'KEY_READ_CONTROL',	# READ_CONTROL    (0x00020000L)
+	'KEY_WRITE_DAC',	# WRITE_DAC       (0x00040000L)
+	'KEY_WRITE_OWNER',	# WRITE_OWNER     (0x00080000L)
+	'KEY_SYNCHRONIZE',	# SYNCHRONIZE     (0x00100000L) (not used)
+	],
     REG_ =>	[qw(
 	REG_OPTION_RESERVED	REG_OPTION_NON_VOLATILE	REG_OPTION_VOLATILE
 	REG_OPTION_CREATE_LINK	REG_OPTION_BACKUP_RESTORE
@@ -138,18 +144,44 @@ sub constant
     return 0;
 }
 
-BEGIN {
-    my $code= 'return _regLastError(@_)';
-    local( $!, $^E )= ( 1, 1 );
-    if(  $! ne $^E  ) {
-	$code= '
-	    local( $^E )= _regLastError(@_);
-	    my $ret= $^E;
-	    return $ret;
-	';
-    }
-    eval "sub regLastError { $code }";
-    die "$@"   if  $@;
+# BEGIN {
+#     my $code= 'return _regLastError(@_)';
+#     local( $!, $^E )= ( 1, 1 );
+#     if(  $! ne $^E  ) {
+# 	$code= '
+# 	    local( $^E )= _regLastError(@_);
+# 	    my $ret= $^E;
+# 	    return $ret;
+# 	';
+#     }
+#     eval "sub regLastError { $code }";
+#     die "$@"   if  $@;
+# }
+
+package Win32API::Registry::_error;
+
+use overload
+    '""' => sub {
+	require Win32 unless defined &Win32::FormatMessage;
+	$_ = Win32::FormatMessage(Win32API::Registry::_regLastError());
+	tr/\r\n//d;
+	return $_;
+    },
+    '0+' => sub { Win32API::Registry::_regLastError() },
+    'fallback' => 1;
+
+sub new { return bless {}, shift }
+sub set { Win32API::Registry::_regLastError($_[1]); return $_[0] }
+
+package Win32API::Registry;
+
+my $_error = new Win32API::Registry::_error;
+
+sub regLastError {
+    require Carp;
+    Carp::croak('Usage: ',__PACKAGE__,'::regLastError( [$setWin32ErrCode] )') if @_ > 1;
+    $_error->set($_[0]) if defined $_[0];
+    return $_error;
 }
 
 # Since we ISA DynaLoader which ISA AutoLoader, we ISA AutoLoader so we
@@ -311,10 +343,7 @@ All calls return a true value for success and a false value for
 failure.  After any failure, C<$^E> should automatically be set
 to indicate the reason.  However, current versions of Perl often
 overwrite C<$^E> too quickly, so you can use C<regLastError()>
-instead, which is only set by Win32API::Registry routines. 
-C<regLastError()> is also good if you have a really old version
-of Perl that does not connect C<$^E> to C<GetLastError()> on
-Win32.
+instead, which is only set by Win32API::Registry routines.
 
 Note that C<$!> is not set by these routines except by
 C<Win32API::Registry::constant()> when a constant is not defined.
@@ -692,10 +721,7 @@ Just like C<$^E>, in a numeric context C<regLastError()> returns
 the numeric error value while in a string context it returns a
 text description of the error [actually it returns a Perl scalar
 that contains both values so C<$x= regLastError()> causes C<$x>
-to give different values in string vs. numeric contexts].  On old
-versions of Perl where C<$^E> isn't tied to C<GetLastError()>,
-C<regLastError> simply returns the number of the error and you'll
-need to use <Win32::FormatMessage> to get the error string.
+to give different values in string vs. numeric contexts].
 
 The last form sets the error returned by future calls to
 C<regLastError()> and should not be used often.  C<$uError> must
@@ -1452,7 +1478,7 @@ For each parameter that specifies a buffer size, a value of C<0>
 can be passed.  For parameter that are pointers to buffer sizes,
 you can also pass in C<NULL> by specifying an empty list reference,
 C<[]>.  Both of these cases will ensure that the variable has
-E<some> buffer space allocated to it and pass in that buffer's
+I<some> buffer space allocated to it and pass in that buffer's
 allocated size.  Many of the calls indicate, via C<ERROR_MORE_DATA>,
 that the buffer size was not sufficient and the F<Registry.xs>
 code will automatically enlarge the buffer to the required size
@@ -1482,7 +1508,7 @@ buffer based on the underlying routine requesting more space.
 Some Reg*() calls may not currently set the buffer size when they
 return C<ERROR_MORE_DATA>.  But some that are not documented as
 doing so, currently do so anyway.  So the code assumes that any
-routine E<might> do this and resizes any buffers and repeats the
+routine I<might> do this and resizes any buffers and repeats the
 call.   We hope that eventually all routines will provide this
 feature.
 

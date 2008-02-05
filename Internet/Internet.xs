@@ -973,7 +973,6 @@ InternetQueryOption(handle,option)
     HINTERNET handle
     DWORD option
 PPCODE:
-    DWORD mysize;
     char *mybuf;
     long mybufsz = 16000;
     DWORD mynum;
@@ -1035,7 +1034,6 @@ InternetSetOption(handle,option,value)
 PPCODE:
     DWORD mysize;
     void *mybuf;
-    BOOL myquerystatus;
     DWORD mynum;
     BOOL myretval;
     STRLEN len;
@@ -1141,7 +1139,7 @@ PPCODE:
     myURL.dwSchemeLength=mysize;
     myURL.lpszHostName=(char *)safemalloc(mysize);
     myURL.dwHostNameLength=mysize;
-    myURL.nPort=mysize;
+    myURL.nPort=(INTERNET_PORT)mysize;
     myURL.lpszUserName=(char *)safemalloc(mysize);
     myURL.dwUserNameLength=mysize;
     myURL.lpszPassword=(char *)safemalloc(mysize);
@@ -1186,7 +1184,7 @@ PPCODE:
     myURL.dwStructSize=sizeof(myURL);
     myURL.lpszScheme	= SvPV(scheme, len); myURL.dwSchemeLength = len;
     myURL.lpszHostName	= SvPV(hostname, len); myURL.dwHostNameLength = len;
-    myURL.nPort		= port;
+    myURL.nPort		= (INTERNET_PORT)port;
     myURL.lpszUserName	= SvPV(username, len); myURL.dwUserNameLength = len;
     myURL.lpszPassword	= SvPV(password, len); myURL.dwPasswordLength = len;
     myURL.lpszUrlPath	= SvPV(path, len); myURL.dwUrlPathLength = len;
@@ -1332,7 +1330,6 @@ PPCODE:
     HINTERNET myhandle;
     WIN32_FIND_DATA myfile;
     SYSTEMTIME mytime;
-    unsigned long myCreationTime, myLastAccessTime, myLastWriteTime;
     unsigned long myFileSize;	
 
     if (myhandle = FtpFindFirstFile(handle, pattern,
@@ -1383,7 +1380,6 @@ InternetFindNextFile(handle)
 PPCODE:
     WIN32_FIND_DATA myfile;
     SYSTEMTIME mytime;
-    unsigned long myCreationTime, myLastAccessTime, myLastWriteTime;
     unsigned long myFileSize;	
 
     if (InternetFindNextFile(handle, &myfile)) {

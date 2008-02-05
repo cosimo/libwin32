@@ -14,7 +14,7 @@ use strict;
 use vars qw( $PACK $VERSION @ISA @EXPORT @EXPORT_OK );
 
 $PACK= "Win32::TieRegistry";	# Used in error messages.
-$VERSION= '0.25';		# Released 2003-10-07
+$VERSION= '0.26';
 
 
 use Carp;
@@ -1484,6 +1484,7 @@ sub DESTROY
     my $self= shift(@_);
     return   if  tied(%$self);
     my $unload;
+    local $@;
     eval { $unload= $self->{UNLOADME}; 1 }
 	or  return;
     my $debug= $ENV{DEBUG_TIE_REGISTRY};

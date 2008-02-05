@@ -481,6 +481,8 @@ RegCreateKeyEx(hkey,subkey,res,kclass,options,sam,security,ohandle,disposition)
 	LONG result;
 	SECURITY_ATTRIBUTES *psa = (SECURITY_ATTRIBUTES *)SvPV(security,sa_len);
 	SECURITY_ATTRIBUTES sa;
+        /* supress unreferenced variable warning */
+        (void)res;
 	if (sa_len != sizeof(SECURITY_ATTRIBUTES)) {
 	    psa = &sa;
 	    memset(&sa, 0, sizeof(SECURITY_ATTRIBUTES));
@@ -528,6 +530,8 @@ RegEnumKey(hkey,idx,subkey)
     CODE:
 	char keybuffer[TMPBUFSZ];
 	LONG result = RegEnumKey(hkey, idx, keybuffer, sizeof(keybuffer));
+        /* supress unreferenced variable warning */
+        (void)subkey;
 	RETVAL = SUCCESS(result);
 	if (!RETVAL)
 	    SetLastError(result);
@@ -550,6 +554,10 @@ RegEnumKeyEx(hkey,idx,subkey,classname,lastwritetime)
 	FILETIME ft;
 	LONG result = RegEnumKeyEx(hkey, idx, keybuffer, &keybuffersz,
 				   0, classbuffer, &classbuffersz, &ft);
+        /* supress unreferenced variable warning */
+        (void)subkey;
+        (void)classname;
+        (void)lastwritetime;
 	RETVAL = SUCCESS(result);
 	if (!RETVAL)
 	    SetLastError(result);
@@ -574,6 +582,11 @@ RegEnumValue(hkey,idx,name,reserved,type,value)
 	DWORD namesz, valsz;
 	unsigned char *ptr;
 	LONG result;
+
+        /* supress unreferenced variable warning */
+        (void)name;
+        (void)reserved;
+        (void)value;
 
 	/* If this is a new key, find out how big the maximum name and value
 	 * sizes are and allocate space for them. Free any old storage and
@@ -674,6 +687,8 @@ RegGetKeySecurity(hkey,sec_info,sec_desc)
 	SECURITY_DESCRIPTOR sd;
 	DWORD sdsz;
 	LONG result = RegGetKeySecurity(hkey, sec_info, &sd, &sdsz);
+        /* supress unreferenced variable warning */
+        (void)sec_desc;
 	RETVAL = SUCCESS(result);
 	if (RETVAL)
 	    SETPVN(2, &sd, sdsz);
@@ -738,6 +753,8 @@ RegOpenKeyEx(hkey,subkey,res,sam,ohandle)
 	HKEY ohandle = NO_INIT
     CODE:
 	LONG result = RegOpenKeyEx(hkey, subkey, 0, sam, &ohandle);
+        /* supress unreferenced variable warning */
+        (void)res;
 	RETVAL = SUCCESS(result);
 	if (!RETVAL)
 	    SetLastError(result);
@@ -763,6 +780,10 @@ RegQueryInfoKey(hkey,kclass,classsz,reserved,numsubkeys,maxsubkeylen,maxclasslen
 	char keyclass[TMPBUFSZ];
 	FILETIME ft;
 	LONG result;
+        /* supress unreferenced variable warning */
+        (void)kclass;
+        (void)reserved;
+        (void)lastwritetime;
 	classsz = sizeof(keyclass);
 	result = RegQueryInfoKey(hkey, keyclass, &classsz, 0,
 				 &numsubkeys, &maxsubkeylen,
@@ -817,6 +838,8 @@ RegQueryValueEx(hkey,valuename,reserved,type,data)
 	DWORD datasz = sizeof(databuffer);
 	LONG result = RegQueryValueEx(hkey, valuename, NULL, &type,
 				      ptr, &datasz);
+        /* supress unreferenced variable warning */
+        (void)reserved;
 	while (result == ERROR_MORE_DATA) {
 	    /* We must be processing HKEY_PERFORMANCE_DATA */
 	    if (ptr != databuffer)
@@ -968,6 +991,8 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 	unsigned int size;
 	char *buffer;
 	LONG result;
+        /* supress unreferenced variable warning */
+        (void)reserved;
 	switch (type) 
 	{
 		case REG_NONE:

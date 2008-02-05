@@ -1,8 +1,11 @@
-use ExtUtils::MakeMaker;
+use strict;
 use Config;
-$BORLAND = 1 if $Config{'cc'} =~ /^bcc32/i;
+use ExtUtils::MakeMaker;
+
+my $is_msvc = $Config{'cc'} =~ /^cl/i;
+
 WriteMakefile(
-    'INC'		=> ($BORLAND ? '' : '-GX'),
+    'INC'		=> ($is_msvc ? '-GX' : ''),
     'OBJECT'		=> 'Cpipe$(OBJ_EXT) Pipe$(OBJ_EXT)',
     'NAME'		=> 'Win32::Pipe',
     'VERSION_FROM'	=> 'Pipe.pm',

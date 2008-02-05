@@ -119,9 +119,9 @@ ${_final}_to_blib: $final
 
     push @m, "
 clean ::
-    $self->{RM_F} @clean\n"   if  @clean;
+	$self->{RM_F} @clean\n"   if  @clean;
     push @m, "
 realclean ::
-    $self->{RM_F} @realclean\n"   if  @realclean;
+	$self->{RM_F} @realclean\n"   if  @realclean;
     return join('',@m);
 }

@@ -536,7 +536,7 @@ not_there:
 int WCTMB(LPWSTR lpwStr, LPSTR lpStr, int size)
 {
     *lpStr = '\0';
-    return WideCharToMultiByte(CP_ACP,NULL,lpwStr,-1,lpStr,size,NULL,NULL);
+    return WideCharToMultiByte(CP_ACP,0,lpwStr,-1,lpStr,size,NULL,NULL);
 }
 
 
@@ -587,8 +587,6 @@ HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
 		PPERF_INSTANCE_DEFINITION PerfInst)
 {
     PPERF_COUNTER_DEFINITION PerfCntr, CurCntr;
-    PPERF_COUNTER_BLOCK PtrToCntr;
-    PPERF_COUNTER_BLOCK PerfCntrBlk;
     BYTE *lpCounterData;
     LARGE_INTEGER *lpLargeInt;
     DWORD *lpDWord;
@@ -794,14 +792,7 @@ PerfLibOpen(machine,ohandle)
 	char *machine
 	HKEY ohandle = NO_INIT
     CODE:
-	if (USING_WIDE()) {
-	    WCHAR wmachine[MAX_PATH+1];
-	    A2WHELPER(machine, wmachine, sizeof(wmachine));
-	    RETVAL = SUCCESS(RegConnectRegistryW(wmachine, HKEY_PERFORMANCE_DATA, &ohandle));
-	}
-	else {
-	    RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_PERFORMANCE_DATA, &ohandle));
-	}
+        RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_PERFORMANCE_DATA, &ohandle));
     OUTPUT:
 	RETVAL
 	ohandle
@@ -818,48 +809,28 @@ bool
 PerfLibGetNames(machine,counter)
 	char *machine
 	SV *counter
-    CODE:
+    PREINIT:
 	HKEY remote_lmkey;
 	HKEY remote_perfkey;
 	char akey[256] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
 	WCHAR wkey[256] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
 	BYTE *nameArray;
-	BYTE *p;
 	DWORD value_len;
 	DWORD type;
-	DWORD value;
-
-	if (USING_WIDE()) {
-	    WCHAR wmachine[MAX_PATH+1];
-	    A2WHELPER(machine, wmachine, sizeof(wmachine));
-	    RETVAL = SUCCESS(RegConnectRegistryW(wmachine, HKEY_LOCAL_MACHINE, &remote_lmkey));
-	}
-	else {
-	    RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_LOCAL_MACHINE, &remote_lmkey));
-	}
+    CODE:
+        RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_LOCAL_MACHINE, &remote_lmkey));
 	if (!RETVAL)
 	    XSRETURN_NO;
 
-	if (USING_WIDE()) {
-	    RETVAL = SUCCESS(RegOpenKeyExW(remote_lmkey, wkey, 0, KEY_READ, &remote_perfkey));
-	}
-	else {
-	    RETVAL = SUCCESS(RegOpenKeyExA(remote_lmkey, akey, 0, KEY_READ, &remote_perfkey));
-	}
+	RETVAL = SUCCESS(RegOpenKeyExA(remote_lmkey, akey, 0, KEY_READ, &remote_perfkey));
 	if (!RETVAL)
 	{
 	    RegCloseKey(remote_lmkey);
 	    XSRETURN_NO;
 	}
 
-	if (USING_WIDE()) {
-	    RETVAL = SUCCESS(RegQueryValueExW(remote_perfkey, L"Counter", NULL, NULL,
-					 NULL, &value_len));
-	}
-	else {
-	    RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Counter", NULL, NULL,
-					 NULL, &value_len));
-	}
+        RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Counter", NULL, NULL,
+                                          NULL, &value_len));
 	if (!RETVAL)
 	{
 	    RegCloseKey(remote_lmkey);
@@ -874,14 +845,8 @@ PerfLibGetNames(machine,counter)
 	    RegCloseKey(remote_perfkey);
 	    XSRETURN_NO;
 	}
-	if (USING_WIDE()) {
-	    RETVAL = SUCCESS(RegQueryValueExW(remote_perfkey, L"Counter", NULL, &type,
-					 (LPBYTE)nameArray, &value_len));
-	}
-	else {
-	    RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Counter", NULL, &type,
-					 (LPBYTE)nameArray, &value_len));
-	}
+        RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Counter", NULL, &type,
+                                          (LPBYTE)nameArray, &value_len));
 	if (RETVAL)
 	{
 	    switch(type)
@@ -889,23 +854,8 @@ PerfLibGetNames(machine,counter)
 	    case REG_SZ:
 	    case REG_MULTI_SZ:
 	    case REG_EXPAND_SZ:
-		if (value_len) {
-		    if (USING_WIDE()) {
-			BYTE* lpTemp;
-			Newz(0, lpTemp, value_len, BYTE);
-			if (!lpTemp)
-			{
-			    Safefree(nameArray);
-			    RegCloseKey(remote_lmkey);
-			    RegCloseKey(remote_perfkey);
-			    XSRETURN_NO;
-			}
-			W2AHELPER((WCHAR*)nameArray, ((char*)lpTemp), value_len);
-			Safefree(nameArray);
-			nameArray = lpTemp;
-		    }
+		if (value_len)
 		    --value_len;
-		}
 		break;
 	    default:
 		break;
@@ -921,51 +871,30 @@ bool
 PerfLibGetHelp(machine,help)
 	char *machine
 	SV *help
-    CODE:
+    PREINIT:
 	HKEY remote_lmkey;
 	HKEY remote_perfkey;
 	char akey[256] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
 	WCHAR wkey[256] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
 	BYTE *helpArray;
-	BYTE *p;
 	DWORD value_len;
 	DWORD type;
-	DWORD value;
-
-	if (USING_WIDE()) {
-	    WCHAR wmachine[MAX_PATH+1];
-	    A2WHELPER(machine, wmachine, sizeof(wmachine));
-	    RETVAL = SUCCESS(RegConnectRegistryW(wmachine, HKEY_LOCAL_MACHINE,
-					    &remote_lmkey));
-	}
-	else {
-	    RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_LOCAL_MACHINE,
-					    &remote_lmkey));
-	}
+    CODE:
+        RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_LOCAL_MACHINE,
+                                             &remote_lmkey));
 	if (!RETVAL) {
 	    XSRETURN_NO;
 	}
 
-	if (USING_WIDE()) {
-	    RETVAL = SUCCESS(RegOpenKeyExW(remote_lmkey, wkey, 0, KEY_READ, &remote_perfkey));
-	}
-	else {
-	    RETVAL = SUCCESS(RegOpenKeyExA(remote_lmkey, akey, 0, KEY_READ, &remote_perfkey));
-	}
+        RETVAL = SUCCESS(RegOpenKeyExA(remote_lmkey, akey, 0, KEY_READ, &remote_perfkey));
 	if (!RETVAL) {
 	    RegCloseKey(remote_lmkey);
 	    XSRETURN_NO;
 	}
 
-	if (USING_WIDE()) {
-	    RETVAL = RegQueryInfoKeyW(remote_perfkey, NULL, NULL, NULL, NULL,
-				 NULL, NULL, NULL, NULL, &value_len, NULL, NULL);
-	}
-	else {
-	    RETVAL = RegQueryInfoKeyA(remote_perfkey, NULL, NULL, NULL, NULL,
-				 NULL, NULL, NULL, NULL, &value_len, NULL, NULL);
-	}
-	if (RETVAL && RETVAL != ERROR_MORE_DATA) {
+        RETVAL = SUCCESS(RegQueryInfoKeyA(remote_perfkey, NULL, NULL, NULL, NULL,
+                                          NULL, NULL, NULL, NULL, &value_len, NULL, NULL));
+	if (!RETVAL) {
 	    RegCloseKey(remote_lmkey);
 	    RegCloseKey(remote_perfkey);
 	    XSRETURN_NO;
@@ -978,14 +907,8 @@ PerfLibGetHelp(machine,help)
 	    RegCloseKey(remote_perfkey);
 	    XSRETURN_NO;
 	}
-	if (USING_WIDE()) {
-	    RETVAL = SUCCESS(RegQueryValueExW(remote_perfkey, L"Help", NULL, &type,
-					 (LPBYTE)helpArray, &value_len));
-	}
-	else {
-	    RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Help", NULL, &type,
-					 (LPBYTE)helpArray, &value_len));
-	}
+        RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Help", NULL, &type,
+                                          (LPBYTE)helpArray, &value_len));
 	if (RETVAL)
 	{
 	    switch(type)
@@ -993,23 +916,8 @@ PerfLibGetHelp(machine,help)
 	    case REG_SZ:
 	    case REG_MULTI_SZ:
 	    case REG_EXPAND_SZ:
-		if (value_len) {
-		    if (USING_WIDE()) {
-			BYTE* lpTemp;
-			Newz(0, lpTemp, value_len, BYTE);
-			if (!lpTemp)
-			{
-			    Safefree(helpArray);
-			    RegCloseKey(remote_lmkey);
-			    RegCloseKey(remote_perfkey);
-			    XSRETURN_NO;
-			}
-			W2AHELPER((WCHAR*)helpArray, ((char*)lpTemp), value_len);
-			Safefree(helpArray);
-			helpArray = lpTemp;
-		    }
+		if (value_len)
 		    --value_len;
-		}
 		break;
 	    default:
 		break;
@@ -1028,7 +936,7 @@ PerfLibGetObjects(handle,counter,data)
 	HKEY handle
 	char *counter
 	SV *data
-    CODE:
+    PREINIT:
 	BYTE databuf[TEMPBUFSZ];
 	SV *bufsv = Nullsv;
 	DWORD cbData = TEMPBUFSZ;
@@ -1037,41 +945,25 @@ PerfLibGetObjects(handle,counter,data)
 	PPERF_OBJECT_TYPE PerfObj;
 	PPERF_INSTANCE_DEFINITION PerfInst;
 	PPERF_COUNTER_DEFINITION PerfCntr, CurCntr;
-	PPERF_COUNTER_BLOCK PtrToCntr;
-	PPERF_COUNTER_BLOCK PerfCntrBlk;
 	BYTE *lpCounterData;
-	LARGE_INTEGER *lpLargeInt;
-	DWORD *lpDWord;
-	DWORD i,k,j,size,type,subtype, display, calc_mod, time_base;
+	DWORD i,j,type;
 	char buffer[TEMPBUFSZ];
-	HV *hvCounter;
 	HV *hvInstance;
 	HV *hvObject;
 	HV *hvCounterNum;
 	HV *hvInstanceNum;
 	HV *hvObjectNum;
-	struct tm t;
-	time_t stime;
 	FILETIME ft;
 	LARGE_INTEGER lft;
 	DWORD PerfLib_debug = 0;
 	DWORD result;
 	DWORD count = 0; // AS
-	WCHAR wcounter[MAX_PATH+1];
-
+    CODE:
 	if (SvROK(data))
 	    data = SvRV(data);
 
-	if (USING_WIDE()) {
-	    A2WHELPER(counter, wcounter, sizeof(wcounter));
-	}
 	while (count < 500) {
-	    if (USING_WIDE()) {
-		result = RegQueryValueExW(handle,wcounter,NULL,&type,lpData, &cbData);
-	    }
-	    else {
-		result = RegQueryValueExA(handle,counter,NULL,&type,lpData, &cbData);
-	    }
+            result = RegQueryValueExA(handle,counter,NULL,&type,lpData, &cbData);
 	    if (ERROR_MORE_DATA == result) {
 		cbData += TEMPBUFSZ;
 		if (lpData == databuf)
@@ -1102,13 +994,13 @@ PerfLibGetObjects(handle,counter,data)
 #//	hv_store((HV*)data, "SystemTime", strlen("SystemTime"),
 #//		 newSVpv(buffer, strlen(buffer)), 0);
 	hv_store((HV*)data, "SystemTime", strlen("SystemTime"),
-		 newSVnv(lft.QuadPart), 0);
+		 newSVnv((double)lft.QuadPart), 0);
 	hv_store((HV*)data, "PerfTime", strlen("PerfTime"),
-		 newSVnv(PerfData->PerfTime.QuadPart),0);
+		 newSVnv((double)PerfData->PerfTime.QuadPart),0);
 	hv_store((HV*)data, "PerfFreq", strlen("PerfFreq"),
-		 newSVnv(PerfData->PerfFreq.QuadPart),0);
+		 newSVnv((double)PerfData->PerfFreq.QuadPart),0);
 	hv_store((HV*)data, "PerfTime100nSec", strlen("PerfTime100nSec"),
-		 newSVnv(PerfData->PerfTime100nSec.QuadPart),0);
+		 newSVnv((double)PerfData->PerfTime100nSec.QuadPart),0);
 	WCTMB((LPWSTR)((PBYTE)PerfData + PerfData->SystemNameOffset), buffer,
 	      PerfData->SystemNameLength);
 	hv_store((HV*)data, "SystemName", strlen("SystemName"),
@@ -1145,7 +1037,7 @@ PerfLibGetObjects(handle,counter,data)
 	    if (PerfObj->NumInstances > 0 )
 	    {
 		hvInstanceNum = newHV();
-		for (j=1;j<=PerfObj->NumInstances;j++)
+		for (j=1;j<=(DWORD)PerfObj->NumInstances;j++)
 		{
 		    if (PerfLib_debug)
 			printf("Instance %S\n",

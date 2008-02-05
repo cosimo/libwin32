@@ -238,7 +238,6 @@ _Release(ilink,ifile)
     IShellLink * ilink
     IPersistFile * ifile
 PPCODE:
-    HRESULT hres;
     ifile->Release();
     ilink->Release();
     XSRETURN_YES;

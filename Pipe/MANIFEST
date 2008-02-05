@@ -8,4 +8,5 @@ Pipe.pm
 Pipe.xs
 README
 Server.pl
+hints/cygwin.pl
 test.bat

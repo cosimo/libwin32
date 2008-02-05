@@ -4,7 +4,7 @@ INPUT
 T_JOB
         if (sv_derived_from($arg, \"Win32::Job\")) {
             IV tmp = SvIV((SV*)SvRV($arg));
-            $var = ($type) tmp;
+            $var = INT2PTR($type, tmp);
         }
         else
             croak(\"$var is not of type Win32::Job\")

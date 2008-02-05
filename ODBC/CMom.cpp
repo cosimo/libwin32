@@ -28,9 +28,9 @@
 
 #include <stdio.h>
 
-#include <SQL.H>
-#include <SQLEXT.H>
-#include <ODBCINST.H>
+#include <sql.h>
+#include <sqlext.h>
+#include <odbcinst.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -45,8 +45,8 @@ extern "C" {
 #endif
 
 #define	_CMOM_
-#include "odbc.h"	
-#include "cmom.hpp"
+#include "ODBC.h"
+#include "CMom.hpp"
 
 
 int	CMom::iTotalHistory = 0;

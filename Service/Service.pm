@@ -12,7 +12,8 @@ $VERSION = '0.05';
 require Exporter;
 require DynaLoader;
 
-die "The Win32::Service module works only on Windows NT" if(!Win32::IsWinNT());
+require Win32 unless defined &Win32::IsWinNT;
+die "The Win32::Service module works only on Windows NT" unless Win32::IsWinNT();
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT_OK =

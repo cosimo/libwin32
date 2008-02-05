@@ -33,6 +33,10 @@
 
 static DWORD dwLastError = NO_ERROR;
 
+#ifdef __CYGWIN__
+wchar_t *_wcsupr(wchar_t *string);
+#endif
+
 /*
  * TSHARE_INFO struct is used in the mapping of the SHARE_INFO_502
  * to a perl readable ( non UNICODE ) form.
@@ -317,7 +321,6 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
     DWORD cEntries = 0xFFFFFFFF; /* enumerate all possible entries    */
     LPNETRESOURCEA lpnrLocal;     /* pointer to enumerated structures  */
     DWORD i;
-    HV*     phvNet;
     SV*        svNetRes;
     AV*	av;
 
@@ -428,7 +431,7 @@ _AllocWideName(char* name)
         length = (strlen(name)+1)*2;
         lpPtr = (LPWSTR)safemalloc(length);
         if(lpPtr != NULL)
-            MultiByteToWideChar(CP_ACP, NULL, name, -1, lpPtr, length);
+            MultiByteToWideChar(CP_ACP, 0, name, -1, lpPtr, length);
     }
     return lpPtr;
 }
@@ -445,7 +448,7 @@ FreeWideName(LPWSTR lpPtr)
 int
 WCTMB(LPWSTR lpwStr, LPSTR lpStr, int size)
 {
-    return WideCharToMultiByte(CP_ACP, NULL, lpwStr, -1, lpStr, size, NULL, NULL);
+    return WideCharToMultiByte(CP_ACP, 0, lpwStr, -1, lpStr, size, NULL, NULL);
 }    
 
 
@@ -609,8 +612,6 @@ _NetShareAdd(tshare,parm_err,servername=NULL)
     PTSHARE_INFO    tshare
     DWORD parm_err = NO_INIT
     LPSTR servername
-PREINIT:
-    DWORD    parm;
 CODE:
     {
         SHARE_INFO_502     Share_502;
@@ -706,7 +707,6 @@ PREINIT:
     TSHARE_INFO    tRet;    
 CODE:
     {
-        BOOL bRet;
         PSHARE_INFO_502    pShareInfo;
         LPWSTR    lpwServer,lpwNetname;
 

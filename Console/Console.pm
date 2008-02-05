@@ -1,15 +1,15 @@
-package Win32::Console;
 #######################################################################
 #
 # Win32::Console - Win32 Console and Character Mode Functions
-# ^^^^^^^^^^^^^^
-# Version: 0.03  (07 Apr 1997)
-# Version: 0.031 (24 Sep 1999) - fixed typo in GenerateCtrlEvent()
 #
 #######################################################################
 
-require Exporter;       # to export the constants to the main:: space
-require DynaLoader;     # to dynuhlode the module.
+package Win32::Console;
+
+require Exporter;
+require DynaLoader;
+
+$VERSION = "0.07";
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT = qw(
@@ -19,7 +19,7 @@ require DynaLoader;     # to dynuhlode the module.
     BACKGROUND_RED
     CAPSLOCK_ON
     CONSOLE_TEXTMODE_BUFFER
-    CTRL_BREAK_EVENT    
+    CTRL_BREAK_EVENT
     CTRL_C_EVENT
     ENABLE_ECHO_INPUT
     ENABLE_LINE_INPUT
@@ -47,6 +47,41 @@ require DynaLoader;     # to dynuhlode the module.
     STD_INPUT_HANDLE
     STD_OUTPUT_HANDLE
     STD_ERROR_HANDLE
+    $FG_BLACK
+    $FG_GRAY
+    $FG_BLUE
+    $FG_LIGHTBLUE
+    $FG_RED
+    $FG_LIGHTRED
+    $FG_GREEN
+    $FG_LIGHTGREEN
+    $FG_MAGENTA
+    $FG_LIGHTMAGENTA
+    $FG_CYAN
+    $FG_LIGHTCYAN
+    $FG_BROWN
+    $FG_YELLOW
+    $FG_LIGHTGRAY
+    $FG_WHITE
+    $BG_BLACK
+    $BG_GRAY
+    $BG_BLUE
+    $BG_LIGHTBLUE
+    $BG_RED
+    $BG_LIGHTRED
+    $BG_GREEN
+    $BG_LIGHTGREEN
+    $BG_MAGENTA
+    $BG_LIGHTMAGENTA
+    $BG_CYAN
+    $BG_LIGHTCYAN
+    $BG_BROWN
+    $BG_YELLOW
+    $BG_LIGHTGRAY
+    $BG_WHITE
+    $ATTR_NORMAL
+    $ATTR_INVERSE
+    @CONSOLE_COLORS
 );
 
 
@@ -79,7 +114,6 @@ sub AUTOLOAD {
 #######################################################################
 # STATIC OBJECT PROPERTIES
 #
-$VERSION = "0.031";
 
 # %HandlerRoutineStack = ();
 # $HandlerRoutineRegistered = 0;
@@ -88,62 +122,65 @@ $VERSION = "0.031";
 # PUBLIC METHODS
 #
 
-#======== (MAIN CONSTRUCTOR)
+#========
 sub new {
 #========
     my($class, $param1, $param2) = @_;
 
     my $self = {};
 
-    if(defined($param1) 
+    if (defined($param1)
     and ($param1 == constant("STD_INPUT_HANDLE",  0)
     or   $param1 == constant("STD_OUTPUT_HANDLE", 0)
-    or   $param1 == constant("STD_ERROR_HANDLE",  0))) {
-
+    or   $param1 == constant("STD_ERROR_HANDLE",  0)))
+    {
         $self->{'handle'} = _GetStdHandle($param1);
-
-    } else {
-
+    }
+    else {
         $param1 = constant("GENERIC_READ", 0)    | constant("GENERIC_WRITE", 0) unless $param1;
         $param2 = constant("FILE_SHARE_READ", 0) | constant("FILE_SHARE_WRITE", 0) unless $param2;
-        $self->{'handle'} = _CreateConsoleScreenBuffer($param1, $param2, 
+        $self->{'handle'} = _CreateConsoleScreenBuffer($param1, $param2,
                                                        constant("CONSOLE_TEXTMODE_BUFFER", 0));
     }
     bless $self, $class;
     return $self;
 }
 
-
 #============
 sub Display {
 #============
-    my($self)=@_;
+    my($self) = @_;
     return undef unless ref($self);
-
     return _SetConsoleActiveScreenBuffer($self->{'handle'});
 }
 
 #===========
 sub Select {
 #===========
-    ($self, $type) = @_;
+    my($self, $type) = @_;
     return undef unless ref($self);
-
     return _SetStdHandle($type, $self->{'handle'});
 }
 
+#===========
+sub SetIcon {
+#===========
+    my($self, $icon) = @_;
+    $icon = $self unless ref($self);
+    return _SetConsoleIcon($icon);
+}
 
 #==========
 sub Title {
 #==========
     my($self, $title) = @_;
-
     $title = $self unless ref($self);
 
-    if(defined($title)) {
-      return _SetConsoleTitle($title);
-    } else {
-      return _GetConsoleTitle();
+    if (defined($title)) {
+	return _SetConsoleTitle($title);
+    }
+    else {
+	return _GetConsoleTitle();
     }
 }
 
@@ -152,7 +189,6 @@ sub WriteChar {
 #==============
     my($self, $text, $col, $row) = @_;
     return undef unless ref($self);
-
     return _WriteConsoleOutputCharacter($self->{'handle'},$text,$col,$row);
 }
 
@@ -161,16 +197,15 @@ sub ReadChar {
 #=============
     my($self, $size, $col, $row) = @_;
     return undef unless ref($self);
-  
-    my $buffer = (" " x $size);  
-    if(_ReadConsoleOutputCharacter($self->{'handle'}, $buffer, $size, $col, $row)) {
+
+    my $buffer = (" " x $size);
+    if (_ReadConsoleOutputCharacter($self->{'handle'}, $buffer, $size, $col, $row)) {
         return $buffer;
-    } else {
+    }
+    else {
         return undef;
     }
 }
-
-
 
 #==============
 sub WriteAttr {
@@ -185,10 +220,8 @@ sub ReadAttr {
 #=============
     my($self, $size, $col, $row) = @_;
     return undef unless ref($self);
-  
     return _ReadConsoleOutputAttribute($self->{'handle'}, $size, $col, $row);
 }
-
 
 #==========
 sub Write {
@@ -198,26 +231,26 @@ sub Write {
     return _WriteConsole($self->{'handle'}, $string);
 }
 
-
 #=============
 sub ReadRect {
 #=============
     my($self, $left, $top, $right, $bottom) = @_;
     return undef unless ref($self);
-    
+
     my $col = $right  - $left + 1;
     my $row = $bottom - $top  + 1;
 
     my $buffer = (" " x ($col*$row*4));
-    if(_ReadConsoleOutput($self->{'handle'},   $buffer,
+    if (_ReadConsoleOutput($self->{'handle'},   $buffer,
                           $col,  $row, 0,      0,
-                          $left, $top, $right, $bottom)) {
+                          $left, $top, $right, $bottom))
+    {
         return $buffer;
-    } else {
+    }
+    else {
         return undef;
     }
 }
-
 
 #==============
 sub WriteRect {
@@ -233,8 +266,6 @@ sub WriteRect {
                                $left, $top, $right, $bottom);
 }
 
-
-
 #===========
 sub Scroll {
 #===========
@@ -242,24 +273,24 @@ sub Scroll {
               $col,   $row,  $char,   $attr,
               $left2, $top2, $right2, $bottom2) = @_;
     return undef unless ref($self);
-  
+
     return _ScrollConsoleScreenBuffer($self->{'handle'},
                                       $left1, $top1, $right1, $bottom1,
                                       $col,   $row,  $char,   $attr,
                                       $left2, $top2, $right2, $bottom2);
 }
 
-
 #==============
 sub MaxWindow {
 #==============
     my($self, $flag) = @_;
     return undef unless ref($self);
-  
-    if(not defined($flag)) {
+
+    if (not defined($flag)) {
         my @info = _GetConsoleScreenBufferInfo($self->{'handle'});
         return $info[9], $info[10];
-    } else {
+    }
+    else {
         return _GetLargestConsoleWindowSize($self->{'handle'});
     }
 }
@@ -269,21 +300,20 @@ sub Info {
 #=========
     my($self) = @_;
     return undef unless ref($self);
-  
     return _GetConsoleScreenBufferInfo($self->{'handle'});
 }
-
 
 #===========
 sub Window {
 #===========
     my($self, $flag, $left, $top, $right, $bottom) = @_;
     return undef unless ref($self);
-  
-    if(not defined($flag)) {
+
+    if (not defined($flag)) {
         my @info = _GetConsoleScreenBufferInfo($self->{'handle'});
         return $info[5], $info[6], $info[7], $info[8];
-    } else {
+    }
+    else {
         return _SetConsoleWindowInfo($self->{'handle'}, $flag, $left, $top, $right, $bottom);
     }
 }
@@ -291,20 +321,16 @@ sub Window {
 #==============
 sub GetEvents {
 #==============
-    my $self="";
-    ($self)=@_;
+    my($self) = @_;
     return undef unless ref($self);
-  
     return _GetNumberOfConsoleInputEvents($self->{'handle'});
 }
-
 
 #==========
 sub Flush {
 #==========
     my($self) = @_;
     return undef unless ref($self);
-
     return _FlushConsoleInputBuffer($self->{'handle'});
 }
 
@@ -313,13 +339,14 @@ sub InputChar {
 #==============
     my($self, $number) = @_;
     return undef unless ref($self);
-    
+
     $number = 1 unless defined($number);
-  
+
     my $buffer = (" " x $number);
-    if(_ReadConsole($self->{'handle'}, $buffer, $number) == $number) {
+    if (_ReadConsole($self->{'handle'}, $buffer, $number) == $number) {
         return $buffer;
-    } else {
+    }
+    else {
         return undef;
     }
 }
@@ -329,7 +356,6 @@ sub Input {
 #==========
     my($self) = @_;
     return undef unless ref($self);
-  
     return _ReadConsoleInput($self->{'handle'});
 }
 
@@ -338,30 +364,26 @@ sub PeekInput {
 #==============
     my($self) = @_;
     return undef unless ref($self);
-  
     return _PeekConsoleInput($self->{'handle'});
 }
-
 
 #===============
 sub WriteInput {
 #===============
     my($self) = shift;
     return undef unless ref($self);
-  
     return _WriteConsoleInput($self->{'handle'}, @_);
 }
-
 
 #=========
 sub Mode {
 #=========
     my($self, $mode) = @_;
     return undef unless ref($self);
-  
-    if(defined($mode)) {
+    if (defined($mode)) {
         return _SetConsoleMode($self->{'handle'}, $mode);
-    } else {
+    }
+    else {
         return _GetConsoleMode($self->{'handle'});
     }
 }
@@ -372,8 +394,8 @@ sub Cls {
     my($self, $attr) = @_;
     return undef unless ref($self);
 
-    $attr = $main::ATTR_NORMAL unless defined($attr);
-    
+    $attr = $ATTR_NORMAL unless defined($attr);
+
     my ($x, $y) = $self->Size();
     my($left, $top, $right ,$bottom) = $self->Window();
     my $vx = $right  - $left;
@@ -384,16 +406,16 @@ sub Cls {
     $self->Window(1, 0, 0, $vx, $vy);
 }
 
-
 #=========
 sub Attr {
 #=========
     my($self, $attr) = @_;
     return undef unless ref($self);
-  
-    if(not defined($attr)) {
+
+    if (not defined($attr)) {
         return (_GetConsoleScreenBufferInfo($self->{'handle'}))[4];
-    } else {
+    }
+    else {
         return _SetConsoleTextAttribute($self->{'handle'}, $attr);
     }
 }
@@ -411,17 +433,17 @@ sub Cursor {
     my $return    = 0;
     my $discard   = 0;
 
-  
-    if(defined($col)) {
+
+    if (defined($col)) {
         $row = -1 if not defined($row);
-        if($col == -1 or $row == -1) {
+        if ($col == -1 or $row == -1) {
             ($discard, $discard, $curr_col, $curr_row) = _GetConsoleScreenBufferInfo($self->{'handle'});
             $col=$curr_col if $col==-1;
             $row=$curr_row if $row==-1;
         }
         $return += _SetConsoleCursorPosition($self->{'handle'}, $col, $row);
-        if(defined($size) and defined($visi)) {
-            if($size == -1 or $visi == -1) {
+        if (defined($size) and defined($visi)) {
+            if ($size == -1 or $visi == -1) {
                 ($curr_size, $curr_visi) = _GetConsoleCursorInfo($self->{'handle'});
                 $size = $curr_size if $size == -1;
                 $visi = $curr_visi if $visi == -1;
@@ -431,24 +453,27 @@ sub Cursor {
             $return += _SetConsoleCursorInfo($self->{'handle'}, $size, $visi);
         }
         return $return;
-    } else {
+    }
+    else {
         ($discard, $discard, $curr_col, $curr_row) = _GetConsoleScreenBufferInfo($self->{'handle'});
         ($curr_size, $curr_visi) = _GetConsoleCursorInfo($self->{'handle'});
         return ($curr_col, $curr_row, $curr_size, $curr_visi);
     }
 }
-  
+
 #=========
 sub Size {
 #=========
     my($self, $col, $row) = @_;
     return undef unless ref($self);
-    if(not defined($col)) {
+
+    if (not defined($col)) {
         ($col, $row) = _GetConsoleScreenBufferInfo($self->{'handle'});
         return ($col, $row);
-    } else {
+    }
+    else {
         $row = -1 if not defined($row);
-        if($col == -1 or $row == -1) {
+        if ($col == -1 or $row == -1) {
             ($curr_col, $curr_row) = _GetConsoleScreenBufferInfo($self->{'handle'});
             $col=$curr_col if $col==-1;
             $row=$curr_row if $row==-1;
@@ -465,8 +490,8 @@ sub FillAttr {
 
     $number = 1 unless $number;
 
-    if(!defined($col) or !defined($row) or $col == -1 or $row == -1) {
-        ($discard,  $discard, 
+    if (!defined($col) or !defined($row) or $col == -1 or $row == -1) {
+        ($discard,  $discard,
          $curr_col, $curr_row) = _GetConsoleScreenBufferInfo($self->{'handle'});
         $col = $curr_col if !defined($col) or $col == -1;
         $row = $curr_row if !defined($row) or $row == -1;
@@ -480,7 +505,7 @@ sub FillChar {
     my($self, $char, $number, $col, $row) = @_;
     return undef unless ref($self);
 
-    if(!defined($col) or !defined($row) or $col == -1 or $row == -1) {
+    if (!defined($col) or !defined($row) or $col == -1 or $row == -1) {
         ($discard,  $discard,
          $curr_col, $curr_row) = _GetConsoleScreenBufferInfo($self->{'handle'});
         $col = $curr_col if !defined($col) or $col == -1;
@@ -494,9 +519,10 @@ sub InputCP {
 #============
     my($self, $codepage) = @_;
     $codepage = $self if (defined($self) and ref($self) ne "Win32::Console");
-    if(defined($codepage)) {
+    if (defined($codepage)) {
         return _SetConsoleCP($codepage);
-    } else {
+    }
+    else {
         return _GetConsoleCP();
     }
 }
@@ -506,9 +532,10 @@ sub OutputCP {
 #=============
     my($self, $codepage) = @_;
     $codepage = $self if (defined($self) and ref($self) ne "Win32::Console");
-    if(defined($codepage)) {
+    if (defined($codepage)) {
         return _SetConsoleOutputCP($codepage);
-    } else {
+    }
+    else {
         return _GetConsoleOutputCP();
     }
 }
@@ -528,15 +555,15 @@ sub GenerateCtrlEvent {
 #    my($name, $add) = @_;
 #    $add = 1 unless defined($add);
 #    my @nor = keys(%HandlerRoutineStack);
-#    if($add == 0) {
+#    if ($add == 0) {
 #        foreach $key (@nor) {
 #            delete $HandlerRoutineStack{$key}, last if $HandlerRoutineStack{$key}==$name;
 #        }
 #        $HandlerRoutineRegistered--;
 #    } else {
-#        if($#nor == -1) {
+#        if ($#nor == -1) {
 #            my $r = _SetConsoleCtrlHandler();
-#            if(!$r) {
+#            if (!$r) {
 #                print "WARNING: SetConsoleCtrlHandler failed...\n";
 #            }
 #        }
@@ -545,6 +572,11 @@ sub GenerateCtrlEvent {
 #    }
 #}
 
+#===================
+sub get_Win32_IPC_HANDLE { # So Win32::IPC can wait on a console handle
+#===================
+    $_[0]->{'handle'};
+}
 
 ########################################################################
 # PRIVATE METHODS
@@ -564,14 +596,12 @@ sub GenerateCtrlEvent {
 #    return $result;
 #}
 
-#============  (MAIN DESTRUCTOR)
+#============
 sub DESTROY {
 #============
     my($self) = @_;
     _CloseHandle($self->{'handle'});
 }
-
-
 
 #######################################################################
 # dynamically load in the Console.pll module.
@@ -583,98 +613,92 @@ bootstrap Win32::Console;
 # ADDITIONAL CONSTANTS EXPORTED IN THE MAIN NAMESPACE
 #
 
-$main::FG_BLACK        = 0;
-$main::FG_BLUE         = constant("FOREGROUND_BLUE",0);
-$main::FG_LIGHTBLUE    = constant("FOREGROUND_BLUE",0)|
-                         constant("FOREGROUND_INTENSITY",0);
-$main::FG_RED          = constant("FOREGROUND_RED",0);
-$main::FG_LIGHTRED     = constant("FOREGROUND_RED",0)|
-                         constant("FOREGROUND_INTENSITY",0);
-$main::FG_GREEN        = constant("FOREGROUND_GREEN",0);
-$main::FG_LIGHTGREEN   = constant("FOREGROUND_GREEN",0)|
-                         constant("FOREGROUND_INTENSITY",0);
-$main::FG_MAGENTA      = constant("FOREGROUND_RED",0)|
-                         constant("FOREGROUND_BLUE",0);
-$main::FG_LIGHTMAGENTA = constant("FOREGROUND_RED",0)|
-                         constant("FOREGROUND_BLUE",0)|
-                         constant("FOREGROUND_INTENSITY",0);
-$main::FG_CYAN         = constant("FOREGROUND_GREEN",0)|
-                         constant("FOREGROUND_BLUE",0);
-$main::FG_LIGHTCYAN    = constant("FOREGROUND_GREEN",0)|
-                         constant("FOREGROUND_BLUE",0)|
-                         constant("FOREGROUND_INTENSITY",0);
-$main::FG_BROWN        = constant("FOREGROUND_RED",0)|
-                         constant("FOREGROUND_GREEN",0);
-$main::FG_YELLOW       = constant("FOREGROUND_RED",0)|
-                         constant("FOREGROUND_GREEN",0)|
-                         constant("FOREGROUND_INTENSITY",0);
-$main::FG_GRAY         = constant("FOREGROUND_RED",0)|
-                         constant("FOREGROUND_GREEN",0)|
-                         constant("FOREGROUND_BLUE",0);
-$main::FG_WHITE        = constant("FOREGROUND_RED",0)|
-                         constant("FOREGROUND_GREEN",0)|
-                         constant("FOREGROUND_BLUE",0)|
-                         constant("FOREGROUND_INTENSITY",0);
+$FG_BLACK        = 0;
+$FG_GRAY         = constant("FOREGROUND_INTENSITY",0);
+$FG_BLUE         = constant("FOREGROUND_BLUE",0);
+$FG_LIGHTBLUE    = constant("FOREGROUND_BLUE",0)|
+                   constant("FOREGROUND_INTENSITY",0);
+$FG_RED          = constant("FOREGROUND_RED",0);
+$FG_LIGHTRED     = constant("FOREGROUND_RED",0)|
+                   constant("FOREGROUND_INTENSITY",0);
+$FG_GREEN        = constant("FOREGROUND_GREEN",0);
+$FG_LIGHTGREEN   = constant("FOREGROUND_GREEN",0)|
+                   constant("FOREGROUND_INTENSITY",0);
+$FG_MAGENTA      = constant("FOREGROUND_RED",0)|
+                   constant("FOREGROUND_BLUE",0);
+$FG_LIGHTMAGENTA = constant("FOREGROUND_RED",0)|
+                   constant("FOREGROUND_BLUE",0)|
+                   constant("FOREGROUND_INTENSITY",0);
+$FG_CYAN         = constant("FOREGROUND_GREEN",0)|
+                   constant("FOREGROUND_BLUE",0);
+$FG_LIGHTCYAN    = constant("FOREGROUND_GREEN",0)|
+                   constant("FOREGROUND_BLUE",0)|
+                   constant("FOREGROUND_INTENSITY",0);
+$FG_BROWN        = constant("FOREGROUND_RED",0)|
+                   constant("FOREGROUND_GREEN",0);
+$FG_YELLOW       = constant("FOREGROUND_RED",0)|
+                   constant("FOREGROUND_GREEN",0)|
+                   constant("FOREGROUND_INTENSITY",0);
+$FG_LIGHTGRAY    = constant("FOREGROUND_RED",0)|
+                   constant("FOREGROUND_GREEN",0)|
+                   constant("FOREGROUND_BLUE",0);
+$FG_WHITE        = constant("FOREGROUND_RED",0)|
+                   constant("FOREGROUND_GREEN",0)|
+                   constant("FOREGROUND_BLUE",0)|
+                   constant("FOREGROUND_INTENSITY",0);
 
-$main::BG_BLACK        = 0;
-$main::BG_BLUE         = constant("BACKGROUND_BLUE",0);
-$main::BG_LIGHTBLUE    = constant("BACKGROUND_BLUE",0)|
-                         constant("BACKGROUND_INTENSITY",0);
-$main::BG_RED          = constant("BACKGROUND_RED",0);
-$main::BG_LIGHTRED     = constant("BACKGROUND_RED",0)|
-                         constant("BACKGROUND_INTENSITY",0);
-$main::BG_GREEN        = constant("BACKGROUND_GREEN",0);
-$main::BG_LIGHTGREEN   = constant("BACKGROUND_GREEN",0)|
-                         constant("BACKGROUND_INTENSITY",0);
-$main::BG_MAGENTA      = constant("BACKGROUND_RED",0)|
-                         constant("BACKGROUND_BLUE",0);
-$main::BG_LIGHTMAGENTA = constant("BACKGROUND_RED",0)|
-                         constant("BACKGROUND_BLUE",0)|
-                         constant("BACKGROUND_INTENSITY",0);
-$main::BG_CYAN         = constant("BACKGROUND_GREEN",0)|
-                         constant("BACKGROUND_BLUE",0);
-$main::BG_LIGHTCYAN    = constant("BACKGROUND_GREEN",0)|
-                         constant("BACKGROUND_BLUE",0)|
-                         constant("BACKGROUND_INTENSITY",0);
-$main::BG_BROWN        = constant("BACKGROUND_RED",0)|
-                         constant("BACKGROUND_GREEN",0);
-$main::BG_YELLOW       = constant("BACKGROUND_RED",0)|
-                         constant("BACKGROUND_GREEN",0)|
-                         constant("BACKGROUND_INTENSITY",0);
-$main::BG_GRAY         = constant("BACKGROUND_RED",0)|
-                         constant("BACKGROUND_GREEN",0)|
-                         constant("BACKGROUND_BLUE",0);
-$main::BG_WHITE        = constant("BACKGROUND_RED",0)|
-                         constant("BACKGROUND_GREEN",0)|
-                         constant("BACKGROUND_BLUE",0)|
-                         constant("BACKGROUND_INTENSITY",0);
+$BG_BLACK        = 0;
+$BG_GRAY         = constant("BACKGROUND_INTENSITY",0);
+$BG_BLUE         = constant("BACKGROUND_BLUE",0);
+$BG_LIGHTBLUE    = constant("BACKGROUND_BLUE",0)|
+                   constant("BACKGROUND_INTENSITY",0);
+$BG_RED          = constant("BACKGROUND_RED",0);
+$BG_LIGHTRED     = constant("BACKGROUND_RED",0)|
+                   constant("BACKGROUND_INTENSITY",0);
+$BG_GREEN        = constant("BACKGROUND_GREEN",0);
+$BG_LIGHTGREEN   = constant("BACKGROUND_GREEN",0)|
+                   constant("BACKGROUND_INTENSITY",0);
+$BG_MAGENTA      = constant("BACKGROUND_RED",0)|
+                   constant("BACKGROUND_BLUE",0);
+$BG_LIGHTMAGENTA = constant("BACKGROUND_RED",0)|
+                   constant("BACKGROUND_BLUE",0)|
+                   constant("BACKGROUND_INTENSITY",0);
+$BG_CYAN         = constant("BACKGROUND_GREEN",0)|
+                   constant("BACKGROUND_BLUE",0);
+$BG_LIGHTCYAN    = constant("BACKGROUND_GREEN",0)|
+                   constant("BACKGROUND_BLUE",0)|
+                   constant("BACKGROUND_INTENSITY",0);
+$BG_BROWN        = constant("BACKGROUND_RED",0)|
+                   constant("BACKGROUND_GREEN",0);
+$BG_YELLOW       = constant("BACKGROUND_RED",0)|
+                   constant("BACKGROUND_GREEN",0)|
+                   constant("BACKGROUND_INTENSITY",0);
+$BG_LIGHTGRAY    = constant("BACKGROUND_RED",0)|
+                   constant("BACKGROUND_GREEN",0)|
+                   constant("BACKGROUND_BLUE",0);
+$BG_WHITE        = constant("BACKGROUND_RED",0)|
+                   constant("BACKGROUND_GREEN",0)|
+                   constant("BACKGROUND_BLUE",0)|
+                   constant("BACKGROUND_INTENSITY",0);
 
-$main::ATTR_NORMAL = $main::FG_GRAY|$main::BG_BLACK;
-$main::ATTR_INVERSE = $main::FG_BLACK|$main::BG_GRAY;
+$ATTR_NORMAL  = $FG_LIGHTGRAY|$BG_BLACK;
+$ATTR_INVERSE = $FG_BLACK|$BG_LIGHTGRAY;
 
-undef unless $main::ATTR_NORMAL;
-undef unless $main::ATTR_INVERSE;
-undef unless $VERSION;
-
-@main::CONSOLE_COLORS = ();
-
-foreach $fg ($main::FG_BLACK, $main::FG_BLUE, $main::FG_GREEN, $main::FG_CYAN, 
-             $main::FG_RED, $main::FG_MAGENTA, $main::FG_BROWN, $main::FG_GRAY,
-             $main::FG_LIGHTBLUE, $main::FG_LIGHTGREEN, $main::FG_LIGHTCYAN,
-             $main::FG_LIGHTRED, $main::FG_LIGHTMAGENTA, $main::FG_YELLOW, 
-             $main::FG_WHITE) {
-
-    foreach $bg ($main::BG_BLACK, $main::BG_BLUE, $main::BG_GREEN, $main::BG_CYAN, 
-                 $main::BG_RED, $main::BG_MAGENTA, $main::BG_BROWN, $main::BG_GRAY,
-                 $main::BG_LIGHTBLUE, $main::BG_LIGHTGREEN, $main::BG_LIGHTCYAN,
-                 $main::BG_LIGHTRED, $main::BG_LIGHTMAGENTA, $main::BG_YELLOW, 
-                 $main::BG_WHITE) {
-        push(@main::CONSOLE_COLORS, $fg|$bg);
+for my $fg ($FG_BLACK, $FG_GRAY, $FG_BLUE, $FG_GREEN,
+	    $FG_CYAN, $FG_RED, $FG_MAGENTA, $FG_BROWN,
+	    $FG_LIGHTBLUE, $FG_LIGHTGREEN, $FG_LIGHTCYAN,
+	    $FG_LIGHTRED, $FG_LIGHTMAGENTA, $FG_YELLOW,
+	    $FG_LIGHTGRAY, $FG_WHITE)
+{
+    for my $bg ($BG_BLACK, $BG_GRAY, $BG_BLUE, $BG_GREEN,
+		$BG_CYAN, $BG_RED, $BG_MAGENTA, $BG_BROWN,
+		$BG_LIGHTBLUE, $BG_LIGHTGREEN, $BG_LIGHTCYAN,
+		$BG_LIGHTRED, $BG_LIGHTMAGENTA, $BG_YELLOW,
+		$BG_LIGHTGRAY, $BG_WHITE)
+    {
+        push(@CONSOLE_COLORS, $fg|$bg);
     }
 }
-
-undef $fg;
-undef $bg;
 
 # Preloaded methods go here.
 
@@ -1215,6 +1239,14 @@ Example:
 
     $CONSOLE->Select(STD_OUTPUT_HANDLE);
 
+=item SetIcon icon_file
+
+Sets the icon in the title bar of the current console window.
+
+Example:
+
+    $CONSOLE->SetIcon("C:/My/Path/To/Custom.ico");
+
 =item Size [col, row]
 
 Gets or sets the console buffer size.
@@ -1226,7 +1258,7 @@ Example:
 
 =item Title [title]
 
-Gets or sets the title bar the string of the current console window.
+Gets or sets the title of the current console window.
 
 Example:
 
@@ -1359,6 +1391,7 @@ script using Win32::Console:
 Additionally, the following variables can be used:
 
     $FG_BLACK
+    $FG_GRAY
     $FG_BLUE
     $FG_LIGHTBLUE
     $FG_RED
@@ -1371,10 +1404,11 @@ Additionally, the following variables can be used:
     $FG_LIGHTCYAN
     $FG_BROWN
     $FG_YELLOW
-    $FG_GRAY
+    $FG_LIGHTGRAY
     $FG_WHITE
 
     $BG_BLACK
+    $BG_GRAY
     $BG_BLUE
     $BG_LIGHTBLUE
     $BG_RED
@@ -1387,7 +1421,7 @@ Additionally, the following variables can be used:
     $BG_LIGHTCYAN
     $BG_BROWN
     $BG_YELLOW
-    $BG_GRAY
+    $BG_LIGHTGRAY
     $BG_WHITE
 
     $ATTR_NORMAL
@@ -1409,68 +1443,14 @@ A reference of the available functions is at:
 http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/sys/src/conchar_34.htm
 
 
-=head1 VERSION HISTORY
-
-=over
-
-=item * 0.031 (24 Sep 1999)
-
-=over
-
-=item *
-
-Fixed typo in GenerateCtrlEvent().
-
-=item *
-
-Converted and added pod documentation (from Jan Dubois <jand@activestate.com>).
-
-=back
-
-=item * 0.03 (07 Apr 1997)
-
-=over
-
-=item *
-
-Added "GenerateCtrlEvent" method.
-
-=item *
-
-The PLL file now comes in 2 versions, one for Perl version 5.001
-(build 110) and one for Perl version 5.003 (build 300 and higher,
-EXCEPT 304).
-
-=item *
-
-added an installation program that will automatically copy the right
-version in the right place.
-
-=back
-
-=item * 0.01 (09 Feb 1997)
-
-=over
-
-=item *
-
-First public release.
-
-=back
-
-=back
-
-
 =head1 AUTHOR
 
 Aldo Calpini <a.calpini@romagiubileo.it>
-
 
 =head1 CREDITS
 
 Thanks to: Jesse Dougherty, Dave Roth, ActiveWare, and the
 Perl-Win32-Users community.
-
 
 =head1 DISCLAIMER
 

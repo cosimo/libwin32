@@ -15,7 +15,8 @@ use Carp ;
 
 $VERSION = '1.04';
 
-croak "The Win32::FileSecurity module works only on Windows NT" if (!Win32::IsWinNT()) ;
+require Win32 unless defined &Win32::IsWinNT;
+croak "The Win32::FileSecurity module works only on Windows NT" unless Win32::IsWinNT();
 
 @ISA= qw( Exporter DynaLoader );
 

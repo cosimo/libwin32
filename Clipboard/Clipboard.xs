@@ -3,9 +3,12 @@
 #
 # Win32::Clipboard - Interaction with the Windows clipboard
 #
-# Version: 0.5101
+# Version: 0.52
 # Created: 19 Nov 96
 # Author: Aldo Calpini <dada@divinf.it>
+#
+# Modified: 24 Jul 2004
+# By: Hideyo Imazu <h@imazu.net>
 #
 #######################################################################
  */
@@ -52,7 +55,7 @@ static HANDLE hThread;
 
 /* DLL entry point */
 BOOL WINAPI DllMain(HINSTANCE hDll, DWORD reason, LPVOID reserved) {
-    BOOL ccb;
+    //    BOOL ccb;
 #ifdef WIN32__CLIPBOARD__DEBUG
     printf("!XS(DllMain): DLL entry point called with reason: %ld\n", reason);
     printf("!XS(DllMain): ClipboardViewer is: %ld\n", GetClipboardViewer());
@@ -344,13 +347,40 @@ not_there:
     return 0;
 }
 
+int
+study_dib(HANDLE h, PBITMAPFILEHEADER p_hdr)
+{
+    LPBITMAPINFO bmi;
+    int bitCount;
+    int clrUsed;
+    int mask_bytes = 0;
+    int rgbquad_array_length;
+    int dib_offset, dib_size;
+    bmi = (LPBITMAPINFO) h;
+    bitCount = bmi->bmiHeader.biBitCount;
+    clrUsed = bmi->bmiHeader.biClrUsed;
+    if ( bitCount == 16 || bitCount == 32 ) mask_bytes = 12;
+    if ( bitCount < 16 && clrUsed == 0 )
+	rgbquad_array_length = 1 << bitCount;
+    else
+	rgbquad_array_length = clrUsed;
+    dib_offset = bmi->bmiHeader.biSize + mask_bytes +
+	rgbquad_array_length * sizeof(RGBQUAD);
+    dib_size = dib_offset + bmi->bmiHeader.biSizeImage;
+    p_hdr->bfType = 0x4d42;        /* 0x42 = "B" 0x4d = "M" */
+    p_hdr->bfSize = (DWORD) (sizeof(BITMAPFILEHEADER) + dib_size);
+    p_hdr->bfReserved1 = 0;
+    p_hdr->bfReserved2 = 0;
+    p_hdr->bfOffBits = (DWORD) (sizeof(BITMAPFILEHEADER) + dib_offset);
+    return dib_size;
+}
 
 MODULE = Win32::Clipboard   PACKAGE = Win32::Clipboard
 
 PROTOTYPES: DISABLE
 
 long
-constant(name,arg)
+constant(name, arg)
     char *name
     int arg
 CODE:
@@ -415,7 +445,7 @@ PPCODE:
     EXTEND(SP,1);
     if(cause == WAIT_OBJECT_0)
         XST_mIV(0, 1);
-    else if(cause == WAIT_TIMEOUT)
+    else if ( cause == WAIT_TIMEOUT )
         XST_mIV(0, 0);
 	else
         XST_mNO(0);
@@ -443,13 +473,13 @@ PPCODE:
     HANDLE myhandle;
 	LPTSTR filename;
 	UINT namelength;
-	int i, toreturn;
+	UINT i, toreturn;
 	UINT count;
-    if(OpenClipboard(NULL)) {
-		if(myhandle = GetClipboardData(CF_HDROP)) {
+    if ( OpenClipboard(NULL) ) {
+		if ( myhandle = GetClipboardData(CF_HDROP) ) {
 			count = DragQueryFile((HDROP) myhandle, 0xFFFFFFFF, NULL, 0);
 			EXTEND(SP, count);
-			for(i=0; i<count; i++) {
+			for ( i = 0 ; i < count ; i++ ) {
 				namelength = DragQueryFile((HDROP) myhandle, i, NULL, 0);
 				filename = (LPTSTR) safemalloc(namelength+1);
 				DragQueryFile((HDROP) myhandle, i, filename, namelength+1);
@@ -457,14 +487,16 @@ PPCODE:
 				safefree(filename);
 			}
 			toreturn = count;
-		} else {
+		}
+                else {
 			EXTEND(SP, 1);
 			XST_mNO(0);
 			toreturn = 1;
 		}
 		CloseClipboard();
 		XSRETURN(toreturn);
-	} else {
+	}
+    else {
 		XSRETURN_NO;
 	}
 
@@ -472,164 +504,97 @@ void
 GetBitmap(...)
 PPCODE:
     HANDLE myhandle;
-	WORD cClrBits;
-	LPBITMAPINFO bmi;
-	BITMAPFILEHEADER hdr;
-	SV* buffer;
-    if(OpenClipboard(NULL)) {
-		if(myhandle = GetClipboardData(CF_DIB)) {
-			bmi = (LPBITMAPINFO) myhandle;
-			cClrBits = (WORD)(bmi->bmiHeader.biPlanes * bmi->bmiHeader.biBitCount);
-			if (cClrBits == 1)       cClrBits = 1;
-			else if (cClrBits <= 4)  cClrBits = 4;
-			else if (cClrBits <= 8)  cClrBits = 8;
-			else if (cClrBits <= 16) cClrBits = 16;
-			else if (cClrBits <= 24) cClrBits = 24;
-			else                     cClrBits = 32;
-			hdr.bfType = 0x4d42;        /* 0x42 = "B" 0x4d = "M" */
-			/* Compute the size of the entire file. */
-			hdr.bfSize = (DWORD) (sizeof(BITMAPFILEHEADER) +
-						 bmi->bmiHeader.biSize + bmi->bmiHeader.biClrUsed
-						 * sizeof(RGBQUAD) + bmi->bmiHeader.biSizeImage);
-			hdr.bfReserved1 = 0;
-			hdr.bfReserved2 = 0;
-			/* Compute the offset to the array of color indices. */
-			hdr.bfOffBits = (DWORD)
-				sizeof(BITMAPFILEHEADER) +
-				bmi->bmiHeader.biSize +
-				bmi->bmiHeader.biClrUsed * sizeof(RGBQUAD);
-			/* Copy the BITMAPFILEHEADER */
-			buffer = sv_2mortal(newSVpvn(
-				(char *) &hdr,
-				sizeof(BITMAPFILEHEADER)
-			));
-			/* Copy the BITMAPINFOHEADER and RGBQUAD array */
-			sv_catpvn(
-				buffer,
-				(char *) bmi,
-				sizeof(BITMAPINFOHEADER) +
-				bmi->bmiHeader.biClrUsed * sizeof(RGBQUAD)
-			);
-			/* Copy the image bits */
-			sv_catpvn(
-				buffer,
-				(char *) myhandle +
-				(bmi->bmiHeader.biSize + bmi->bmiHeader.biClrUsed * sizeof(RGBQUAD)),
-				bmi->bmiHeader.biSizeImage
-			);
-			CloseClipboard();
-			EXTEND(SP, 1);
-			XPUSHs(buffer);
-			XSRETURN(1);
-		} else {
-			CloseClipboard();
-			XSRETURN_NO;
-		}
+    BITMAPFILEHEADER hdr;
+    SV* buffer;
+    int dib_size;
+    if ( OpenClipboard(NULL) ) {
+	if( myhandle = GetClipboardData(CF_DIB) ) {
+	    dib_size = study_dib(myhandle, &hdr);
+	    /* Copy the BITMAPFILEHEADER */
+	    buffer = sv_2mortal(newSVpvn((char *) &hdr,
+					 sizeof(BITMAPFILEHEADER)));
+	    /* Copy the DIB data */
+	    sv_catpvn(buffer, (char *) myhandle, dib_size);
+	    CloseClipboard();
+	    EXTEND(SP, 1);
+	    XPUSHs(buffer);
+	    XSRETURN(1);
 	} else {
-		XSRETURN_NO;
+	    CloseClipboard();
+	    XSRETURN_NO;
+	}
+    } else {
+	XSRETURN_NO;
     }
 
 void
 GetAs(self=NULL, format)
-	SV* self;
-	int format;
+    SV* self;
+    int format;
 PPCODE:
     HANDLE myhandle;
     LPTSTR filename;
     UINT namelength;
-    int toret;
+    UINT toret;
     UINT count;
-    int i;
-	WORD cClrBits;
-	LPBITMAPINFO bmi;
-	BITMAPFILEHEADER hdr;
-	SV* buffer;
+    UINT i;
+    BITMAPFILEHEADER hdr;
+    int dib_size;
+    SV* buffer;
     if(items == 1) format = SvIV(ST(0));
-    if(OpenClipboard(NULL)) {
-		switch(format) {
-		case CF_HDROP:
-			if(myhandle = GetClipboardData(CF_HDROP)) {
-				count = DragQueryFile((HDROP) myhandle, 0xFFFFFFFF, NULL, 0);
-				EXTEND(SP, count);
-				for(i=0; i<count; i++) {
-					namelength = DragQueryFile((HDROP) myhandle, i, NULL, 0);
-					filename = (LPTSTR) safemalloc(namelength+1);
-					DragQueryFile((HDROP) myhandle, i, filename, namelength+1);
-					XST_mPV(i, (char *)filename);
-					safefree(filename);
-				}
-				toret = count;
-			} else {
-				EXTEND(SP, 1);
-				XST_mNO(0);
-				toret = 1;
-			}
-			break;
-		case CF_DIB:
-			if(myhandle = GetClipboardData(CF_DIB)) {
-				bmi = (LPBITMAPINFO) myhandle;
-				cClrBits = (WORD)(bmi->bmiHeader.biPlanes * bmi->bmiHeader.biBitCount);
-				if (cClrBits == 1)       cClrBits = 1;
-				else if (cClrBits <= 4)  cClrBits = 4;
-				else if (cClrBits <= 8)  cClrBits = 8;
-				else if (cClrBits <= 16) cClrBits = 16;
-				else if (cClrBits <= 24) cClrBits = 24;
-				else                     cClrBits = 32;
-				hdr.bfType = 0x4d42;        /* 0x42 = "B" 0x4d = "M" */
-				/* Compute the size of the entire file. */
-				hdr.bfSize = (DWORD) (sizeof(BITMAPFILEHEADER) +
-							 bmi->bmiHeader.biSize + bmi->bmiHeader.biClrUsed
-							 * sizeof(RGBQUAD) + bmi->bmiHeader.biSizeImage);
-				hdr.bfReserved1 = 0;
-				hdr.bfReserved2 = 0;
-				/* Compute the offset to the array of color indices. */
-				hdr.bfOffBits = (DWORD)
-					sizeof(BITMAPFILEHEADER) +
-					bmi->bmiHeader.biSize +
-					bmi->bmiHeader.biClrUsed * sizeof(RGBQUAD);
-				/* Copy the BITMAPFILEHEADER */
-				buffer = sv_2mortal(newSVpvn(
-					(char *) &hdr,
-					sizeof(BITMAPFILEHEADER)
-				));
-				/* Copy the BITMAPINFOHEADER and RGBQUAD array */
-				sv_catpvn(
-					buffer,
-					(char *) bmi,
-					sizeof(BITMAPINFOHEADER) +
-					bmi->bmiHeader.biClrUsed * sizeof(RGBQUAD)
-				);
-				/* Copy the image bits */
-				sv_catpvn(
-					buffer,
-					(char *) myhandle +
-					(bmi->bmiHeader.biSize + bmi->bmiHeader.biClrUsed * sizeof(RGBQUAD)),
-					bmi->bmiHeader.biSizeImage
-				);
-				CloseClipboard();
-				EXTEND(SP, 1);
-				XPUSHs(buffer);
-				XSRETURN(1);
-			} else {
-				CloseClipboard();
-			}
-			break;
-		default:
-			EXTEND(SP, 1);
-			if(myhandle = GetClipboardData((UINT) format))
-				XST_mPV(0,(char *) myhandle);
-			else
-				XST_mNO(0);
-			toret = 1;
-			break;
+    if ( OpenClipboard(NULL) ) {
+	switch ( format ) {
+	case CF_HDROP:
+	    if(myhandle = GetClipboardData(CF_HDROP)) {
+		count = DragQueryFile((HDROP) myhandle, 0xFFFFFFFF, NULL, 0);
+		EXTEND(SP, count);
+		for ( i = 0 ; i < count ; i++ ) {
+		    namelength = DragQueryFile((HDROP) myhandle, i, NULL, 0);
+		    filename = (LPTSTR) safemalloc(namelength+1);
+		    DragQueryFile((HDROP) myhandle, i, filename, namelength+1);
+		    XST_mPV(i, (char *)filename);
+		    safefree(filename);
 		}
+		toret = count;
+	    }
+	    else {
+		EXTEND(SP, 1);
+		XST_mNO(0);
+		toret = 1;
+	    }
+	    break;
+	case CF_DIB:
+	    if ( myhandle = GetClipboardData(CF_DIB) ) {
+		dib_size = study_dib(myhandle, &hdr);
+		/* Copy the BITMAPFILEHEADER */
+		buffer = sv_2mortal(newSVpvn((char *) &hdr,
+					     sizeof(BITMAPFILEHEADER)));
+		/* Copy the DIB data */
+		sv_catpvn(buffer, (char *) myhandle, dib_size);
+		CloseClipboard();
+		EXTEND(SP, 1);
+		XPUSHs(buffer);
+		XSRETURN(1);
+	    } else {
+		CloseClipboard();
+	    }
+	    break;
+	default:
+	    EXTEND(SP, 1);
+	    if(myhandle = GetClipboardData((UINT) format))
+		XST_mPV(0,(char *) myhandle);
+	    else
+		XST_mNO(0);
+	    toret = 1;
+	    break;
+	}
         CloseClipboard();
         XSRETURN(toret);
     }
-	XSRETURN_NO;
+    XSRETURN_NO;
 
 void
-Set(text,...)
+Set(text, ...)
     SV *text
 PPCODE:
     HANDLE myhandle;
@@ -641,39 +606,41 @@ PPCODE:
         text = ST(1);
 
     str = SvPV(text, leng);
-    if (hGlobal = GlobalAlloc(GMEM_DDESHARE, (leng+1)*sizeof(char))) {
+    if ( hGlobal = GlobalAlloc(GMEM_DDESHARE, (leng+1)*sizeof(char)) ) {
         szString = (char *) GlobalLock(hGlobal);
         memcpy(szString, str, leng*sizeof(char));
         szString[leng] = (char) 0;
         GlobalUnlock(hGlobal);
 
-        if (OpenClipboard(NULL)) {
+        if ( OpenClipboard(NULL) ) {
             EmptyClipboard();
             myhandle = SetClipboardData(CF_TEXT, (HANDLE) hGlobal);
             CloseClipboard();
 
-            if (myhandle) {
+            if ( myhandle ) {
                 XSRETURN_YES;
             } else {
 #ifdef WIN32__CLIPBOARD__DEBUG
-                printf("XS(Set): SetClipboardData failed (%d)\n", GetLastError());
+                printf("XS(Set): SetClipboardData failed (%d)\n",
+                       GetLastError());
 #endif
                 XSRETURN_NO;
             }
-        } else {
+        }
+        else {
 #ifdef WIN32__CLIPBOARD__DEBUG
             printf("XS(Set): OpenClipboard failed (%d)\n", GetLastError());
 #endif
             GlobalFree(hGlobal);
             XSRETURN_NO;
         }
-    } else {
+    }
+    else {
 #ifdef WIN32__CLIPBOARD__DEBUG
         printf("XS(Set): GlobalAlloc failed (%d)\n", GetLastError());
 #endif
         XSRETURN_NO;
     }
-
 
 void
 Empty(...)
@@ -693,25 +660,25 @@ void
 EnumFormats(...)
 PPCODE:
 	UINT format;
-	LPTSTR formatname[1024];
 	int count;
-    if(OpenClipboard(NULL)) {
+    if ( OpenClipboard(NULL) ) {
 		format = EnumClipboardFormats(0);
 		count = 0;
-		while(format != 0) {
+		while ( format != 0 ) {
 			XST_mIV(count++, (long) format);
 			format = EnumClipboardFormats(format);
 		}
 		CloseClipboard();
-    } else
+    }
+    else {
         XSRETURN_NO;
+    }
 	XSRETURN(count);
 
 void
-IsFormatAvailable(svformat,...)
+IsFormatAvailable(svformat, ...)
     SV *svformat
 PPCODE:
-	UINT format;
     if (items > 1)
         svformat = ST(1);
 	XST_mIV(0, (long) IsClipboardFormatAvailable((UINT) SvIV(svformat)));
@@ -739,20 +706,17 @@ OUTPUT:
 	RETVAL
 
 void
-GetFormatName(svformat,...)
+GetFormatName(svformat, ...)
     SV *svformat
 PPCODE:
 	char * name[1024];
     if (items > 1)
         svformat = ST(1);
-	if(GetClipboardFormatName(
-		(UINT) SvIV(svformat),
-		(LPTSTR) name,
-		1024)
-	) {
+	if ( GetClipboardFormatName((UINT) SvIV(svformat), (LPTSTR) name, 1024) ) {
 		EXTEND(SP, 1);
 		XST_mPV(0, (char *) name);
 		XSRETURN(1);
-	} else {
+	}
+    else {
 		XSRETURN_NO;
 	}

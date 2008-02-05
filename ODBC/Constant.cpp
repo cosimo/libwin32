@@ -27,9 +27,9 @@
 #include <windows.h>
 
 #include <stdio.h>
-#include <SQL.H>
-#include <SQLEXT.H>
-#include <ODBCINST.H>
+#include <sql.h>
+#include <sqlext.h>
+#include <odbcinst.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -43,7 +43,7 @@ extern "C" {
 }
 #endif
 
-#include "constant.h"		   
+#include "Constant.h"
 
 // constant function for exporting NT definitions.
 long

@@ -1,5 +1,5 @@
-#these tests are useless in the automated build process
-exit if $ENV{ACTIVEPERL_SKIP_INTERACTIVE_TESTS};
+# these tests are useless in the automated build process
+exit if $ENV{PERL_MM_USE_DEFAULT};
 
 use Win32::Console;
 
@@ -45,23 +45,23 @@ $mX = ($wRight  - $wLeft) / 2;
 $mY = ($wBottom - $wTop)  / 2;
 $OUT->Cursor($mX, $mY, 99, 1);
 
-# Main loop 
-while($key ne chr(27)) {
+# Main loop
+while ($key ne chr(27)) {
     last unless ($wLeft - $wRight);
     @event = $IN->Input();
-    
+
     $do = 0;
 
-    if($event[0] == 1 and $event[1]) {
+    if ($event[0] == 1 and $event[1]) {
         $key = chr($event[5]);
 
         # ENTER
-        if($event[5] == 13) {
+        if ($event[5] == 13) {
             $do = $menu;
         }
 
         # LEFT ARROW
-        if( $event[3] == 37 
+        if ($event[3] == 37
         and $event[4] == 75
         and $menu > 1) {
             $menu = $menu - 1;
@@ -69,32 +69,34 @@ while($key ne chr(27)) {
         }
 
         # RIGHT ARROW
-        if( $event[3] == 39 
+        if ($event[3] == 39
         and $event[4] == 77
         and $menu < 3) {
             $menu = $menu + 1;
             highlightMenu($menu);
         }
-        
-    } elsif($event[0]==2) {
-        $mX = $event[1]; 
+
+    }
+    elsif ($event[0]==2) {
+        $mX = $event[1];
         $mY = $event[2];
-        if($event[3] == 1 and $mY == $wTop+1) {
+        if ($event[3] == 1 and $mY == $wTop+1) {
             for $m (1..3) {
-                if($mX >= $menupos[$m] and $mX <= $menupos[$m]+$menulen[$m]) {
+                if ($mX >= $menupos[$m] and $mX <= $menupos[$m]+$menulen[$m]) {
                     $menu = $m;
                     $do = $menu;
-                }                     
+                }
             }
             highlightMenu($menu);
         }
     }
-    if($do == 1) {
+    if ($do == 1) {
         grayMenu();
         $T = chooseTest();
         &$T if $T;
         highlightMenu($menu);
-    } elsif($do == 2) {
+    }
+    elsif ($do == 2) {
         ($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
         $cX = $wLeft + int((($wRight-$wLeft)-45)/2);
         $cY = $wTop  + int((($wBottom-$wTop)-8)/2);
@@ -103,7 +105,8 @@ while($key ne chr(27)) {
         showAbout();
         $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+45, $cY+8);
 
-    } elsif($do==3) {
+    }
+    elsif ($do==3) {
         exit(0);
     }
     $OUT->Cursor($mX, $mY);
@@ -126,9 +129,10 @@ sub highlightMenu {
     my($menu) = @_;
     my $m;
     for $m (1..3) {
-        if($m == $menu) {
+        if ($m == $menu) {
             $OUT->FillAttr($FG_BLACK | $BG_WHITE, $menulen[$m], $menupos[$m], $wTop+1);
-        } else {
+        }
+	else {
             $OUT->FillAttr($FG_WHITE | $BG_BLUE,  $menulen[$m], $menupos[$m], $wTop+1);
         }
     }
@@ -150,7 +154,7 @@ sub filledBox {
 sub borderBox {
 #==============
     my($O, $left, $top, $width, $height) = @_;
-    
+
     $O->FillChar(chr(218), 1,        $left,          $top);
     $O->FillChar(chr(196), $width-2, $left+1,        $top);
     $O->FillChar(chr(191), 1,        $left+$width-1, $top);
@@ -189,6 +193,7 @@ sub writeCentered {
 #===============
 sub millisleep {
 #===============
+    require Win32 unless defined &Win32::GetTickCount;
     my $ctick = Win32::GetTickCount();
     my $etick = $ctick + $_[0];
     while ($ctick < $etick) { $ctick = Win32::GetTickCount(); }
@@ -205,15 +210,15 @@ sub explodeAttr {
 
     my $X = $wRight-$wLeft;
     my $Y = $wBottom-$wTop;
-     
+
     my $times = int( ($X>$Y)? ($Y/2) : ($X/2) );
 
-    my $left   = $wLeft + int($X/2); 
+    my $left   = $wLeft + int($X/2);
     my $right  = $wLeft + int($X/2);
     my $top    = $wTop + int($Y/2);
     my $bottom = $wTop + int($Y/2);
 
-    my ($cip, $ciop);
+    my($cip, $ciop);
     for $cip (0..$times) {
 	last if $times == 0;
         for $ciop ($top..$bottom) {
@@ -225,7 +230,7 @@ sub explodeAttr {
         $right  += int(($X/2)/$times);
         millisleep(5); # sleeps for 5 milliseconds
     }
-   
+
     # the final touch
     ($wLeft, $wTop, $wRight, $wBottom) = $O->Window();
     $X = $wRight-$wLeft+1;
@@ -244,19 +249,19 @@ sub showAbout {
 
     my $dX = 45;
     my $dY = 8;
-    
+
     my $cX = $wLeft + int(($X-$dX)/2);
     my $cY = $wTop  + int(($Y-$dY)/2);
-    
+
     Window($OUT, $FG_WHITE | $BG_BLUE, " ",  $cX, $cY, $dX, $dY);
     $OUT->Attr($FG_WHITE | $BG_BLUE);
     writeCentered($OUT, "Win32::Console version $Win32::Console::VERSION",               $X, $cY+2);
     writeCentered($OUT, "TEST SUITE",                                $X, $cY+4);
-    writeCentered($OUT, "by Aldo Calpini <dada\@divinf.it>",         $X, $cY+5);    
+    writeCentered($OUT, "by Aldo Calpini <dada\@divinf.it>",         $X, $cY+5);
     writeCentered($OUT, "Press any key or mouse button to continue", $X, $cY+6);
 
     # save settings
-    my ($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor(); 
+    my($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();
     my $oldmode = $IN->Mode();
 
 
@@ -265,9 +270,9 @@ sub showAbout {
     $IN->Flush();
     # millisleep(500);
     $IN->Flush();
-    
+
     my $color = 0;
-    $string = "TEST SUITE";    
+    $string = "TEST SUITE";
     my $sX = int(($X-length($string))/2);
     my $sY = $cY+4;
     my $tX = $sX;
@@ -276,9 +281,9 @@ sub showAbout {
     # to wait for something to happen
     #
     my @event = $IN->PeekInput();
-    until(($event[0]==1 and $event[1]==1) 
+    until(($event[0]==1 and $event[1]==1)
     or    ($event[0]==2 and $event[3]!=0)) {
-    
+
         #
         # cycle colors on "TEST SUITE"
         #
@@ -289,7 +294,7 @@ sub showAbout {
             $color++;
             $color = 0 if $color>15;
         }
-        
+
         #
         # process all pending input events
         #
@@ -311,7 +316,7 @@ sub testInfo {
 
     # save settings
     my $oldT = $OUT->Title();
-    my ($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();     
+    my($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();
     my($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
     my $X = $wRight-$wLeft;
@@ -333,12 +338,12 @@ sub testInfo {
     }
     my $dX = $max + 4;
     my $dY = $#towrite + 4;
-    
+
     my $cX = $wLeft + int(($X-$dX)/2);
     my $cY = $wTop  + int(($Y-$dY)/2);
-    
+
     my $BACKGROUND = $OUT->ReadRect($cX, $cY, $cX+$dX, $cY+$dY);
-    
+
     Window($OUT, $FG_WHITE | $BG_BLUE, " ",  $cX, $cY, $dX, $dY);
     $OUT->Attr($FG_WHITE | $BG_BLUE);
     for $row ($cY+1..$cY+1+$#towrite) {
@@ -352,14 +357,14 @@ sub testInfo {
 
     $IN->Flush();
     my @event = $IN->Input();
-    until(($event[0]==1 and $event[1]==1) 
+    until(($event[0]==1 and $event[1]==1)
     or    ($event[0]==2 and $event[3]!=0)) {
         @event = $IN->Input();
     }
     $IN->Flush();
-   
+
     $OUT->Window(1, $wLeft, $wTop, $wRight, $wBottom);
-    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);        
+    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);
     $OUT->Cursor($oldX, $oldY, $oldS, $oldV);
     $OUT->Title($oldT);
 }
@@ -370,10 +375,10 @@ sub testTitle {
 
     # save settings
     my $oldT = $OUT->Title();
-    my ($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();     
-    
+    my($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();
+
     $OUT->Cursor(-1, -1, -1, 0); # hide the cursor
-    
+
     my($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
     my $X = $wRight-$wLeft;
@@ -381,12 +386,12 @@ sub testTitle {
 
     my $dX = 14;
     my $dY = 2;
-    
+
     my $cX = $wLeft + int(($X-$dX)/2);
     my $cY = $wTop  + int(($Y-$dY)/2);
-    
+
     my $BACKGROUND = $OUT->ReadRect($cX, $cY, $cX+$dX, $cY+$dY);
-    
+
     Window($OUT, $FG_WHITE | $BG_BLUE, " ",  $cX, $cY, $dX, $dY);
     $OUT->Attr($FG_WHITE | $BG_BLUE);
     writeCentered($OUT, "Testing...", $X, $cY+1);
@@ -404,7 +409,7 @@ sub testTitle {
         $OUT->Title("");
     }
 
-    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);    
+    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);
     $OUT->Cursor($oldX, $oldY, $oldS, $oldV);
     $OUT->Title($oldT);
 }
@@ -415,10 +420,10 @@ sub testScroll {
 
     # save settings
     my $oldT = $OUT->Title();
-    my ($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();     
-    
+    my($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();
+
     $OUT->Cursor(-1, -1, -1, 0); # hide the cursor
-    
+
     my($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
     my $X = $wRight-$wLeft;
@@ -426,12 +431,12 @@ sub testScroll {
 
     my $dX = 48;
     my $dY = 4;
-    
+
     my $cX = $wLeft + int(($X-$dX)/2);
     my $cY = $wTop  + int(($Y-$dY)/2);
-    
+
     filledBox($OUT, $FG_GRAY | $BG_BLACK, " ",  $wLeft, $wTop+3, $wRight, $wBottom);
-    
+
     Window($OUT, $FG_WHITE | $BG_BLUE, " ",  $cX, $cY, $dX, $dY);
     $OUT->Attr($FG_WHITE | $BG_BLUE);
     writeCentered($OUT, "Scrolling", $X, $cY+1);
@@ -443,43 +448,43 @@ sub testScroll {
     my @event = ();
     my $test = 1;
     my $return = "";
-    while($key != 27) {
+    while ($key != 27) {
 
         @event = $IN->Input();
 
-        if($event[0] == 1 and $event[1]) {
+        if ($event[0] == 1 and $event[1]) {
 
 
             # LEFT ARROW
-            if( $event[3] == 37 and $event[4] == 75 and $cX > $wLeft) {
+            if ($event[3] == 37 and $event[4] == 75 and $cX > $wLeft) {
                 $result = $OUT->Scroll($cX, $cY, $cX+$dX, $cY+$dY, $cX-1, $cY, " ", $FG_GRAY|$BG_BLACK, $wLeft, $wTop, $wRight, $wBottom);
                 $cX--;
             }
 
             # RIGHT ARROW
-            if( $event[3] == 39  and $event[4] == 77 and $cX < $wRight-$dX) {
+            if ($event[3] == 39  and $event[4] == 77 and $cX < $wRight-$dX) {
                 $result = $OUT->Scroll($cX, $cY, $cX+$dX, $cY+$dY, $cX+1, $cY, " ", $FG_GRAY|$BG_BLACK, $wLeft, $wTop, $wRight, $wBottom);
                 $cX++;
             }
 
             # UP ARROW
-            if($event[3] == 38 and $event[4] == 72 and $cY > $wTop+3) {
+            if ($event[3] == 38 and $event[4] == 72 and $cY > $wTop+3) {
                 $result = $OUT->Scroll($cX, $cY, $cX+$dX, $cY+$dY, $cX, $cY-1, " ", $FG_GRAY|$BG_BLACK, $wLeft, $wTop, $wRight, $wBottom);
                 $cY--;
             }
 
             # DOWN ARROW
-            if($event[3] == 40 and $event[4] == 80 and $cY < $wBottom-$dY) {
+            if ($event[3] == 40 and $event[4] == 80 and $cY < $wBottom-$dY) {
                 $result = $OUT->Scroll($cX, $cY, $cX+$dX, $cY+$dY, $cX, $cY+1, " ", $FG_GRAY|$BG_BLACK, $wLeft, $wTop, $wRight, $wBottom);
                 $cY++;
             }
 
             $key = $event[5];
         }
-        
+
     }
     $IN->Flush();
-    
+
     filledBox($OUT, $FG_GRAY | $BG_BLACK, " ",  $cX, $cY, $dX, $dY);
     $OUT->Cursor($oldX, $oldY, $oldS, $oldV);
     $OUT->Title($oldT);
@@ -492,10 +497,10 @@ sub testBox {
 
     # save settings
     my $oldT = $OUT->Title();
-    my ($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();     
-    
+    my($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();
+
     $OUT->Cursor(-1, -1, -1, 0); # hide the cursor
-    
+
     my($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
     my @FG_COLORS=(
@@ -542,7 +547,7 @@ sub testBox {
 
     my $cX = $wLeft + int(($X-$dX)/2);
     my $cY = $wTop  + int(($Y-$dY)/2);
-    
+
     $IN->Flush();
     my $key = 0;
     my @event = $IN->PeekInput();
@@ -552,7 +557,7 @@ sub testBox {
     my $h = 0;
     my $FG = 0;
     my $BG = 0;
-    until(($event[0]==1 and $event[1]==1) 
+    until(($event[0]==1 and $event[1]==1)
     or    ($event[0]==2 and $event[3]!=0)) {
 
         $x = rand($X);
@@ -562,10 +567,11 @@ sub testBox {
 
         $FG = $FG_COLORS[rand($#FG_COLORS)];
         $BG = $BG_COLORS[rand($#BG_COLORS)];
-        
-        if(rand(100)>50 and $w>2 and $h>2) {
+
+        if (rand(100)>50 and $w>2 and $h>2) {
             borderBox($OUT, $x, $y, $w, $h);
-        } else {            
+        }
+	else {
             filledBox($OUT, $FG|$BG, " ", $x, $y, $w, $h);
         }
 
@@ -587,7 +593,7 @@ sub testWindow {
 
     # save settings
     my $oldT = $OUT->Title();
-    my ($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();     
+    my($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();
     my($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
     my $X = $wRight-$wLeft;
@@ -595,30 +601,30 @@ sub testWindow {
 
     my $dX = 14;
     my $dY = 2;
-    
+
     my $cX = $wLeft + int(($X-$dX)/2);
     my $cY = $wTop  + int(($Y-$dY)/2);
-    
+
     my $BACKGROUND = $OUT->ReadRect($cX, $cY, $cX+$dX, $cY+$dY);
-    
+
     Window($OUT, $FG_WHITE | $BG_BLUE, " ",  $cX, $cY, $dX, $dY);
     $OUT->Attr($FG_WHITE | $BG_BLUE);
     writeCentered($OUT, "Testing...", $X, $cY+1);
-   
+
     $OUT->Cursor(-1, -1, -1, 0); # hide the cursor
-    
+
     my($maxx, $maxy) = $OUT->MaxWindow();
     $OUT->Window(1, 0, 0, $maxx, $maxy);
-    
-    while($maxx>1 and $maxy>1) {
+
+    while ($maxx>1 and $maxy>1) {
         $maxx--;
         $maxy--;
         $OUT->Window(1, 0, 0, $maxx, $maxy);
         millisleep(50);
     }
-    
+
     $OUT->Window(1, $wLeft, $wTop, $wRight, $wBottom);
-    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);        
+    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);
     $OUT->Cursor($oldX, $oldY, $oldS, $oldV);
     $OUT->Title($oldT);
 }
@@ -632,7 +638,7 @@ sub chooseTest {
 
     # save settings
     my $oldT = $OUT->Title();
-    my ($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();     
+    my($oldX, $oldY, $oldS, $oldV) = $OUT->Cursor();
     my($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
     my $X = $wRight-$wLeft;
@@ -640,12 +646,12 @@ sub chooseTest {
 
     my $dX = 45;
     my $dY = 6;
-    
+
     my $cX = $wLeft;
     my $cY = $wTop  + 3;
-    
+
     my $BACKGROUND = $OUT->ReadRect($cX, $cY, $cX+$dX, $cY+$dY);
-    
+
     Window($OUT, $FG_WHITE | $BG_BLUE, " ",  $cX, $cY, $dX, $dY);
 
     $OUT->Attr($FG_WHITE | $BG_BLUE);
@@ -655,30 +661,30 @@ sub chooseTest {
     $OUT->Cursor($wLeft+2, $cY+3);    $OUT->Write("Scrolling");
     $OUT->Cursor($wLeft+2, $cY+4);    $OUT->Write("Title Bar");
     $OUT->Cursor($wLeft+2, $cY+5);    $OUT->Write("Window Size");
-    
+
     $IN->Flush();
     my $key = 0;
     my @event = ();
     my $test = 1;
     highlightTest(1);
     my $return = "";
-    my ($mX, $mY) = $OUT->Cursor();
+    my($mX, $mY) = $OUT->Cursor();
 
-    while($key != 27) {
+    while ($key != 27) {
 
         @event = $IN->Input();
 
         # A KEY PRESSED
-        if($event[0] == 1 and $event[1]) {
+        if ($event[0] == 1 and $event[1]) {
 
             # UP ARROW
-            if($event[3] == 38 and $event[4] == 72 and $test > 1) {
+            if ($event[3] == 38 and $event[4] == 72 and $test > 1) {
                 $test=$test-1;
                 highlightTest($test);
             }
 
             # DOWN ARROW
-            if($event[3] == 40 and $event[4] == 80 and $test < 5) {
+            if ($event[3] == 40 and $event[4] == 80 and $test < 5) {
                 $test=$test+1;
                 highlightTest($test);
             }
@@ -686,19 +692,20 @@ sub chooseTest {
             $key = $event[5];
 
             # ENTER
-            if($key == 13) {
-                $return = ("", "testInfo", "testBox", 
+            if ($key == 13) {
+                $return = ("", "testInfo", "testBox",
                                "testScroll", "testTitle", "testWindow")[$test];
                 $key = 27;
             }
-        } elsif($event[0] == 2) {
-            $mX = $event[1]; 
+        }
+	elsif ($event[0] == 2) {
+            $mX = $event[1];
             $mY = $event[2];
-            if($event[3] == 1) {
+            if ($event[3] == 1) {
                 for $m (1..5) {
-                    if( ($mX >= $cX+1 and $mX <= $cX+$dX) 
+                    if (($mX >= $cX+1 and $mX <= $cX+$dX)
                     and ($mY == $cY+$m) ) {
-                        $return = ("", "testInfo", "testBox", 
+                        $return = ("", "testInfo", "testBox",
                                        "testScroll", "testTitle", "testWindow")[$m];
                         $key = 27;
                     }
@@ -709,7 +716,7 @@ sub chooseTest {
     }
     $IN->Flush();
 
-    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);    
+    $OUT->WriteRect($BACKGROUND, $cX, $cY, $cX+$dX, $cY+$dY);
     $OUT->Cursor($oldX, $oldY, $oldS, $oldV);
     $OUT->Title($oldT);
     return $return;
@@ -720,9 +727,10 @@ sub highlightTest {
 #==================
     my($i) = @_;
     for $m (1..5) {
-        if($m == $i) {
+        if ($m == $i) {
             $OUT->FillAttr($FG_BLACK | $BG_WHITE, 43, $wLeft+1, $wTop+3+$m);
-        } else {
+        }
+	else {
             $OUT->FillAttr($FG_WHITE | $BG_BLUE, 43, $wLeft+1, $wTop+3+$m);
         }
     }

@@ -6,12 +6,12 @@ package Win32::Shortcut;
 # This module creates an object oriented interface to the Win32
 # Shell Links (IShellLink interface).
 #
-# Version: 0.03 (07 Apr 1997)
-#
 #######################################################################
 
-require Exporter;       # to export the constants to the main:: space
-require DynaLoader;     # to dynuhlode the module.
+$VERSION = "0.04";
+
+require Exporter;
+require DynaLoader;
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT = qw(
@@ -31,24 +31,11 @@ sub AUTOLOAD {
     my($constname);
     ($constname = $AUTOLOAD) =~ s/.*:://;
     #reset $! to zero to reset any current errors.
-    local $! = 0;
+    local $!;
     my $val = constant($constname, @_ ? $_[0] : 0);
-    if ($! != 0) {
-
-    # [dada] This results in an ugly Autoloader error
-
-    #if ($! =~ /Invalid/) {
-    #    $AutoLoader::AUTOLOAD = $AUTOLOAD;
-    #    goto &AutoLoader::AUTOLOAD;
-    #} else {
-    
-    # [dada] ... I prefer this one :)
-
-        ($pack, $file, $line) = caller;
-        undef $pack; # [dada] and get rid of "used only once" warning...
+    if ($!) {
+        my(undef, $file, $line) = caller;
         die "Win32::Shortcut::$constname is not defined, used at $file line $line.";
-
-    #}
     }
     eval "sub $AUTOLOAD { $val }";
     goto &$AUTOLOAD;
@@ -56,15 +43,10 @@ sub AUTOLOAD {
 
 
 #######################################################################
-# STATIC OBJECT PROPERTIES
-#
-$VERSION = "0.03";
-
-#######################################################################
 # PUBLIC METHODS
 #
 
-#======== ### CLASS CONSTRUCTOR
+#========
 sub new {
 #========
     my($class, $file) = @_;
@@ -146,10 +128,13 @@ sub Set {
 sub Save {
 #=========
     my($self, $file) = @_;
-    return undef unless ref($self);
+    return unless ref($self);
 
-    return undef if not $file and not $self->{'File'};
-    $file = $self->{'File'} if not $file;
+    $file = $self->{'File'} unless $file;
+    return unless $file;
+
+    require Win32 unless defined &Win32::GetFullPathName;
+    $file = Win32::GetFullPathName($file);
 
     _SetPath($self->{'ilink'}, $self->{'ifile'}, $self->{'Path'});
     _SetArguments($self->{'ilink'}, $self->{'ifile'}, $self->{'Arguments'});
@@ -161,6 +146,9 @@ sub Save {
                      $self->{'IconLocation'}, $self->{'IconNumber'});
 
     my $result = _Save($self->{'ilink'}, $self->{'ifile'}, $file);
+    if ($result) {
+	$self->{'File'} = $file unless $self->{'File'};
+    }
     return $result;
 }
 
@@ -319,7 +307,7 @@ sub Version {
 # PRIVATE METHODS
 #
 
-#============ ### CLASS DESTRUCTOR
+#============
 sub DESTROY {
 #============
     my($self) = @_;
@@ -330,17 +318,6 @@ sub DESTROY {
     }
 }
 
-#######################################################################
-# dynamically load in the Shortcut.pll module.
-#
-
 bootstrap Win32::Shortcut;
 
-# Preloaded methods go here.
-
-#Currently Autoloading is not implemented in Perl for win32
-# Autoload methods go after __END__, and are processed by the autosplit program.
-
 1;
-__END__
-

@@ -18,8 +18,10 @@ if($L) {
     # print "   L.ilink=".$L->{'ilink'}."\n";
     # print "   L.ifile=".$L->{'ifile'}."\n";
 
-    $L->Path($ENV{'SYSTEMROOT'}."\\Notepad.exe");
-    $L->WorkingDirectory($ENV{'TEMP'});
+    my $windows = $ENV{'SYSTEMROOT'} || $ENV{'WINDIR'};
+    $L->Path("$windows\\Notepad.exe");
+    my $temp = $ENV{'TEMP'}; $temp =~ s!/!\\!g;
+    $L->WorkingDirectory($temp);
     $L->ShowCmd(3);
 
     printf("%20s = %s\n","Path",            $L->Path);
@@ -51,9 +53,9 @@ if($L) {
     
     print "\n   Changing shortcut data...\n";
 
-    $L->Set($ENV{'SYSTEMROOT'}."\\Write.exe",
+    $L->Set($windows."\\Write.exe",
             "",
-            $ENV{'SYSTEMROOT'},
+            $windows,
             "This is a description",
             1,
             hex('0x0337'),
@@ -94,8 +96,9 @@ if(open(DUMMY,">dummy.txt")) {
     $L = new Win32::Shortcut();
     if($L) {
         print "OK\n";
-        $L->Path("dummy.txt");
-        $pathto = Cwd::getcwd();
+	require Win32 unless defined &Win32::GetCwd;
+        $pathto = Win32::GetCwd();
+        $L->Path("$pathto\\dummy.txt");
         $L->WorkingDirectory($pathto);
         printf("%20s = %s\n", "WorkingDirectory", $L->WorkingDirectory);
         printf("%20s = %s\n", "Path", $L->Path);

@@ -27,6 +27,7 @@
 
 #define	VERNAME			"ODBC extension for Win32 Perl"
 #define VERSION_NUM		VERSION_HI
+#undef VERSION
 #define	VERSION			VERSION_NUM " " VERSION_TYPE
 #define VERDATE			__DATE__
 #define VERTIME			__TIME__

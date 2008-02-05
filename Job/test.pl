@@ -3,6 +3,11 @@ use Data::Dumper;
 use Win32::Job;
 
 my $job;
+my $perlpath = $Config{perlpath};
+if ($^O eq 'cygwin') {
+    chomp($perlpath = `cygpath -w $perlpath`);
+    $perlpath .= '.exe' if $perlpath !~ /\.exe$/;
+}
 
 # Processes you spawn in the job are initially suspended. You can activate
 # them by using one of the following functions. This allows you to run several 
@@ -20,12 +25,12 @@ if ($pid = fork()) {
 $ENV{xxyyzz} = 'fOo';
 
 $job = Win32::Job->new;
-$job->spawn($Config{perlpath}, "perl child.t", {
+$job->spawn($perlpath, "perl child.t", {
 	stdin => 'NUL',
 	stdout => 'stdout.txt',
 	stderr => 'stdout.txt',
 });
-$job->spawn($Config{perlpath}, "perl -le \"print \$\$\"");
+$job->spawn($perlpath, "perl -le \"print \$\$\"");
 $job->spawn("cmd", q{cmd /C "echo %PATH%"});
 $i = 0;
 $job->watch(sub {
@@ -40,7 +45,7 @@ END { unlink "stdout.txt" }
 # you're letting it run with no timeout at all (and you might as well use a 
 # simpler module).
 $job = Win32::Job->new;
-$job->spawn($Config{perlpath}, "perl child.t"); #, {new_console => 1});
+$job->spawn($perlpath, "perl child.t"); #, {new_console => 1});
 $job->run(10);
 print Dumper $job->status;
 print "$^E\n";
@@ -48,6 +53,6 @@ print "$^E\n";
 # You can call kill() explicitly to kill the job and all of its subprocesses.
 # You could do this from a watchdog timer, for example.
 $job = Win32::Job->new;
-$job->spawn($Config{perlpath}, "perl child.t");
+$job->spawn($perlpath, "perl child.t");
 $job->run(1);
 print Dumper $job->status;

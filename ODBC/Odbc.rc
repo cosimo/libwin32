@@ -3,7 +3,7 @@
 
 
 // Icon
-Win32ODBC               ICON    DISCARDABLE     "ODBC.ICO"
+Win32ODBC               ICON    DISCARDABLE     "ODBC.ico"
 
 
 // Version

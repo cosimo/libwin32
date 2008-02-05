@@ -10,6 +10,7 @@ use constant WIN32s => 0;
 use constant WIN9X  => 1;
 use constant WINNT  => 2;
 
+require Win32 unless defined &Win32::GetOSVersion;
 my @ver = Win32::GetOSVersion;
 die "Win32::Job is not supported on $ver[0]" unless (
     $ver[4] == WINNT and (

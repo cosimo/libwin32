@@ -10,8 +10,6 @@ $user = "";
 $passwd = "";
 
 use Win32::NetResource;
-#use Data::Dumper;
-#use Win32;
 $debug = 2;
 
 sub deb {
@@ -21,12 +19,14 @@ sub deb {
 }
 
 sub err {
+    require Win32 unless defined &Win32::FormatMessage;
     my $err;
     Win32::NetResource::GetError($err);
     deb("|$err| => ", Win32::FormatMessage($err));
 }
 
-print "1..7\n";
+$tests = 7;
+print "1..$tests\n";
 
 $ShareInfo = {
 		'path' => 'c:\\',
@@ -74,8 +74,17 @@ $ShareInfo = {
 
 
 deb("Testing NetShareAdd");
-$parm = "";
-Win32::NetResource::NetShareAdd( $ShareInfo,$parm ) or print "not ";
+$ok = $parm = "";
+$ok = Win32::NetResource::NetShareAdd( $ShareInfo,$parm );
+unless ($ok) {
+    Win32::NetResource::GetError(my $err);
+    if ($err == 2114) {
+	print "ok $_ # skip The Server service is not started.\n" for 2..$tests;
+	exit 0;
+    }
+}
+
+$ok or print "not ";
 print "ok 2\n";
 
 err();
@@ -134,7 +143,6 @@ $drive = Win32::GetNextAvailDrive();
 deb("drive is $drive");
 if (keys %$myRef) {
     $myRef->{'LocalName'} = $drive;
-    #print STDERR "mapping to |$drive|\n", Dumper($myRef), "\n";
     Win32::NetResource::AddConnection($myRef,$passwd,$user,0);
     err();
 
@@ -148,7 +156,7 @@ if (keys %$myRef) {
     err();
 }
 else {
-    print "ok $_ # skipped: share not found\n" for 5..6;
+    print "ok $_ # skip Share not found\n" for 5..6;
 }
 Win32::NetResource::NetShareDel("PerlTempShare") or print "not ";
 print "ok 7\n";

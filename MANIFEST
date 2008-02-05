@@ -14,7 +14,8 @@ APIFile/ex/DiskGeom.plx
 APIFile/ex/FormatFloppy.plx
 APIFile/ex/ListDevs.plx
 APIFile/ppport.h
-APIFile/test.pl
+APIFile/t/file.t
+APIFile/t/tie.t
 APIFile/typemap
 APINet/Changes
 APINet/MANIFEST
@@ -22,7 +23,6 @@ APINet/Makefile.PL
 APINet/Net.html
 APINet/Net.pm
 APINet/Net.xs
-APINet/mingw32.exc
 APINet/t/test.t
 APIRegistry/Changes
 APIRegistry/ExtUtils/Myconst2perl.pm
@@ -46,6 +46,7 @@ ChangeNotify/Makefile.PL
 ChangeNotify/test.pl
 ChangeNotify/typemap
 Changes
+Clipboard/ChangeLog
 Clipboard/Clipboard.pm
 Clipboard/Clipboard.xs
 Clipboard/MANIFEST
@@ -56,6 +57,7 @@ Clipboard/samples/monitor.pl
 Clipboard/samples/test-tie.pl
 Clipboard/samples/test.pl
 Clipboard/t/test.t
+Console/Changes
 Console/Console.pm
 Console/Console.xs
 Console/MANIFEST
@@ -94,7 +96,6 @@ FileSecurity/FileSecurity.pm
 FileSecurity/FileSecurity.xs
 FileSecurity/MANIFEST
 FileSecurity/Makefile.PL
-FileSecurity/mingw32.exc
 FileSecurity/test.pl
 IPC/Changes
 IPC/IPC.pm
@@ -115,7 +116,6 @@ Internet/docs/intro.html
 Internet/docs/license.html
 Internet/docs/reference.html
 Internet/docs/toc.html
-Internet/mingw32.exc
 Internet/test-async.pl
 Internet/test.pl
 Internet/typemap
@@ -140,14 +140,12 @@ NetAdmin/MANIFEST
 NetAdmin/Makefile.PL
 NetAdmin/NetAdmin.pm
 NetAdmin/NetAdmin.xs
-NetAdmin/mingw32.exc
 NetAdmin/t/netadmin.t
 NetResource/Changes
 NetResource/MANIFEST
 NetResource/Makefile.PL
 NetResource/NetResource.pm
 NetResource/NetResource.xs
-NetResource/mingw32.exc
 NetResource/t/netresource.t
 NetResource/typemap
 ODBC/CMom.cpp
@@ -157,10 +155,10 @@ ODBC/CResults.hpp
 ODBC/Constant.cpp
 ODBC/Constant.h
 ODBC/HISTORY.TXT
-ODBC/Icon2.ico
 ODBC/MANIFEST
 ODBC/Makefile.PL
 ODBC/ODBC.h
+ODBC/ODBC.ico
 ODBC/ODBC.pm
 ODBC/ODBC.xs
 ODBC/ODBCbuild.h
@@ -171,7 +169,7 @@ ODBC/ROADMAP.TXT
 ODBC/Test.pl
 ODBC/docs/object.html
 ODBC/docs/odbc.html
-ODBC/mingw32.exc
+ODBC/hints/cygwin.pl
 ODBC/resource.h
 OLE/Changes			Lowlevel changelog
 OLE/MANIFEST
@@ -188,7 +186,6 @@ OLE/lib/Win32/OLE/Lite.pm	Lightweight OLE.pm not using ANY other modules
 OLE/lib/Win32/OLE/NEWS.pod	History of user visable changes
 OLE/lib/Win32/OLE/NLS.pm	Win32::OLE::NLS module: National Language Support
 OLE/lib/Win32/OLE/TPJ.pod	Win32::OLE article from "The Perl Journal" #10
-
 OLE/lib/Win32/OLE.pm
 OLE/lib/Win32/OLE/TypeInfo.pm	Win32::OLE::TypeInfo module
 OLE/lib/Win32/OLE/Variant.pm	Win32::OLE::Variant module: VARIANT variables
@@ -226,7 +223,6 @@ PerfLib/PerfLib.mak
 PerfLib/PerfLib.pm
 PerfLib/PerfLib.xs
 PerfLib/calc.html
-PerfLib/mingw32.exc
 PerfLib/test.pl
 PerfLib/typemap
 Pipe/Client.pl
@@ -239,7 +235,7 @@ Pipe/Pipe.pm
 Pipe/Pipe.xs
 Pipe/README
 Pipe/Server.pl
-Pipe/mingw32.exc
+Pipe/hints/cygwin.pl
 Pipe/test.bat
 Process/Changes
 Process/MANIFEST
@@ -247,7 +243,7 @@ Process/Makefile.PL
 Process/Process.hpp
 Process/Process.pm
 Process/Process.xs
-Process/mingw32.exc
+Process/hints/cygwin.pl
 Process/test.pl
 Process/typemap
 README
@@ -273,6 +269,7 @@ Service/Makefile.PL
 Service/Service.pm
 Service/Service.xs
 Service/t/service.t
+Shortcut/Changes
 Shortcut/MANIFEST
 Shortcut/Makefile.PL
 Shortcut/README
@@ -284,7 +281,6 @@ Shortcut/docs/license.html
 Shortcut/docs/reference.html
 Shortcut/docs/toc.html
 Shortcut/ln32.bat
-Shortcut/mingw32.exc
 Shortcut/test.pl
 Shortcut/typemap
 Sound/MANIFEST
@@ -292,7 +288,6 @@ Sound/Makefile.PL
 Sound/README
 Sound/Sound.pm
 Sound/Sound.xs
-Sound/mingw32.exc
 Sound/test.pl
 Sound/samples/welcome.wav
 Sound/samples/devices.pl
