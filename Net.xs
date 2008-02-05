@@ -480,11 +480,11 @@ MBTWC(char* name)
     int length;
     LPWSTR lpPtr = NULL;
     
-    if (name != NULL && *name != '\0') {
+    if (name != NULL) { // && *name != '\0') {
 	length = strlen(name)+1;
 	Newz(0, lpPtr, length, WCHAR);
 	MultiByteToWideChar(CP_ACP, NULL, name, -1, lpPtr,
-			    length * sizeof(WCHAR));
+				length * sizeof(WCHAR));
     }
     return lpPtr;
 }
@@ -498,11 +498,13 @@ MBTWC(char* name)
 
 #define HV_GET_PV(CAST, field, name) \
     STMT_START {							\
+	STRLEN pl_na;							\
 	if ((svPtr = hv_fetch((HV*)hv, name, strlen(name), 0)) == NULL)	\
 	    croak("Required argument not supplied (%s),", name);	\
-	if (!SvPOK(*svPtr))						\
-	    croak("Bad data for %s, ", name);				\
-	((CAST)uiX)->field = MBTWC(SvPV(*svPtr, na));			\
+	if (SvOK(*svPtr))						\
+	    ((CAST)uiX)->field = MBTWC(SvPV(*svPtr, pl_na));		\
+	else /* fields set to "undef" pass NULL to underlying API */	\
+	    ((CAST)uiX)->field = (LPWSTR)NULL;				\
     } STMT_END
 
 #define HV_GET_IV(CAST, field, name) \
@@ -1032,6 +1034,10 @@ fillGroupHash(HV *hv, int level, LPBYTE *uiX)
     char tmpBuf[UNLEN+1];
     
     switch (level) {
+	case 2:
+	HV_STORE_IV(PGROUP_INFO_2, grpi2_group_id,	 "groupId");
+	HV_STORE_IV(PGROUP_INFO_2, grpi2_attributes, "attributes");
+	/* fall through to 1 */
     case 1:
 	HV_STORE_PV(PGROUP_INFO_1, grpi1_comment,    "comment");
 	/* fall through to 0 */
@@ -1349,13 +1355,13 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwUser = MBTWC(user);
-	PLOCALGROUP_USERS_INFO_0 pwzLocalGroupUsers;
+	LPLOCALGROUP_USERS_INFO_0 pwzLocalGroupUsers=NULL;
 	DWORD entriesRead = 0, totalEntries = 0;
 	int index, len = PREFLEN;
 	char tmpBuf[UNLEN+1];
 	DWORD lastError = 0;
 
-	if (items > 3) flags = (int)SvIV(ST(4));
+	if (items > 3) flags = (int)SvIV(ST(3));
 	
 	if (!(array && SvROK(array) &&
 	     (array = SvRV(array)) && (SvTYPE(array) == SVt_PVAV)))
@@ -1403,6 +1409,7 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwUser = MBTWC(user);
 	int i;
+	STRLEN pl_na;
 	DWORD lastError = 0;
 
 	GROUP_INFO_0    *groups;
@@ -1410,7 +1417,7 @@ CODE:
 	Newz(0, groups, items, GROUP_INFO_0);
 
 	for (i=2; i<items; i++) 
-	    groups[i-2].grpi0_name = MBTWC(SvPV(ST(i), na));
+	    groups[i-2].grpi0_name = MBTWC(SvPV(ST(i), pl_na));
 
 	lastError = NetUserSetGroups(lpwServer, lpwUser, 0,
 				     (LPBYTE)groups, items-2);
@@ -1617,7 +1624,7 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwGroup = MBTWC(group);
-	LPBYTE groupInfo = NULL;
+	LPBYTE *groupInfo = NULL;
 	DWORD lastError = 0;
 	
 	if (!(hash && SvROK(hash) &&
@@ -1626,10 +1633,10 @@ CODE:
 
 	hv_clear((HV*)hash);
 	
-	lastError = NetGroupGetInfo(lpwServer, lpwGroup, level, &groupInfo);
+	lastError = NetGroupGetInfo(lpwServer, lpwGroup, level, (LPBYTE*)&groupInfo);
 
 	if (lastError == NERR_Success)
-	    fillGroupHash((HV*)hash, level, &groupInfo);
+	    fillGroupHash((HV*)hash, level, groupInfo);
 
 	NetApiBufferFree(groupInfo);
 	freeWideName(lpwGroup);
@@ -1733,6 +1740,7 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwGroup = MBTWC(group);
 	int    i, numUsers;
+	STRLEN pl_na;
 	GROUP_USERS_INFO_0    *users;
 	SV        **svTmp;
 	DWORD lastError = 0;
@@ -1748,7 +1756,7 @@ CODE:
 	for (i=0; i<numUsers; i++) {
 	    svTmp = av_fetch((AV*)array, i, 0);
 	    if (*svTmp)
-	    users[i].grui0_name = MBTWC(SvPV(*svTmp, na));
+	    users[i].grui0_name = MBTWC(SvPV(*svTmp, pl_na));
 	}
 
 	lastError = NetGroupSetUsers(lpwServer, lpwGroup, 0,
@@ -1771,12 +1779,13 @@ LocalGroupAdd(server, level, hash, fie)
     int    fie
 PROTOTYPE: $$$$
 PREINIT:
-    LPWSTR lpwServer = MBTWC(server);
     LPBYTE *giX;
 CODE:
     {
 	DWORD error;
 	DWORD lastError = 0;
+
+    LPWSTR lpwServer = MBTWC(server);
 
 	if (!(hash && SvROK(hash) &&
 	     (hash = SvRV(hash)) && SvTYPE(hash) == SVt_PVHV))
@@ -1807,6 +1816,7 @@ CODE:
 	LPWSTR lpwGroup = MBTWC(group);
 	LOCALGROUP_MEMBERS_INFO_3    *members;
 	int i, len;
+	STRLEN pl_na;
 	SV    **svTmp;
 	DWORD lastError = 0;
 
@@ -1821,7 +1831,7 @@ CODE:
 	for (i=0; i<len; i++) {
 	    svTmp = av_fetch((AV*)array, i, 0);
 	    if (*svTmp)
-		members[i].lgrmi3_domainandname = MBTWC(SvPV(*svTmp, na));
+		members[i].lgrmi3_domainandname = MBTWC(SvPV(*svTmp, pl_na));
 	}
 	
 	lastError = NetLocalGroupAddMembers(lpwServer, lpwGroup, 3,
@@ -1871,6 +1881,7 @@ CODE:
 	LOCALGROUP_MEMBERS_INFO_3    *members;
 	int totalEntries = items-2;
 	int i, len;
+	STRLEN pl_na;
 	SV    **svTmp;
 	DWORD lastError = 0;
 
@@ -1885,7 +1896,7 @@ CODE:
 	for (i=0; i<len; i++) {
 	    svTmp = av_fetch((AV*)array, i, 0);
 	    if (*svTmp)
-		members[i].lgrmi3_domainandname = MBTWC(SvPV(*svTmp, na));
+		members[i].lgrmi3_domainandname = MBTWC(SvPV(*svTmp, pl_na));
 	}
 	
 	lastError = NetLocalGroupDelMembers(lpwServer, lpwGroup, 3,

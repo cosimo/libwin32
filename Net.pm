@@ -29,7 +29,7 @@ require DynaLoader;
         USER_PRIV_GUEST USER_PRIV_MASK USER_PRIV_PARMNUM USER_PRIV_USER
         USER_PROFILE_PARMNUM USER_PROFILE_PARMNUM USER_SCRIPT_PATH_PARMNUM
         USER_UNITS_PER_WEEK_PARMNUM USER_USR_COMMENT_PARMNUM
-        USER_WORKSTATIONS_PARMNUM LG_INCLUDE_INDIRECT
+        USER_WORKSTATIONS_PARMNUM USER_BAD_PW_COUNT_PARMNUM LG_INCLUDE_INDIRECT
         UF_ACCOUNTDISABLE UF_ACCOUNT_TYPE_MASK UF_DONT_EXPIRE_PASSWD
         UF_HOMEDIR_REQUIRED UF_INTERDOMAIN_TRUST_ACCOUNT UF_LOCKOUT
         UF_MACHINE_ACCOUNT_MASK UF_NORMAL_ACCOUNT UF_PASSWD_CANT_CHANGE
@@ -64,7 +64,7 @@ require DynaLoader;
 }
 $EXPORT_TAGS{ALL}= \@EXPORT_OK;
 
-$VERSION = '0.04';
+$VERSION = '0.08';
 
 sub AUTOLOAD {
     my $constname;
@@ -95,6 +95,22 @@ Win32API::Net - Perl interface to the Windows NT LanManager API account manageme
 =head1 SYNOPSIS
 
 use Win32API::Net;
+
+=head1 NOTE ON VERSIONS PRIOR TO 0.08
+
+As of version 0.08 of this module, the behaviour relating to empty strings
+in input hashes has changed. The old behaviour converted such strings to
+the NULL pointer. The underlying API uses this value as an indication to
+not change the value stored for a given field. This meant that you were not
+able to clear (say) the logonScript field for a user using UserSetInfo().
+
+The new behaviour is to leave the string as an empty C string which will
+allow fields to be cleared.  To pass a NULL pointer to the underlying
+API call (and thus, to leave the field as it was), you need to set the
+corresponding field to C<undef>.
+
+WARNING: B<THIS IS AN INCOMPATIBLE CHANGE>.
+B<EXISTING SCRIPTS THAT RELIED ON PRIOR BEHAVIOR MAY NEED TO BE MODIFIED>.
 
 =head1 DESCRIPTION
 
@@ -1330,7 +1346,7 @@ or more of these values.
 
 This account has been disabled.
 
-=item C<UF_DONT_EXPIRE_PASSWORD()>
+=item C<UF_DONT_EXPIRE_PASSWD()>
 
 Never expire the password on this account.
 
