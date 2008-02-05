@@ -18,6 +18,7 @@ print "ok 1\n";
 # comes to accessing the %ENV hash and the username could be returned
 # in any old case. Hence the extra precautions...
 
+require Win32 unless defined &Win32::LoginName;
 $userName = Win32::LoginName();
 print "not " unless $userName =~ /$ENV{'USERNAME'}/i;
 print "ok 2\n";
@@ -114,9 +115,19 @@ print "ok 9\n";
 print "not " unless UserEnum($dc, \@users, FILTER_NORMAL_ACCOUNT());
 print "ok 10\n";
 
-print "not " unless LocalGroupGetInfo($dc, "Administrators", 1,
-				      \%localGroupInfo);
+print "not " unless LocalGroupEnum("", \@localGroups);
 print "ok 11\n";
+
+# Pick out out the Administrators and Guest group names for further tests
+# XXX Where is it defined that the 1st and 3rd group are always
+# XXX "Administrators" and "Guest"?
+$Administrators = $localGroups[0];
+$Guest = $localGroups[2];
+undef @localGroups;
+
+print "not " unless LocalGroupGetInfo($dc, $Administrators, 1,
+				      \%localGroupInfo);
+print "ok 12\n";
 undef %localGroupInfo;
 
 # LocalGroupAdd()
@@ -124,16 +135,12 @@ $localGroupName="##Freds";
 %localGroup=('name' => $localGroupName, 'comment' => 'All the freds');
 
 print "not " unless LocalGroupAdd("", 1, \%localGroup, $fie);
-print "ok 12\n";
-
-@localGroupMembers=($testUserName, "Guest");
-print "not " unless LocalGroupAddMembers("", $localGroupName,
-					 \@localGroupMembers);
 print "ok 13\n";
 
-print "not " unless LocalGroupEnum("", \@localGroups);
+@localGroupMembers=($testUserName, $Guest);
+print "not " unless LocalGroupAddMembers("", $localGroupName,
+					 \@localGroupMembers);
 print "ok 14\n";
-undef @localGroups;
 
 print "not " unless LocalGroupGetInfo("", $localGroupName, 1, \%lgInfo);
 print "ok 15\n";
@@ -142,7 +149,7 @@ print "not " unless LocalGroupGetMembers("", $localGroupName, \@lgMembers);
 print "ok 16\n";
 undef %lgMembers;
 
-@localGroupDelMembers=("Guest");
+@localGroupDelMembers=($Guest);
 print "not " unless LocalGroupDelMembers("", $localGroupName,
 					 \@localGroupDelMembers);
 print "ok 17\n";
