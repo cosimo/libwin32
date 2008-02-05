@@ -15,6 +15,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "../ppport.h"
+
 static int
 not_here(char *s)
 {
@@ -548,7 +550,8 @@ allocUserInfoX(int level, HV *hv)
 {
     LPBYTE	*uiX = NULL;
     SV		**svPtr;
-    
+    dTHX;
+
     switch (level) {
     case 3:
 	uiX_INIT(USER_INFO_3);
@@ -730,6 +733,7 @@ freeWideName(LPWSTR lpPtr)
 void
 freeUserInfoX(LPBYTE *uiX, int level)
 {
+    dTHX;
     switch (level) {
     case 3:
 	WCFREE(PUSER_INFO_3, usri3_home_dir_drive);
@@ -832,6 +836,7 @@ allocGroupInfoX(int level, HV *hv)
 {
     LPBYTE	*uiX = NULL;
     SV		**svPtr;
+    dTHX;
     
     switch (level) {
     case 2:
@@ -929,6 +934,7 @@ fillUserHash(HV *hv, int level, LPBYTE *uiX)
 {
     SV *sv;
     char tmpBuf[UNLEN+1];
+    dTHX;
     
     switch (level) {
     case 3:
@@ -1032,6 +1038,7 @@ fillGroupHash(HV *hv, int level, LPBYTE *uiX)
 {
     SV *sv;
     char tmpBuf[UNLEN+1];
+    dTHX;
     
     switch (level) {
 	case 2:
@@ -1054,6 +1061,7 @@ allocLocalGroupInfoX(int level, HV *hv)
 {
     LPBYTE	*uiX = NULL;
     SV		**svPtr;
+    dTHX;
     
     switch (level) {
     case 1:
@@ -1080,6 +1088,7 @@ fillLocalGroupHash(HV *hv, int level, LPBYTE *uiX)
 {
     SV *sv;
     char tmpBuf[UNLEN+1];
+    dTHX;
     
     switch (level) {
     case 1:
@@ -1099,6 +1108,7 @@ fillLocalGroupHash(HV *hv, int level, LPBYTE *uiX)
 void
 freeLocalGroupInfoX(int level, LPBYTE *uiX)
 {
+    dTHX;
     switch (level) {
     case 1:
 	WCFREE(PLOCALGROUP_INFO_1, lgrpi1_comment);
@@ -1335,7 +1345,7 @@ CODE:
 	    fillUserHash((HV *)hash, level, uiX);
 	    sv = newSVpv(user, strlen(user));
 	    hv_store((HV*)hash, "name", 4, sv, 0);            
-	    NetApiBufferFree(*uiX);
+	    NetApiBufferFree(uiX);
 	}
 
 	RETVAL = (lastError == NERR_Success);
