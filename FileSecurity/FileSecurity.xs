@@ -38,14 +38,19 @@
 #undef checkfree
 #define checkfree(x)    if ( x != NULL ) LocalFree( x ) ;
 
-#define GENERIC_RIGHTS_MASK (0xF0000000L)
-#define REST_RIGHTS_MASK    (0x001FFFFFL)
+#define GENERIC_RIGHTS_MASK	(0xF0010000L)
+#define GENERIC_RIGHTS_CHK	(0xF0000000L)
+#define REST_RIGHTS_MASK	(0x001FFFFFL)
 
 /* #define NUM_RIGHTS            23 */
 #define NUM_SPECIAL_SID        1
 #define MAXIMUM_NAME_LENGTH    256
 #define ALLOW_ACE_LENGTH    sizeof( ACCESS_ALLOWED_ACE ) + 50
 
+/* these are defined in WinNT.h
+ * FULL and CHANGE DEFS are borrowed from CACLS source code
+ * http://premium.microsoft.com/msdn/library/devprods/vc++/vcsamples/f14/f1d/d3f/s1cd60.htm
+ */
 static DWORD nRights[] =
 {
   DELETE, READ_CONTROL, WRITE_DAC, WRITE_OWNER,
@@ -55,11 +60,26 @@ static DWORD nRights[] =
   SPECIFIC_RIGHTS_ALL, ACCESS_SYSTEM_SECURITY, 
   MAXIMUM_ALLOWED, GENERIC_READ, GENERIC_WRITE,
   GENERIC_EXECUTE, GENERIC_ALL,
-  READ_CONTROL | SYNCHRONIZE,
-  READ_CONTROL | SYNCHRONIZE,
-  DELETE | READ_CONTROL | SYNCHRONIZE,
-  DELETE | READ_CONTROL | SYNCHRONIZE,
-  (0x001F01FF), (0x001F01FF) /* FULL from experience rather than compsite flags */
+
+  /* R or Read */
+  FILE_GENERIC_READ | FILE_EXECUTE,
+  FILE_GENERIC_READ | FILE_EXECUTE,
+
+  /* C or Change */
+  FILE_GENERIC_WRITE | FILE_GENERIC_READ | FILE_EXECUTE | DELETE,
+  FILE_GENERIC_WRITE | FILE_GENERIC_READ | FILE_EXECUTE | DELETE,
+
+  /* A or Add */
+  0x001201bf,
+  0x001201bf,
+
+  /* F or Full */
+  STANDARD_RIGHTS_ALL | FILE_READ_DATA | FILE_WRITE_DATA | FILE_APPEND_DATA |
+  FILE_READ_EA | FILE_WRITE_EA | FILE_EXECUTE | FILE_DELETE_CHILD |
+  FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+  STANDARD_RIGHTS_ALL | FILE_READ_DATA | FILE_WRITE_DATA | FILE_APPEND_DATA |
+  FILE_READ_EA | FILE_WRITE_EA | FILE_EXECUTE | FILE_DELETE_CHILD |
+  FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
 } ;
 
 static char *szRights[] =
@@ -71,7 +91,7 @@ static char *szRights[] =
   "SPECIFIC_RIGHTS_ALL", "ACCESS_SYSTEM_SECURITY", 
   "MAXIMUM_ALLOWED", "GENERIC_READ", "GENERIC_WRITE",
   "GENERIC_EXECUTE", "GENERIC_ALL",
-  "R", "READ", "C", "CHANGE", "F", "FULL", NULL
+  "R", "READ", "C", "CHANGE", "A", "ADD", "F", "FULL", NULL
 } ;
 
 static char *szLocalLookup[] = { "BUILTIN", "NT AUTHORITY", NULL } ;
@@ -461,8 +481,17 @@ Set(filename, hv)
 		}
 
 		/* I've kludged the GENERIC RIGHTS and STANDARD RIGHTS 
-		 * into one mask */
-		AccountRights = GENERIC_RIGHTS_MASK & (ACCESS_MASK) SvIV( sv ) ;
+		 * into one mask
+		 * The CHK / MASK difference is because of the DELETE
+		 * bit is shared by both masks. */
+		if ( AccountRights = GENERIC_ALL & (ACCESS_MASK) SvIV( sv ) ) {
+		    /* Do nothing... */
+		}
+		else if ( GENERIC_RIGHTS_CHK & (ACCESS_MASK) SvIV( sv ) ) {
+		    AccountRights = GENERIC_RIGHTS_MASK & (ACCESS_MASK)SvIV(sv);
+		} else {
+		    AccountRights = 0;
+		}
 		pAllAce->Header.AceFlags = INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE ;
 		
 		tries = 2 ;

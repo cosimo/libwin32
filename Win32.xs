@@ -125,12 +125,12 @@ XS(w32_InitiateSystemShutdown)
     message = SvPV(ST(1), na);
     bRet = InitiateSystemShutdown(machineName, message,
 				  SvIV(ST(2)), SvIV(ST(3)), SvIV(ST(4)));
-    CloseHandle(hToken);
 
     /* Disable shutdown privilege. */
     tkp.Privileges[0].Attributes = 0; 
     AdjustTokenPrivileges(hToken, FALSE, &tkp, 0,
 			  (PTOKEN_PRIVILEGES)NULL, 0); 
+    CloseHandle(hToken);
     XSRETURN_IV(bRet);
 }
 
@@ -173,6 +173,96 @@ XS(w32_AbortSystemShutdown)
 }
 
 
+XS(w32_MsgBox)
+{
+    dXSARGS;
+    char *msg;
+    char *title = "Perl";
+    DWORD flags = MB_ICONEXCLAMATION;
+
+    if (items < 1 || items > 3)
+	croak("usage: Win32::MsgBox($message [, $flags [, $title]]);\n");
+
+    msg = SvPV(ST(0), na);
+    if (items > 1) {
+	flags = SvIV(ST(1));
+	if (items > 2)
+	    title = SvPV(ST(2), na);
+    }
+    XSRETURN_IV(MessageBox(GetActiveWindow(), msg, title, flags));
+}
+
+XS(w32_LoadLibrary)
+{
+    dXSARGS;
+    if (items != 1)
+	croak("usage: Win32::LoadLibrary($libname)\n");
+    XSRETURN_IV((long)LoadLibrary((char *)SvPV(ST(0), na)));
+}
+
+XS(w32_FreeLibrary)
+{
+    dXSARGS;
+    if (items != 1)
+	croak("usage: Win32::FreeLibrary($handle)\n");
+    if (FreeLibrary((HINSTANCE) SvIV(ST(0)))) {
+	XSRETURN_YES;
+    }
+    XSRETURN_NO;
+}
+
+XS(w32_GetProcAddress)
+{
+    dXSARGS;
+    if (items != 2)
+	croak("usage: Win32::GetProcAddress($hinstance, $procname)\n");
+    XSRETURN_IV((long)GetProcAddress((HINSTANCE)SvIV(ST(0)), SvPV(ST(1), na)));
+}
+
+XS(w32_RegisterServer)
+{
+    dXSARGS;
+    BOOL result = FALSE;
+    HINSTANCE hnd;
+    FARPROC func;
+
+    if (items != 1)
+	croak("usage: Win32::RegisterServer($libname)\n");
+    hnd = LoadLibrary(SvPV(ST(0), na));
+    if (hnd) {
+	func = GetProcAddress(hnd, "DllRegisterServer");
+	if (func && func() == 0)
+	    result = TRUE;
+	FreeLibrary(hnd);
+    }
+    if (result)
+	XSRETURN_YES;
+    else
+	XSRETURN_NO;
+}
+
+XS(w32_UnregisterServer)
+{
+    dXSARGS;
+    BOOL result = FALSE;
+    HINSTANCE hnd;
+    FARPROC func;
+
+    if (items != 1)
+	croak("usage: Win32::UnregisterServer($libname)\n");
+    hnd = LoadLibrary(SvPV(ST(0), na));
+    if (hnd) {
+	func = GetProcAddress(hnd, "DllUnregisterServer");
+	if (func && func() == 0)
+	    result = TRUE;
+	FreeLibrary(hnd);
+    }
+    if (result)
+	XSRETURN_YES;
+    else
+	XSRETURN_NO;
+}
+
 XS(boot_Win32)
 {
     dXSARGS;
@@ -183,6 +273,13 @@ XS(boot_Win32)
     newXS("Win32::InitiateSystemShutdown", w32_InitiateSystemShutdown, file);
     newXS("Win32::AbortSystemShutdown", w32_AbortSystemShutdown, file);
     newXS("Win32::ExpandEnvironmentStrings", w32_ExpandEnvironmentStrings, file);
+    newXS("Win32::MsgBox", w32_MsgBox, file);
+    newXS("Win32::LoadLibrary", w32_LoadLibrary, file);
+    newXS("Win32::FreeLibrary", w32_FreeLibrary, file);
+    newXS("Win32::GetProcAddress", w32_GetProcAddress, file);
+    newXS("Win32::RegisterServer", w32_RegisterServer, file);
+    newXS("Win32::UnregisterServer", w32_UnregisterServer, file);
+
     ST(0) = &sv_yes;
     XSRETURN(1);
 }

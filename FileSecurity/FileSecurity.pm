@@ -6,14 +6,14 @@ package Win32::FileSecurity;
 # Larry Wall's Artistic License applies to all related Perl
 #  and C code for this module
 # Thanks to the guys at ActiveWare!
-# ver 0.65 ALPHA 1997.02.25
+# ver 0.67 ALPHA 1997.07.07
 #
 
 require Exporter;
 require DynaLoader;
 use Carp ;
 
-$VERSION = '1.02';
+$VERSION = '1.03';
 
 croak "The Win32::FileSecurity module works only on Windows NT" if (!Win32::IsWinNT()) ;
 
@@ -51,6 +51,8 @@ require DynaLoader ;
 	READ
 	C
 	CHANGE
+	A
+	ADD
 	       ) ;
 
 sub AUTOLOAD {
@@ -183,13 +185,45 @@ Entries take the form $permisshash{USERNAME} = $mask ;
 	Set( $_, \%hash ) ;
     }
 
+=head1 COMMON MASKS FROM CACLS AND WINFILE
+
+=head2 READ
+
+	MakeMask( qw( FULL ) ); # for files
+	MakeMask( qw( READ GENERIC_READ GENERIC_EXECUTE ) ); # for directories
+
+=head2 CHANGE
+
+	MakeMask( qw( CHANGE ) ); # for files
+	MakeMask( qw( CHANGE GENERIC_WRITE GENERIC_READ GENERIC_EXECUTE ) ); # for directories
+
+=head2 ADD & READ
+
+	MakeMask( qw( ADD GENERIC_READ GENERIC_EXECUTE ) ); # for directories only!
+
+=head2 FULL
+
+	MakeMask( qw( FULL ) ); # for files
+	MakeMask( qw( FULL  GENERIC_ALL ) ); # for directories
+
+=head1 RESOURCES
+
+From Microsoft: check_sd
+	http://premium.microsoft.com/download/msdn/samples/2760.exe
+
+(thanks to Guert Schimmel at Sybase for turning me on to this one)
+
 =head1 VERSION
 
-1.02 ALPHA	97-12-14
+1.03 ALPHA	97-12-14
 
 =head1 REVISION NOTES
 
 =over 10
+
+=item 1.03 ALPHA 1998.01.11
+
+Imported diffs from 0.67 (parent) version
 
 =item 1.02 ALPHA 1997.12.14
 
@@ -200,6 +234,14 @@ Fix unitialized vars on unknown ACLs <jmk@exc.bybyte.de>
 =item 1.01 ALPHA 1997.04.25
 
 CORE Win32 version imported from 0.66 <gsar@umich.edu>
+
+=item 0.67 ALPHA 1997.07.07
+
+Kludged bug in mapping bits to separate ACE's.  Notably, this screwed
+up CHANGE access by leaving out a delete bit in the
+C<INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE> Access Control Entry.
+
+May need to rethink...
 
 =item 0.66 ALPHA 1997.03.13
 

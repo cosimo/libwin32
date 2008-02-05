@@ -1,6 +1,6 @@
 package Win32;
 
-$VERSION = $VERSION = '0.09';
+$VERSION = $VERSION = '0.10';
 
 require Exporter;
 require DynaLoader;

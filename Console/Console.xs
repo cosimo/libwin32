@@ -17,6 +17,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#undef Top			/* some devel version pollutes */
 #undef WORD
 #define WORD __TEMP_WORD
 

@@ -4,7 +4,7 @@ require Exporter;
 require DynaLoader;
 require AutoLoader;
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 @ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export
@@ -252,17 +252,19 @@ sub GetSharedResources
     
     # build the array of hashes in $_[0]
 #   print Dumper($aref);    
-    foreach ( @$aref ) {
-	my %hash;
-	@hash{'Scope',
-              'Type',
-	      'DisplayType',
-	      'Usage',
-	      'LocalName',
-	      'RemoteName',
-	      'Comment',
-	      'Provider'} = split /\001/, $_;
-        push @{$_[0]}, \%hash;
+    if ($ret) {
+	foreach ( @$aref ) {
+	    my %hash;
+	    @hash{'Scope',
+		  'Type',
+		  'DisplayType',
+		  'Usage',
+		  'LocalName',
+		  'RemoteName',
+		  'Comment',
+		  'Provider'} = split /\001/, $_;
+	    push @{$_[0]}, \%hash;
+	}
     }
 
     $ret;

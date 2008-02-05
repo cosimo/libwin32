@@ -1,4 +1,3 @@
-ChangeNotify/ChangeNotify.hpp
 ChangeNotify/ChangeNotify.pm
 ChangeNotify/ChangeNotify.xs
 ChangeNotify/Changes
@@ -6,6 +5,7 @@ ChangeNotify/MANIFEST
 ChangeNotify/Makefile.PL
 ChangeNotify/test.pl
 ChangeNotify/typemap
+Changes
 Clipboard/Clipboard.pm
 Clipboard/Clipboard.xs
 Clipboard/MANIFEST
@@ -24,6 +24,13 @@ Console/docs/reference.html
 Console/docs/toc.html
 Console/test.pl
 Console/typemap
+Event/Changes
+Event/Event.pm
+Event/Event.xs
+Event/MANIFEST
+Event/Makefile.PL
+Event/test.pl
+Event/typemap
 EventLog/Changes
 EventLog/EventLog.pm
 EventLog/EventLog.xs
@@ -45,7 +52,6 @@ FileSecurity/MANIFEST
 FileSecurity/Makefile.PL
 FileSecurity/test.pl
 IPC/Changes
-IPC/IPC.hpp
 IPC/IPC.pm
 IPC/IPC.xs
 IPC/MANIFEST
@@ -72,7 +78,6 @@ Makefile.PL
 Mutex/Changes
 Mutex/MANIFEST
 Mutex/Makefile.PL
-Mutex/Mutex.hpp
 Mutex/Mutex.pm
 Mutex/Mutex.xs
 Mutex/test.pl
@@ -158,7 +163,6 @@ Registry/typemap
 Semaphore/Changes
 Semaphore/MANIFEST
 Semaphore/Makefile.PL
-Semaphore/Semaphore.hpp
 Semaphore/Semaphore.pm
 Semaphore/Semaphore.xs
 Semaphore/test.pl
@@ -196,3 +200,5 @@ WinError/MANIFEST
 WinError/Makefile.PL
 WinError/WinError.pm
 WinError/WinError.xs
+install.bat
+instsup/ExtUtils/Install.pm

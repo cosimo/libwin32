@@ -18,7 +18,7 @@ require Exporter;       #to export the constants to the main:: space
 require DynaLoader;     # to dynuhlode the module.
 use Win32::WinError; 		# for windows constants.
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT = qw(
@@ -26,8 +26,8 @@ $VERSION = '0.02';
 	HKEY_CURRENT_USER
 	HKEY_LOCAL_MACHINE
 	HKEY_PERFORMANCE_DATA
-	HKEY_PERFORMANCE_NLSTEXT
-	HKEY_PERFORMANCE_TEXT
+	HKEY_CURRENT_CONFIG
+	HKEY_DYN_DATA
 	HKEY_USERS
 	KEY_ALL_ACCESS
 	KEY_CREATE_LINK
@@ -67,6 +67,8 @@ $VERSION = '0.02';
 	REG_SZ
 	REG_WHOLE_HIVE_VOLATILE
 );
+
+bootstrap Win32::Registry;
 
 #######################################################################
 # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -109,9 +111,9 @@ sub _new
 	if ($_[0]){
 		$self->{'handle'} = $_[0];
 		bless $self
-		}
+	}
 	else{
-			undef($self);
+		undef($self);
 	}
 	$self;
 }
@@ -120,13 +122,13 @@ sub _new
 #these had to be hardwired unfortunately.
 
 
-$main::HKEY_CLASSES_ROOT = _new(0x80000000);
-$main::HKEY_CURRENT_USER = _new(0x80000001);
-$main::HKEY_LOCAL_MACHINE = _new(0x80000002);
-$main::HKEY_USERS = _new(0x80000003);
-$main::HKEY_PERFORMANCE_DATA = _new(0x80000004 );
-$main::HKEY_PERFORMANCE_TEXT =_new(0x80000050 );
-$main::HKEY_PERFORMANCE_NLSTEXT =_new(0x80000060 );
+$main::HKEY_CLASSES_ROOT	= _new(&HKEY_CLASSES_ROOT);
+$main::HKEY_CURRENT_USER	= _new(&HKEY_CURRENT_USER);
+$main::HKEY_LOCAL_MACHINE	= _new(&HKEY_LOCAL_MACHINE);
+$main::HKEY_USERS		= _new(&HKEY_USERS);
+$main::HKEY_PERFORMANCE_DATA	= _new(&HKEY_PERFORMANCE_DATA);
+$main::HKEY_CURRENT_CONFIG	= _new(&HKEY_CURRENT_CONFIG);
+$main::HKEY_DYN_DATA		= _new(&HKEY_DYN_DATA);
 
 
 
@@ -142,7 +144,7 @@ sub Open
 {
 	my $self = shift;
 	
-	if( $#_ != 1 ){
+	if( @_ != 2 ){
 		die 'usage: Open( $SubKey, $ObjRef )';
 	}
 	
@@ -173,7 +175,7 @@ sub Close
 {
 	my $self = shift;
 	
-	if( $#_ != -1 ){
+	if( @_ != 0 ){
 		die "usage: Close()";
 	}
 
@@ -198,7 +200,7 @@ sub Connect
 	local ($Node);
 	my $self = shift;
 	 
-	if( $#_ != 1 )
+	if( @_ != 2 )
 	{
 		die 'usage: Connect( $NodeName, $ObjRef )';
 	}
@@ -230,7 +232,7 @@ sub Create
 {
 	my $self = shift;
 
-	if($#_ != 1 ){
+	if( @_ != 2 ){
 		die 'usage: Create( $SubKey,$ScalarRef )';
 	}
 
@@ -261,7 +263,7 @@ sub Create
 sub SetValue
 {
 	my $self = shift;
-	if($#_ != 2 ){
+	if( @_ != 3 ){
 		die 'usage: SetValue($SubKey,$Type,$value )';
 	}
 
@@ -281,7 +283,7 @@ sub SetValue
 sub SetValueEx
 {
 	my $self = shift;
-	if($#_ != 3){
+	if( @_ != 4 ){
 		die 'usage: SetValueEx( $SubKey,$Reserved,$type,$value )';
 	}
 
@@ -305,7 +307,7 @@ sub QueryValue
 {
 	my $self = shift;
 
-	if($#_ != 1 ){
+	if( @_ != 2 ){
 		die 'usage: QueryValue( $SubKey,$valueref )';
 	}
 
@@ -326,7 +328,7 @@ sub QueryKey
 	my $garbage;
 	my $self = shift;
 
-	if($#_ != 2 ){
+	if( @_ != 3 ){
 		die 'usage: QueryKey( $classref, $numberofSubkeys, $numberofVals )';
 	}
 
@@ -352,7 +354,7 @@ sub QueryValueEx
 {
 	my $self = shift;
 
-	if($#_ != 2 ){
+	if( @_ != 3 ){
 		die 'usage: QueryValueEx( $SubKey,$type,$valueref )';
 	}
 
@@ -375,7 +377,7 @@ sub QueryValueEx
 sub GetKeys
 {
 	my $self = shift;
-	if($#_ != 0 ){
+	if( @_ != 1 ){
 		die 'usage: GetKeys( $arrayref )';
 	}
 
@@ -406,7 +408,7 @@ sub GetValues
 {
 	my $self = shift;
 
-	if($#_ != 0 ){
+	if( @_ != 1 ){
 		die 'usage: GetValues( $hashref )';
 	}
 
@@ -438,7 +440,7 @@ sub DeleteKey
 {
 	my $self = shift;
 	local($Result);
-	if($#_ != 0 ){
+	if( @_ != 1 ){
 		die 'usage: DeleteKey( $SubKey )';
 	}
 
@@ -463,7 +465,7 @@ sub DeleteValue
 	my $self = shift;
 	local( $Result );
 
-	if($#_ != 0 ){
+	if( @_ != 1 ){
 		die 'usage: DeleteValue( $SubKey )';
 	}
 
@@ -488,7 +490,7 @@ sub Save
 {
 	my $self=shift;
 
-	if($#_ != 0 ){
+	if( @_ != 1 ){
 		die 'usage: Save( $FileName )';
 	}
 
@@ -510,7 +512,7 @@ sub Save
 sub Load
 {
 	my $self = shift;
-	if($#_ != 1 ){
+	if( @_ != 2 ){
 		die 'usage: Load( $SubKey,$FileName )';
 	}
 
@@ -524,17 +526,29 @@ sub Load
 
 	return($Result);
 }
-#######################################################################
 
-bootstrap Win32::Registry;
+#######################################################################
+#UnLoad
+#unloads a registry hive
+
+sub UnLoad
+{
+	my $self = shift;
+	if ( @_ != 1 ) {
+		die 'usage: UnLoad( $SubKey )';
+	}
+
+	local( $SubKey) = @_;
+
+	$Result=RegUnLoadKey( $self->{'handle'},$SubKey);
+
+	if( !$Result){
+		$!=Win32::GetLastError();
+	}
+
+	return($Result);
+}
+#######################################################################
 
 1;
 __END__
-
-
-
-
-
-	
-
-	

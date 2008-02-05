@@ -36,6 +36,8 @@ extern "C" {
 #endif
 #include <EXTERN.h>
 #include "perl.h"
+
+#define NO_XSLOCKS
 #include "XSub.h"
 #if defined(__cplusplus)
 }

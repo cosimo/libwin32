@@ -419,7 +419,7 @@ CODE:
     {
         BYTE szRemote[4192];
         DWORD cbBuffer = sizeof(szRemote);
-        dwLastError = WNetGetConnectionA(LocalName,szRemote,&cbBuffer);
+        dwLastError = WNetGetConnectionA(LocalName,(char*)szRemote,&cbBuffer);
         RETVAL = (dwLastError == NO_ERROR);
         if (!RETVAL)
             szRemote[0] = '\0';

@@ -21,13 +21,13 @@
 #define __TEMP_WORD  WORD	/* perl defines a WORD, yikes! */
 
 // Perl includes
-#if defined(__cplusplus)
+#if (defined(__cplusplus) && !defined(PERL_OBJECT))
 extern "C" {
 #endif
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-#if defined(__cplusplus)
+#if (defined(__cplusplus) && !defined(PERL_OBJECT))
 }
 #endif
 
