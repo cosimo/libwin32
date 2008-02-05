@@ -8,7 +8,7 @@ package Win32::File;
 #  Gurusamy Sarathy
 #
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 require Exporter;
 require DynaLoader;
@@ -66,7 +66,7 @@ sub AUTOLOAD
     ($constname = $AUTOLOAD) =~ s/.*:://;
     #reset $! to zero to reset any current errors.
     $!=0;
-    my $val = constant($constant);
+    my $val = constant($constname);
     if($! != 0)
 	{
 		if($! =~ /Invalid/)

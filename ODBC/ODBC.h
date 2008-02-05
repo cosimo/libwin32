@@ -165,7 +165,11 @@ RETCODE ResetStmt(ODBC_TYPE *h);
 char *MapCloseType(UWORD uCloseType);
 void CleanError(ODBC_ERROR *h);
 int	ColNameToNum(ODBC_TYPE *h, char *szName);
+#ifdef __BORLANDC__
+BOOL WINAPI DllEntryPoint(HINSTANCE  hinstDLL, DWORD fdwReason, LPVOID  lpvReserved);
+#else
 BOOL WINAPI DllMain(HINSTANCE  hinstDLL, DWORD fdwReason, LPVOID  lpvReserved);
+#endif
 // void ReturnError(ODBC_TYPE *h);
 void AddDebug(ODBC_TYPE *h);
 void RemoveDebug(ODBC_TYPE *h);

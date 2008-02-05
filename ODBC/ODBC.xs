@@ -2649,7 +2649,13 @@ XS(boot_Win32__ODBC)
 #ifdef	WIN32
 
 	/* ===============  DLL Specific  Functions  ===================  */
-	BOOL WINAPI DllMain(HINSTANCE  hinstDLL, DWORD fdwReason, LPVOID  lpvReserved){
+	BOOL WINAPI
+#  ifdef __BORLANDC__
+	DllEntryPoint
+#  else
+	DllMain
+#  endif
+	(HINSTANCE  hinstDLL, DWORD fdwReason, LPVOID  lpvReserved){
 		BOOL	bResult = TRUE;
 
 		switch(fdwReason){

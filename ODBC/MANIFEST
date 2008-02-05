@@ -13,7 +13,6 @@ ODBC.pm
 ODBC.xs
 ODBCbuild.h
 Odbc.rc
-Odbctest.mdb
 README.TXT
 ROADMAP.TXT
 Test.pl

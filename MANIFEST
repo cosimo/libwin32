@@ -113,7 +113,6 @@ ODBC/ODBC.pm
 ODBC/ODBC.xs
 ODBC/ODBCbuild.h
 ODBC/Odbc.rc
-ODBC/Odbctest.mdb
 ODBC/README.TXT
 ODBC/ROADMAP.TXT
 ODBC/Test.pl
@@ -194,5 +193,4 @@ WinError/MANIFEST
 WinError/Makefile.PL
 WinError/WinError.pm
 WinError/WinError.xs
-perlwin-400_1.patch
 

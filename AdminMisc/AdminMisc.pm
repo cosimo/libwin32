@@ -1,6 +1,6 @@
 package Win32::AdminMisc;
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 #
 #AdminMisc.pm
@@ -55,87 +55,110 @@ Win32::AdminMisc - manage network groups and users in perl
 
 =head1 DESCRIPTION
 
-This module offers control over the administration of groups and users over a network.
+This module offers control over the administration of groups and users over
+a network.
 
 =head1 FUNCTIONS
 
 =head2 NOTE:
-all of the functions return FALSE (0) if they fail, unless otherwise noted.
-server is optional for all the calls below. (if not given the local machine is assumed.)
+
+All of the functions return FALSE (0) if they fail, unless otherwise noted.
+server is optional for all the calls below. (if not given the local machine
+is assumed.)
 
 =over 10
 
 =item UserGetAttributes(server, userName, password, passwordAge, privilege, homeDir, comment, flags, scriptPath)
-	Gets password, passwordAge, privilege, homeDir, comment, flags, and scriptPath for user
+
+Gets password, passwordAge, privilege, homeDir, comment, flags, and
+scriptPath for user.
 
 =item UserSetAttributes(server, userName, password, passwordAge, privilege, homeDir, comment, flags, scriptPath)
-	Sets password, passwordAge, privilege, homeDir, comment, flags, and scriptPath for user
+
+Sets password, passwordAge, privilege, homeDir, comment, flags, and
+scriptPath for user.
 
 =item UserChangePassword(domainname, username, oldpassword, newpassword)
-	Changes a users password. Can be run under any account.
+
+Changes a users password. Can be run under any account.
 
 =item UsersExist(server, userName)
-	Checks if a User exists
+
+Checks if a User exists.
 
 =item GetUsers(server, filter, \@userArray)
-	Fills userArray with the all of the User names
+
+Fills userArray with the all of the User names.
 
 =item GroupCreate(server, group, comment)
-	Creates a group
+
+Creates a group.
 
 =item GroupDelete(server, group)
-	Deletes a group
+
+Deletes a group.
 
 =item GroupGetAttributes(server, groupName, comment)
-	Gets the comment
+
+Gets the comment.
 
 =item GroupSetAttributes(server, groupName, comment)
-	Sets the comment
+
+Sets the comment.
 
 =item GroupAddUsers(server, groupName, users)
-	Adds a user to a group
+
+Adds a user to a group.
 
 =item GroupDelUsers(server, groupName, users)
-	Deletes a users from a group
+
+Deletes a users from a group.
 
 =item GroupIsMember(server, groupName, user)
-	Returns TRUE if user is a member of groupName
+
+Returns TRUE if user is a member of groupName.
 
 =item GroupGetMembers(server, groupName, \@userArray)
-	Fills userArray with the members of groupName
+
+Fills userArray with the members of groupName.
 
 =item LocalGroupCreate(server, group, comment)
-	Creates a local group
+
+Creates a local group.
 
 =item LocalGroupDelete(server, group)
-	Deletes a local group
+
+Deletes a local group.
 
 =item LocalGroupGetAttributes(server, groupName, comment)
-	Gets the comment
+
+Gets the comment.
 
 =item LocalGroupSetAttributes(server, groupName, comment)
-	Sets the comment
+
+Sets the comment.
 
 =item LocalGroupIsMember(server, groupName, user)
-	Returns TRUE if user is a member of groupName
+
+Returns TRUE if user is a member of groupName.
 
 =item LocalGroupGetMembers(server, groupName, \@userArray)
-	Fills userArray with the members of groupName
+
+Fills userArray with the members of groupName.
 
 =item LocalGroupAddUsers(server, groupName, users)
-	Adds a user to a group
+
+Adds a user to a group.
 
 =item LocalGroupDelUsers(server, groupName, users)
-	Deletes a users from a group
+
+Deletes a users from a group.
 
 =back
 
 =cut
 
 sub AUTOLOAD {
-    # This AUTOLOAD is used to 'autoload' constants from the constant()
-    # XS function.  If a constant is not found then control is passed
-    # to the AUTOLOAD in AutoLoader.
 
     local($constname);
     ($constname = $AUTOLOAD) =~ s/.*:://;
@@ -158,12 +181,9 @@ sub AUTOLOAD {
 
 bootstrap Win32::AdminMisc;
 
-# Preloaded methods go here.
-
-# Autoload methods go after __END__, and are processed by the autosplit program.
-
 1;
 __END__
+
 	
 
 

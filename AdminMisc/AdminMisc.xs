@@ -737,7 +737,13 @@ XS(boot_Win32__AdminMisc)
 
 /* ===============  DLL Specific  Functions  ===================  */
 
-BOOL WINAPI DllMain(HINSTANCE  hinstDLL, DWORD fdwReason, LPVOID  lpvReserved){
+BOOL WINAPI
+#ifdef __BORLANDC__
+DllEntryPoint
+#else
+DllMain
+#endif
+(HINSTANCE  hinstDLL, DWORD fdwReason, LPVOID  lpvReserved){
 	BOOL	bResult = 1;
 	switch(fdwReason){
 		case DLL_PROCESS_ATTACH:
