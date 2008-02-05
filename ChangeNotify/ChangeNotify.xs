@@ -125,7 +125,7 @@ close(handle)
 CODE:
     if (handle != INVALID_HANDLE_VALUE) {
       RETVAL = FindCloseChangeNotification(handle);
-      handle = INVALID_HANDLE_VALUE;
+      sv_setiv(SvRV(ST(0)), (IV)INVALID_HANDLE_VALUE);
     } else XSRETURN_UNDEF;
 OUTPUT:
     RETVAL

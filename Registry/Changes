@@ -1,6 +1,13 @@
 Revision history for Perl extension Win32::Registry.
 
 
+0.04  Thu Apr 16 23:00:26 1998
+	- export compatibility symbols RegFoo() (courtesy Tye McQueen
+	  <tye@metronet.com>)
+	- enable priveleges in Reg*Key() functions as needed (courtesy
+	  Jutta M. Klebe <jmk@exc.bybyte.de>)
+	- fix wrong number of args to RegQueryValueEx()
+
 0.03  Fri Feb  6 21:24:30 1998
 	- import changes from AS build 315
 	- eliminate hardcoded constants in Registry.pm

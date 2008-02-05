@@ -21,20 +21,20 @@
 #define TMPBUFSZ 1024
 static time_t ft2timet(FILETIME *ft)
 {
-	SYSTEMTIME st;
-	struct tm tm;
+    SYSTEMTIME st;
+    struct tm tm;
 
-	FileTimeToSystemTime(ft, &st);
-	tm.tm_sec = st.wSecond;
-	tm.tm_min = st.wMinute;
-	tm.tm_hour = st.wHour;
-	tm.tm_mday = st.wDay;
-	tm.tm_mon = st.wMonth - 1;
-	tm.tm_year = st.wYear - 1900;
-	tm.tm_wday = st.wDayOfWeek;
-	tm.tm_yday = -1;
-	tm.tm_isdst = -1;
-	return mktime (&tm);
+    FileTimeToSystemTime(ft, &st);
+    tm.tm_sec = st.wSecond;
+    tm.tm_min = st.wMinute;
+    tm.tm_hour = st.wHour;
+    tm.tm_mday = st.wDay;
+    tm.tm_mon = st.wMonth - 1;
+    tm.tm_year = st.wYear - 1900;
+    tm.tm_wday = st.wDayOfWeek;
+    tm.tm_yday = -1;
+    tm.tm_isdst = -1;
+    return mktime (&tm);
 }
 
 #define SUCCESS(x)	(x == ERROR_SUCCESS)
@@ -43,6 +43,37 @@ static time_t ft2timet(FILETIME *ft)
 #define SETNV(index,value) sv_setnv(ST(index), value)
 #define SETPV(index,string) sv_setpv(ST(index), string)
 #define SETPVN(index, buffer, length) sv_setpvn(ST(index), (char*)buffer, length)
+
+DWORD
+SetPrivilege( char *privilege, BOOL bEnable )
+{
+    HANDLE              hToken;
+    TOKEN_PRIVILEGES    tp;
+    if (!OpenProcessToken(GetCurrentProcess(),
+			  TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+			  &hToken))
+	return FALSE;
+    if (!LookupPrivilegeValue(NULL, privilege, &tp.Privileges[0].Luid))
+    {
+	CloseHandle(hToken);
+	return FALSE;
+    }
+    tp.PrivilegeCount = 1;
+    if( bEnable )
+	tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    else
+	tp.Privileges[0].Attributes = 0;
+    if (!AdjustTokenPrivileges(hToken, FALSE, &tp, 0,
+			       (PTOKEN_PRIVILEGES)NULL, 0))
+    {
+	CloseHandle(hToken);
+	return FALSE;
+    }
+    if (!CloseHandle(hToken))
+	return FALSE;
+
+    return TRUE;
+}
 
 
 DWORD
@@ -586,24 +617,11 @@ RegLoadKey(hkey,subkey,filename)
 	char *subkey
 	char *filename
     CODE:
-	HANDLE              hToken;
-	TOKEN_PRIVILEGES    tp;
 	DWORD		    dwLastError;
-	char pszPrivilege[TMPBUFSZ] = "SeRestorePrivilege";
-	if (!OpenProcessToken(GetCurrentProcess(),
-			      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
-			      &hToken))
-	    XSRETURN_NO;
-	if (!LookupPrivilegeValue(NULL, pszPrivilege, &tp.Privileges[0].Luid))
-	    XSRETURN_NO;
-	tp.PrivilegeCount = 1;
-	tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	if (!AdjustTokenPrivileges(hToken, FALSE, &tp, 0,
-				   (PTOKEN_PRIVILEGES)NULL, 0))
-	    XSRETURN_NO;
-	if (!CloseHandle(hToken))
+	if (!SetPrivilege(SE_RESTORE_NAME, TRUE))
 	    XSRETURN_NO;
 	dwLastError = RegLoadKey(hkey, subkey, filename);
+	SetPrivilege(SE_RESTORE_NAME, FALSE);
 	RETVAL = SUCCESS(dwLastError);
     OUTPUT:
 	RETVAL
@@ -760,7 +778,12 @@ RegReplaceKey(hkey,subkey,newfile,oldfile)
 	char *newfile
 	char *oldfile
     CODE:
-	RETVAL = SUCCESS(RegReplaceKey(hkey, subkey, newfile, oldfile));
+	DWORD dwLastError;
+	if (!SetPrivilege(SE_RESTORE_NAME, TRUE))
+	    XSRETURN_NO;
+	dwLastError = RegReplaceKey(hkey, subkey, newfile, oldfile);
+	SetPrivilege(SE_RESTORE_NAME, FALSE);
+	RETVAL = SUCCESS(dwLastError);
     OUTPUT:
 	RETVAL
 
@@ -771,8 +794,13 @@ RegRestoreKey(hkey,filename, ...)
     PREINIT:
 	DWORD flags = 0;
     CODE:
-	if(items > 2) flags = SvIV(ST(2));
-	RETVAL = SUCCESS(RegRestoreKey(hkey, filename, flags));
+	DWORD dwLastError;
+	if (items > 2) flags = SvIV(ST(2));
+	if (!SetPrivilege(SE_RESTORE_NAME, TRUE))
+	    XSRETURN_NO;
+	dwLastError = RegRestoreKey(hkey, filename, flags);
+	SetPrivilege(SE_RESTORE_NAME, FALSE);
+	RETVAL = SUCCESS(dwLastError);
     OUTPUT:
 	RETVAL
 
@@ -781,7 +809,12 @@ RegSaveKey(hkey,filename)
 	HKEY hkey
 	char *filename
     CODE:
-	RETVAL = SUCCESS(RegSaveKey(hkey, filename, NULL));
+	DWORD dwLastError;
+	if (!SetPrivilege(SE_BACKUP_NAME, TRUE))
+	    XSRETURN_NO;
+	dwLastError = RegSaveKey(hkey, filename, NULL);
+	SetPrivilege(SE_BACKUP_NAME, FALSE);
+	RETVAL = SUCCESS(dwLastError);
     OUTPUT:
 	RETVAL
 

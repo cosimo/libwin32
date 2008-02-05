@@ -8,7 +8,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#define RETURNRESULT(x)		if((x)){ XST_mYES(0); }\
+#define RETURNRESULT(x)		if ((x)){ XST_mYES(0); }\
                      		else { XST_mNO(0); }\
                      		XSRETURN(1)
 #define SETIV(index,value) sv_setiv(ST(index), value)
@@ -192,13 +192,14 @@ StartService(lpHostName, lpServiceName)
     CODE:
 	{
 	    SC_HANDLE hSCManager, hSCService;
+	    RETVAL = FALSE;
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
 		hSCManager = OpenSCManager(lpHostName, NULL, SC_MANAGER_CONNECT);
-		if(hSCManager != NULL)	{
+		if (hSCManager != NULL)	{
 		    hSCService = OpenService(hSCManager, lpServiceName, SERVICE_START);
-		    if(hSCService != NULL)  {
+		    if (hSCService != NULL)  {
 			RETVAL = StartService(hSCService, 0, NULL);
 			CloseServiceHandle(hSCService);
 		    }
@@ -218,13 +219,14 @@ StopService(lpHostName, lpServiceName)
 	{
 	    SERVICE_STATUS serviceStatus;
 	    SC_HANDLE hSCManager, hSCService;
-	    if(lpHostName && *lpHostName == '\0')
+	    RETVAL = FALSE;
+	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
-	    if(lpServiceName && *lpServiceName != '\0') {
+	    if (lpServiceName && *lpServiceName != '\0') {
 		hSCManager = OpenSCManager(lpHostName, NULL, SC_MANAGER_CONNECT);
-		if(hSCManager != NULL)	{
+		if (hSCManager != NULL)	{
 		    hSCService = OpenService(hSCManager, lpServiceName, SERVICE_STOP);
-		    if(hSCService != NULL) {
+		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_STOP,
 						&serviceStatus);
 			CloseServiceHandle(hSCService);
@@ -246,6 +248,7 @@ GetStatus(lpHostName,lpServiceName,status)
 	    SERVICE_STATUS serviceStatus;
 	    SC_HANDLE hSCManager, hSCService;
 
+	    RETVAL = FALSE;
 	    if (!(status && SvROK(status) &&
 		  (status = SvRV(status)) && SvTYPE(status) == SVt_PVHV))
 		croak("third arg must be a HASHREF");
@@ -260,6 +263,11 @@ GetStatus(lpHostName,lpServiceName,status)
 		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_INTERROGATE,
 						&serviceStatus);
+			if (!RETVAL && GetLastError() == ERROR_SERVICE_NOT_ACTIVE) {
+			    Zero(&serviceStatus, 1, SERVICE_STATUS);
+			    serviceStatus.dwCurrentState = SERVICE_STOPPED;
+			    RETVAL = TRUE;
+			}
 			CloseServiceHandle(hSCService);
 		    }
 		    CloseServiceHandle(hSCManager);
@@ -300,13 +308,14 @@ PauseService(lpHostName,lpServiceName)
 	{
 	    SERVICE_STATUS serviceStatus;
 	    SC_HANDLE hSCManager, hSCService;
+	    RETVAL = FALSE;
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
 		hSCManager = OpenSCManager(lpHostName, NULL, SC_MANAGER_ALL_ACCESS);
-		if(hSCManager != NULL)	{
+		if (hSCManager != NULL)	{
 		    hSCService = OpenService(hSCManager, lpServiceName, SERVICE_PAUSE_CONTINUE);
-		    if(hSCService != NULL) {
+		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_PAUSE, &serviceStatus);
 			CloseServiceHandle(hSCService);
 		    }
@@ -325,14 +334,15 @@ ResumeService(lpHostName,lpServiceName)
 	{
 	    SERVICE_STATUS serviceStatus;
 	    SC_HANDLE hSCManager, hSCService;
+	    RETVAL = FALSE;
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 	    if (lpServiceName && *lpServiceName != '\0') {
 		hSCManager = OpenSCManager(lpHostName, NULL, SC_MANAGER_ALL_ACCESS);
-		if(hSCManager != NULL)	{
+		if (hSCManager != NULL)	{
 		    hSCService = OpenService(hSCManager, lpServiceName,
 					     SERVICE_PAUSE_CONTINUE);
-		    if(hSCService != NULL) {
+		    if (hSCService != NULL) {
 			RETVAL = ControlService(hSCService, SERVICE_CONTROL_CONTINUE,
 						&serviceStatus);
 			CloseServiceHandle(hSCService);
@@ -354,31 +364,32 @@ GetServices(lpHostName, hv)
 	    ENUM_SERVICE_STATUS ess[1000];
 	    SC_HANDLE hSCManager;
 
+	    RETVAL = FALSE;
 	    if (!(hv && SvROK(hv) &&
 		  (hv = SvRV(hv)) && SvTYPE(hv) == SVt_PVHV))
 		croak("third arg must be a HASHREF");
 	    
-	    if(lpHostName && *lpHostName == '\0')
+	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
 
 	    hSCManager = OpenSCManager(lpHostName, NULL, SC_MANAGER_ENUMERATE_SERVICE);
-	    if(hSCManager != NULL) {
+	    if (hSCManager != NULL) {
 		dwResumeHandle = 0;
 		dwBytesNeeded = 0;
 		dwServicesReturned = 0;
-		while(EnumServicesStatus(hSCManager, SERVICE_WIN32,
+		while (EnumServicesStatus(hSCManager, SERVICE_WIN32,
 					 SERVICE_ACTIVE | SERVICE_INACTIVE,
 					 ess, sizeof(ess), &dwBytesNeeded,
 					 &dwServicesReturned,
 					 &dwResumeHandle) == TRUE
-		      || GetLastError() == ERROR_MORE_DATA)
+		       || GetLastError() == ERROR_MORE_DATA)
 		{
 		    for (dwIndex = 0; dwIndex < dwServicesReturned; ++dwIndex) {
 			SV *sv = newSVpv(ess[dwIndex].lpServiceName, 0);
 			hv_store((HV*)hv, ess[dwIndex].lpDisplayName,
 				 strlen(ess[dwIndex].lpDisplayName), sv, 0);
 		    }
-		    if(dwResumeHandle == 0) {
+		    if (dwResumeHandle == 0) {
 			RETVAL = TRUE;
 			break;
 		    }

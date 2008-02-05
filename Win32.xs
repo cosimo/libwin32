@@ -263,6 +263,24 @@ XS(w32_UnregisterServer)
 	XSRETURN_NO;
 }
 
+/* XXX rather bogus */
+XS(w32_GetArchName)
+{
+    dXSARGS;
+    XSRETURN_PV(getenv("PROCESSOR_ARCHITECTURE"));
+}
+
+XS(w32_GetChipName)
+{
+    dXSARGS;
+    SYSTEM_INFO sysinfo;
+
+    Zero(&sysinfo,1,SYSTEM_INFO);
+    GetSystemInfo(&sysinfo);
+    /* XXX docs say dwProcessorType is deprecated on NT */
+    XSRETURN_IV(sysinfo.dwProcessorType);
+}
+
 XS(boot_Win32)
 {
     dXSARGS;
@@ -279,6 +297,8 @@ XS(boot_Win32)
     newXS("Win32::GetProcAddress", w32_GetProcAddress, file);
     newXS("Win32::RegisterServer", w32_RegisterServer, file);
     newXS("Win32::UnregisterServer", w32_UnregisterServer, file);
+    newXS("Win32::GetArchName", w32_GetArchName, file);
+    newXS("Win32::GetChipName", w32_GetChipName, file);
 
     ST(0) = &sv_yes;
     XSRETURN(1);

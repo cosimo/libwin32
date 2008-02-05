@@ -18,7 +18,7 @@ require Exporter;       #to export the constants to the main:: space
 require DynaLoader;     # to dynuhlode the module.
 use Win32::WinError; 		# for windows constants.
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT = qw(
@@ -68,7 +68,45 @@ $VERSION = '0.03';
 	REG_WHOLE_HIVE_VOLATILE
 );
 
+@EXPORT_OK = qw(
+    RegCloseKey
+    RegConnectRegistry
+    RegCreateKey
+    RegCreateKeyEx
+    RegDeleteKey
+    RegDeleteValue
+    RegEnumKey
+    RegEnumValue
+    RegFlushKey
+    RegGetKeySecurity
+    RegLoadKey
+    RegNotifyChangeKeyValue
+    RegOpenKey
+    RegOpenKeyEx
+    RegQueryInfoKey
+    RegQueryValue
+    RegQueryValueEx
+    RegReplaceKey
+    RegRestoreKey
+    RegSaveKey
+    RegSetKeySecurity
+    RegSetValue
+    RegSetValueEx
+    RegUnLoadKey
+);
+$EXPORT_TAGS{ALL}= \@EXPORT_OK;
+
 bootstrap Win32::Registry;
+
+sub import
+{
+    my( $pkg )= shift;
+    if(  "Win32" eq $_[0]  ) {
+	Exporter::export( $pkg, "Win32", @EXPORT_OK );
+	shift;
+    }
+    Win32::Registry->export_to_level( 1+$Exporter::ExportLevel, $pkg, @_ );
+}
 
 #######################################################################
 # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -359,7 +397,7 @@ sub QueryValueEx
 	}
 
 	#Query the value.
-	$Result = RegQueryValueEx( $self->{'handle'}, $_[0], $_[1], $_[2] );
+	$Result = RegQueryValueEx( $self->{'handle'}, $_[0], NULL, $_[1], $_[2] );
 
 	#check the results.
 

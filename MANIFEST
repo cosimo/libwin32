@@ -117,20 +117,35 @@ ODBC/docs/object.html
 ODBC/docs/odbc.html
 ODBC/resource.h
 OLE/Changes
-OLE/Const.pm
-OLE/Enum.pm
+OLE/Compat.pm		Compatibility layer: old toplevel OLE.pm
+OLE/Const.pm		Win32::OLE::Const module: TypeLib constants
+OLE/Enum.pm		Win32::OLE::Enum module: Collection objects
 OLE/MANIFEST
 OLE/Makefile.PL
+OLE/NLS.pm		Win32::OLE::NLS module: National Language Support
 OLE/OLE.pm
 OLE/OLE.xs
 OLE/README
 OLE/ToDo
-OLE/Variant.pm
-OLE/eg/constants.pl
-OLE/eg/properties.pl
-OLE/eg/typelibs.pl
-OLE/t/ole.t
-OLE/typemap
+OLE/Variant.pm		The Win32::OLE::Variant module: VARIANT variables
+OLE/eg/constants.pl	Sample script prints all Excel defined constants
+OLE/eg/properties.pl	Sample script prints all Excel application properties
+OLE/eg/typelibs.pl	Sample script prints all registered typelib names
+OLE/eg/word2pod.pl	Prototype of a Word -> POD translator
+OLE/eg/word2xxx.pl	Sample file type converter
+OLE/t/1_nls.t		Regression tests for Win32::OLE::NLS module
+OLE/t/2_variant.t	Regression tests for the Win32::OLE::Variant module
+OLE/t/3_ole.t		Regression tests for Win32::OLE using Excel 7 and above
+OLE/t/4_compat.t	Regression tests for OLE compatibility module
+OLE/t/5_unicode.t	Regression tests using the Unicode::String module
+PerfLib/Changes
+PerfLib/Makefile.PL
+PerfLib/MANIFEST
+PerfLib/PerfLib.pm
+PerfLib/PerfLib.xs
+PerfLib/calc.html
+PerfLib/test.pl
+PerfLib/typemap
 Pipe/Client.pl
 Pipe/Cpipe.cpp
 Pipe/Cpipe.hpp
@@ -202,3 +217,4 @@ WinError/WinError.pm
 WinError/WinError.xs
 install.bat
 instsup/ExtUtils/Install.pm
+instsup/Process.dll
