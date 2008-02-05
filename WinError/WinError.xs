@@ -5897,6 +5897,7 @@ not_there:
 
 MODULE = Win32::WinError   PACKAGE = Win32::WinError
 
+PROTOTYPES: DISABLE
 
 double
 constant(name,arg)
