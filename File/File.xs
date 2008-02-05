@@ -73,6 +73,12 @@ static long constant(char *name)
 #endif	
 	break;
     case 'O':
+	if (strEQ(name, "OFFLINE"))
+#ifdef FILE_ATTRIBUTE_OFFLINE
+		return FILE_ATTRIBUTE_OFFLINE;
+#else
+		goto not_there;
+#endif	
 	break;
     case 'P':
 	break;
@@ -95,6 +101,12 @@ static long constant(char *name)
 #endif	
 	break;
     case 'T':
+	if (strEQ(name, "TEMPORARY"))
+#ifdef FILE_ATTRIBUTE_TEMPORARY
+		return FILE_ATTRIBUTE_TEMPORARY;
+#else
+		goto not_there;
+#endif	
 	break;
     case 'U':
 	break;

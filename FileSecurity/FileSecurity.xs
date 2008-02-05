@@ -291,6 +291,8 @@ Get(filename, hv)
 			&eUse           /* address of structure for SID type */
 			) ) {
 			Name = NoName ;
+			bDName = 0;
+			bName = strlen(Name);
 		    }
 
 		    if ( bDName ) {

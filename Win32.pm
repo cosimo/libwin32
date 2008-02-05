@@ -1,7 +1,10 @@
 package Win32;
 
+$VERSION = $VERSION = '0.09';
+
 require Exporter;
-@ISA = qw(Exporter);
+require DynaLoader;
+@ISA = qw(Exporter DynaLoader);
 @EXPORT =
     qw(
 	NULL
@@ -51,5 +54,7 @@ sub MB_ICONWARNING	{ (0x00000030); }
 sub MB_ICONERROR	{ (0x00000010); }
 sub MB_ICONINFORMATION	{ (0x00000040); }
 sub MB_ICONSTOP		{ (0x00000010); }
+
+bootstrap Win32;
 
 1;

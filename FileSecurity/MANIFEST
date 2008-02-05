@@ -1,6 +1,6 @@
 Changes
 FileSecurity.pm
 FileSecurity.xs
-Makefile.PL
 MANIFEST
+Makefile.PL
 test.pl

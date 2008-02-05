@@ -1,5 +1,5 @@
 Changes
-Makefile.PL
 MANIFEST
+Makefile.PL
 WinError.pm
 WinError.xs

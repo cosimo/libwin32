@@ -17,7 +17,6 @@
 #include "XSUB.h"
 
 /* Section for the constant definitions. */
-#define CROAK croak
 #define MAX_LENGTH 2048
 #define TMPBUFSZ 1024
 static time_t ft2timet(FILETIME *ft)
@@ -417,9 +416,9 @@ RegCreateKey(hkey,subkey,ohandle)
     CODE:
 	DWORD disposition;
 	RETVAL =  SUCCESS(RegCreateKeyEx(hkey, subkey, 0, NULL,
-						  REG_OPTION_NON_VOLATILE,
-						  KEY_ALL_ACCESS,
-						  NULL, &ohandle, &disposition));
+					 REG_OPTION_NON_VOLATILE,
+					 KEY_ALL_ACCESS,
+					 NULL, &ohandle, &disposition));
    OUTPUT:
 	RETVAL
 	ohandle
@@ -468,19 +467,20 @@ RegEnumValue(hkey,idx,name,reserved,type,value)
 	char  mynambuf[MAX_LENGTH];
 	DWORD namesz, valsz;
 
-	/* If this is a new key, find out how big the maximum name and value sizes are and
-	 * allocate space for them. Free any old storage and set the old key value to the
-	 * current key.
+	/* If this is a new key, find out how big the maximum name and value
+	 * sizes are and allocate space for them. Free any old storage and
+	 * set the old key value to the current key.
 	 */
 	if(hkey != (HKEY)last_hkey) {
 	    char keyclass[TMPBUFSZ];
-	    DWORD classsz, subkeys, maxsubkey, maxclass, maxnamesz, maxvalsz, values, salen;
+	    DWORD classsz, subkeys, maxsubkey, maxclass, maxnamesz;
+	    DWORD maxvalsz, values, salen;
 	    FILETIME ft;
 	    classsz = sizeof(keyclass);
 	    RETVAL = SUCCESS(RegQueryInfoKey(hkey, keyclass, &classsz, 0,
-						      &subkeys, &maxsubkey, &maxclass,
-						      &values, &maxnamesz,&maxvalsz,
-						      &salen, &ft));
+					     &subkeys, &maxsubkey, &maxclass,
+					     &values, &maxnamesz,&maxvalsz,
+					     &salen, &ft));
 	    if (!RETVAL)
 		XSRETURN_NO;
 	    
@@ -491,7 +491,7 @@ RegEnumValue(hkey,idx,name,reserved,type,value)
 	namesz = MAX_LENGTH;
 	valsz = MAX_LENGTH;
 	RETVAL = SUCCESS(RegEnumValue(hkey, idx, mynambuf, &namesz, 0,
-					       &type, (LPBYTE) myvalbuf, &valsz));
+				      &type, (LPBYTE) myvalbuf, &valsz));
 	if (RETVAL) {
 	    /* return includes the null terminator so delete it if REG_SZ,
 	       REG_MULTI_SZ or REG_EXPAND_SZ */
@@ -538,7 +538,8 @@ RegNotifyChangeKeyValue(hkey,watch_subtree,notify_filt,evt,async_flag)
 	HANDLE evt
 	bool async_flag
     CODE:
-	RETVAL = SUCCESS(RegNotifyChangeKeyValue(hkey, watch_subtree, notify_filt, evt, async_flag));
+	RETVAL = SUCCESS(RegNotifyChangeKeyValue(hkey, watch_subtree,
+						 notify_filt, evt, async_flag));
     OUTPUT:
 	RETVAL
 
@@ -571,10 +572,11 @@ RegQueryInfoKey(hkey,class,classsz,reserved,numsubkeys,maxsubkeylen,maxclasslen,
 	char keyclass[TMPBUFSZ];
 	FILETIME ft;
 	classsz = sizeof(keyclass);
-	RETVAL = SUCCESS(RegQueryInfoKey(hkey, keyclass, &classsz, 0, &numsubkeys,
-						  &maxsubkeylen,&maxclasslen, &numvalues,
-						  &maxvalnamelen, &maxvaldatalen,
-						  &secdesclen, &ft));
+	RETVAL = SUCCESS(RegQueryInfoKey(hkey, keyclass, &classsz, 0,
+					 &numsubkeys, &maxsubkeylen,
+					 &maxclasslen, &numvalues,
+					 &maxvalnamelen, &maxvaldatalen,
+					 &secdesclen, &ft));
     OUTPUT:
 	RETVAL
 	class			SETPV(1, keyclass);
@@ -592,15 +594,47 @@ bool
 RegQueryValue(hkey,valuename,data)
 	HKEY hkey
 	char *valuename
-	char *data = NO_INIT
+	SV *data
     CODE:
 	unsigned char databuffer[TMPBUFSZ*2];
 	long datasz = sizeof(databuffer);
-	RETVAL = SUCCESS(RegQueryValue(hkey, valuename, (char*)databuffer, &datasz));
+	RETVAL = SUCCESS(RegQueryValue(hkey, valuename, (char*)databuffer,
+				       &datasz));
 	/* return includes the null terminator so delete it */
     OUTPUT:
 	RETVAL
 	data			if (RETVAL) { SETPVN(2, databuffer, --datasz); }
+
+
+bool
+RegQueryValueEx(hkey,valuename,type,data)
+	HKEY hkey
+	char *valuename
+	DWORD type = NO_INIT
+	SV *data
+    CODE:
+	unsigned char databuffer[TMPBUFSZ*2];
+	long datasz = sizeof(databuffer);
+	RETVAL = SUCCESS(RegQueryValueEx(hkey, valuename, NULL, &type,
+					 (char*)databuffer, &datasz));
+	/* return includes the null terminator so delete it if
+	 * REG_SZ, REG_MULTI_SZ or REG_EXPAND_SZ */
+	if (RETVAL) {
+	    switch (type) {
+	    case REG_SZ:
+	    case REG_MULTI_SZ:
+	    case REG_EXPAND_SZ:
+		if (datasz)
+		    --datasz;
+		break;
+	    default:
+		break;
+	    }
+	}
+    OUTPUT:
+	RETVAL
+	type		if (RETVAL) SETIV(2, type);
+	data		if (RETVAL) { SETPVN(3, databuffer, datasz); }
 
 bool
 RegReplaceKey(hkey,subkey,newfile,oldfile)
@@ -640,7 +674,7 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 	char *valname
 	DWORD reserved = NO_INIT
 	DWORD type
-	char *data
+	SV *data
     CODE:
 	DWORD val;
 	unsigned int size;
@@ -650,21 +684,21 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 		case REG_SZ:
 		case REG_MULTI_SZ:
 		case REG_EXPAND_SZ:
-		    size++; /* include null terminator in size */
-		    /* FALL THROUGH */
 		case REG_BINARY:
-		    buffer = SvPV(ST(4), size);
+		    buffer = SvPV(data, size);
+		    if (type != REG_BINARY)
+			size++;		/* include null terminator in size */
 		    RETVAL = SUCCESS(RegSetValueEx(hkey,valname,0,type,
-							    (PBYTE) buffer, size));
+						   (PBYTE) buffer, size));
 		    break;
 		case REG_DWORD_BIG_ENDIAN:
 		case REG_DWORD_LITTLE_ENDIAN: /* Same as REG_DWORD */
-		    val = (DWORD) SvIV(ST(4));
+		    val = (DWORD) SvIV(data);
 		    RETVAL = SUCCESS(RegSetValueEx(hkey,valname, 0, type,
-							    (PBYTE) &val, sizeof(DWORD)));
+						   (PBYTE)&val, sizeof(DWORD)));
 		    break;
 		default:
-			CROAK("Type not specified, cannot set %s\n", valname);
+			croak("Type not specified, cannot set %s\n", valname);
 	}
     OUTPUT:
 	RETVAL
@@ -674,13 +708,13 @@ RegSetValue(hkey,subkey,type,data)
 	HKEY hkey
 	char *subkey
 	DWORD type
-	char *data
+	SV *data
     CODE:
 	unsigned int size;
 	char *buffer;
 	if(type != REG_SZ)
-		CROAK("Type was not REG_SZ, cannot set %s\n", subkey);
-	buffer = SvPV(ST(3), size);
+		croak("Type was not REG_SZ, cannot set %s\n", subkey);
+	buffer = SvPV(data, size);
 	RETVAL = SUCCESS(RegSetValue(hkey, subkey, REG_SZ, buffer, size));
     OUTPUT:
 	RETVAL

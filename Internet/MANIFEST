@@ -3,6 +3,7 @@ Internet.xs
 MANIFEST
 Makefile.PL
 README
+WININET.H
 docs/append.html
 docs/index.html
 docs/intro.html

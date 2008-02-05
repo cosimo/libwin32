@@ -1,6 +1,6 @@
 Changes
-Makefile.PL
 MANIFEST
+Makefile.PL
 Service.pm
 Service.xs
 t/service.t

@@ -18,7 +18,7 @@ require Exporter;       #to export the constants to the main:: space
 require DynaLoader;     # to dynuhlode the module.
 use Win32::WinError; 		# for windows constants.
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT = qw(
@@ -133,7 +133,8 @@ $main::HKEY_PERFORMANCE_NLSTEXT =_new(0x80000060 );
 
 
 #######################################################################
-#Open: creates a new Registry object from an existing one.
+#Open
+# creates a new Registry object from an existing one.
 # usage: $RegObj->Open( "SubKey",$SubKeyObj );
 #               $SubKeyObj->Open( "SubberKey", *SubberKeyObj );
 
@@ -186,6 +187,39 @@ sub Close
 	return($Result);
 }
 
+#######################################################################
+#Connect
+# connects to a remote Registry object, returning it in $ObjRef.
+# returns false if it fails.
+# usage: $RegObj->Connect( $NodeName, $ObjRef );
+
+sub Connect
+{
+	local ($Node);
+	my $self = shift;
+	 
+	if( $#_ != 1 )
+	{
+		die 'usage: Connect( $NodeName, $ObjRef )';
+	}
+	 
+	($Node) = @_;
+	local ($Result,$SubHandle);
+
+	$Result = RegConnectRegistry ($Node, $self->{'handle'}, $SubHandle);
+	$_[1] = _new( $SubHandle );
+
+	if (!$_[1] ){
+		return 0;
+	}
+
+	if(!$Result){
+		$! = Win32::GetLastError();
+	}
+
+	# return a boolean value
+	return($Result);
+}  
 
 #######################################################################
 #Create
@@ -298,7 +332,8 @@ sub QueryKey
 
 	local ($Result);
 
-	$Result = RegQueryInfoKey( $self->{'handle'}, $_[0], $garbage, $_[1],
+	$Result = RegQueryInfoKey( $self->{'handle'}, $_[0],
+				   $garbage, $garbage, $_[1],
 				   $garbage, $garbage, $_[2],
 				   $garbage, $garbage, $garbage, $garbage);
 
@@ -306,6 +341,30 @@ sub QueryKey
  	if(!$Result){
 		$! = Win32::GetLastError();
 	}
+	return($Result);
+}
+
+#######################################################################
+#QueryValueEx
+# QueryValueEx gets information on a value in the current key.
+
+sub QueryValueEx
+{
+	my $self = shift;
+
+	if($#_ != 2 ){
+		die 'usage: QueryValueEx( $SubKey,$type,$valueref )';
+	}
+
+	#Query the value.
+	$Result = RegQueryValueEx( $self->{'handle'}, $_[0], $_[1], $_[2] );
+
+	#check the results.
+
+ 	if(!$Result) {
+		$! = Win32::GetLastError();
+	}
+
 	return($Result);
 }
 
@@ -393,6 +452,7 @@ sub DeleteKey
 	return($Result);
 
 }
+
 #######################################################################
 #DeleteValue
 # delete a value from the current key in the registry
@@ -465,15 +525,8 @@ sub Load
 	return($Result);
 }
 #######################################################################
-# dynamically load in the Registry.pll module.
-
 
 bootstrap Win32::Registry;
-
-# Preloaded methods go here.
-
-#Currently Autoloading is not implemented in Perl for win32
-# Autoload methods go after __END__, and are processed by the autosplit program.
 
 1;
 __END__

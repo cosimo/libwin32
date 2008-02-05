@@ -1,8 +1,9 @@
 use ExtUtils::MakeMaker;
 use Config;
 $BORLAND = 1 if $Config{'cc'} =~ /^bcc32/i;
+my $incpath = $Config{incpath};
 WriteMakefile(
-    'INC'	=> ($BORLAND ? '-Id:\bc5\include\mfc' : '-GX'),
+    'INC'	=> ($BORLAND ? "-I$incpath\\mfc" : '-GX'),
     'OBJECT'	=> 'CMom$(OBJ_EXT) Constant$(OBJ_EXT) CResults$(OBJ_EXT) ODBC$(OBJ_EXT)',
     'NAME'	=> 'Win32::ODBC',
     'VERSION_FROM' => 'ODBC.pm',
