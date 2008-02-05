@@ -310,3 +310,4 @@ WinError/Makefile.PL
 WinError/WinError.pm
 WinError/WinError.xs
 ppport.h
+META.yml                                 Module meta-data (added by MakeMaker)
