@@ -119,6 +119,13 @@ Internet/mingw32.exc
 Internet/test-async.pl
 Internet/test.pl
 Internet/typemap
+Job/Job.pm
+Job/Job.xs
+Job/MANIFEST
+Job/Makefile.PL
+Job/child.t
+Job/test.pl
+Job/typemap
 MANIFEST
 Makefile.PL
 Mutex/Changes

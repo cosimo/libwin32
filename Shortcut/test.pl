@@ -86,10 +86,6 @@ if($L) {
 print "\n3. Resolving a shortcut...\n";
 print "   Creating a dummy file \"dummy.txt\"...";
 
-unlink("dummy.txt") if -f "dummy.txt";
-unlink("dummy2.txt") if -f "dummy2.txt";
-unlink("test3.lnk") if -f "test3.lnk";
-
 if(open(DUMMY,">dummy.txt")) {
     print DUMMY "doh\n";
     close(DUMMY);
@@ -136,3 +132,4 @@ if(open(DUMMY,">dummy.txt")) {
     print "** ERROR **\n";
 }
 
+END { unlink qw[dummy.txt dummy2.txt test1.lnk test2.lnk test3.lnk]; }

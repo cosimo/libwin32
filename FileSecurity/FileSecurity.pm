@@ -59,7 +59,7 @@ sub AUTOLOAD {
     local($constname);
     ($constname = $AUTOLOAD) =~ s/.*:://;
     #reset $! to zero to reset any current errors.
-    $!=0;
+    local $! = 0;
     $val = constant($constname);
     if($! != 0) {
 	if($! =~ /Invalid/) {

@@ -12,8 +12,7 @@ WriteMakefile(
 	( 'AUTHOR'		=> 'Tye McQueen <tye@metronet.com>',
 	  'ABSTRACT_FROM'	=> 'Registry.pm' )
     ),
-    (  $] < 5.007  ?  'postamble'  :  'CONST2PERL'  )
-		=> { IMPORT_LIST => [qw(/._/ !/[a-z]/)],
+    'postamble' => { IMPORT_LIST => [qw(/._/ !/[a-z]/)],
 		     IFDEF => q{ /^SE_/ ? '__cplusplus' : /REG_/ },
 		     CPLUSPLUS => 1,
 		     WRITE_PERL => 1,

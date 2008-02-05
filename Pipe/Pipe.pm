@@ -166,7 +166,7 @@ sub AUTOLOAD {
     my($constname);
     ($constname = $AUTOLOAD) =~ s/.*:://;
     #reset $! to zero to reset any current errors.
-    $!=0;
+    local $! = 0;
     $val = constant($constname, @_ ? $_[0] : 0);
 
     if ($! != 0) {

@@ -12,8 +12,7 @@ WriteMakefile(
 	( 'AUTHOR'		=> 'Tye McQueen <tye@metronet.com>',
 	  'ABSTRACT_FROM'	=> 'File.pm' )
     ),
-    (  $] < 5.007  ?  'postamble'  :  'CONST2PERL'  )
-		=> { IMPORT_LIST => [qw(/._/ !/[a-z]/ :MEDIA_TYPE)],
+    'postamble' => { IMPORT_LIST => [qw(/._/ !/[a-z]/ :MEDIA_TYPE)],
 		     IFDEF => "!/[a-z\\d]/",
 		     CPLUSPLUS => 1,
 		     WRITE_PERL => 1,

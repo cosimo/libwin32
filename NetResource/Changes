@@ -1,5 +1,14 @@
 Revision history for Perl extension Win32::NetResource.
 
+0.053 Mon Jul  8 16:44:32 2002
+	- added missing STYPE_* and SHARE_* constants
+	- fixed NetShareCheck() to uppercase the device argument appropriately
+	- functions that took out-parameters weren't setting them correctly
+	- GetUNCName() could fail if forward slashes were used
+	- NetShareCheck() and GetUNCName() are documented a bit better
+	- added an example of using GetSharedResources() to enumerate
+	  resources on a particular host
+
 0.052 Mon Nov 12 23:21:52 2001
 	- NetShareGetInfo() didn't work when passed a hashref as \%share
 	- pointers to various stack variables were being used outside

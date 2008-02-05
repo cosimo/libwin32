@@ -4,7 +4,7 @@ require Exporter;
 require DynaLoader;
 require AutoLoader;
 
-$VERSION = '0.052';
+$VERSION = '0.053';
 
 @ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export
@@ -28,6 +28,20 @@ $VERSION = '0.052';
     RESOURCE_CONNECTED
     RESOURCE_GLOBALNET
     RESOURCE_REMEMBERED
+    STYPE_DISKTREE
+    STYPE_PRINTQ
+    STYPE_DEVICE
+    STYPE_IPC
+    STYPE_SPECIAL
+    SHARE_NETNAME_PARMNUM
+    SHARE_TYPE_PARMNUM
+    SHARE_REMARK_PARMNUM
+    SHARE_PERMISSIONS_PARMNUM
+    SHARE_MAX_USES_PARMNUM
+    SHARE_CURRENT_USES_PARMNUM
+    SHARE_PATH_PARMNUM
+    SHARE_PASSWD_PARMNUM
+    SHARE_FILE_SD_PARMNUM
 );
 
 @EXPORT_OK = qw(
@@ -77,44 +91,44 @@ printers etc can be shared over a network.
 There are two main data types required to control network resources.
 In Perl these are represented by hash types.
 
-=over 10
+=over 4
 
 =item %NETRESOURCE
 
-        KEY                    VALUE
-        
-        'Scope'         =>  Scope of an Enumeration
-                            RESOURCE_CONNECTED,
-                            RESOURCE_GLOBALNET,
-                            RESOURCE_REMEMBERED.
-        
-        'Type'          =>  The type of resource to Enum
-                            RESOURCETYPE_ANY    All resources
-                            RESOURCETYPE_DISK    Disk resources
-                            RESOURCETYPE_PRINT    Print resources
-        
-        'DisplayType'   =>  The way the resource should be displayed.
-                            RESOURCEDISPLAYTYPE_DOMAIN    
-                            The object should be displayed as a domain.
-                            RESOURCEDISPLAYTYPE_GENERIC    
-                            The method used to display the object does not matter.
-                            RESOURCEDISPLAYTYPE_SERVER    
-                            The object should be displayed as a server.
-                            RESOURCEDISPLAYTYPE_SHARE    
-                            The object should be displayed as a sharepoint.
-        
-        'Usage'         =>  Specifies the Resources usage:
-                            RESOURCEUSAGE_CONNECTABLE
-                            RESOURCEUSAGE_CONTAINER.
-        
-        'LocalName'     =>  Name of the local device the resource is 
-                            connected to.
-        
-        'RemoteName'    =>  The network name of the resource.
-        
-        'Comment'       =>  A string comment.
-        
-        'Provider'      =>  Name of the provider of the resource.
+    KEY                    VALUE
+    
+    'Scope'         =>  Scope of an Enumeration
+			RESOURCE_CONNECTED,
+			RESOURCE_GLOBALNET,
+			RESOURCE_REMEMBERED.
+    
+    'Type'          =>  The type of resource to Enum
+			RESOURCETYPE_ANY    All resources
+			RESOURCETYPE_DISK    Disk resources
+			RESOURCETYPE_PRINT    Print resources
+    
+    'DisplayType'   =>  The way the resource should be displayed.
+			RESOURCEDISPLAYTYPE_DOMAIN    
+			The object should be displayed as a domain.
+			RESOURCEDISPLAYTYPE_GENERIC    
+			The method used to display the object does not matter.
+			RESOURCEDISPLAYTYPE_SERVER    
+			The object should be displayed as a server.
+			RESOURCEDISPLAYTYPE_SHARE    
+			The object should be displayed as a sharepoint.
+    
+    'Usage'         =>  Specifies the Resources usage:
+			RESOURCEUSAGE_CONNECTABLE
+			RESOURCEUSAGE_CONTAINER.
+    
+    'LocalName'     =>  Name of the local device the resource is 
+			connected to.
+    
+    'RemoteName'    =>  The network name of the resource.
+    
+    'Comment'       =>  A string comment.
+    
+    'Provider'      =>  Name of the provider of the resource.
 
 =back    
 
@@ -122,17 +136,17 @@ In Perl these are represented by hash types.
 
 This hash represents the SHARE_INFO_502 struct.
 
-=over 10
+=over 4
 
-        KEY                    VALUE
-        'netname'        =>    Name of the share.
-        'type'           =>    type of share.
-        'remark'         =>    A string comment.
-        'permissions'    =>    Permissions value
-        'maxusers'       =>    the max # of users.
-        'current-users'  =>    the current # of users.
-        'path'           =>    The path of the share.
-        'passwd'         =>    A password if one is req'd
+    KEY                    VALUE
+    'netname'        =>    Name of the share.
+    'type'           =>    type of share.
+    'remark'         =>    A string comment.
+    'permissions'    =>    Permissions value
+    'maxusers'       =>    the max # of users.
+    'current-users'  =>    the current # of users.
+    'path'           =>    The path of the share.
+    'passwd'         =>    A password if one is req'd
 
 =back
 
@@ -142,7 +156,7 @@ This hash represents the SHARE_INFO_502 struct.
 
 All of the functions return false if they fail.
 
-=over 10
+=over 4
 
 =item GetSharedResources(\@Resources,dwType,\%NetResource = NULL)
 
@@ -177,11 +191,16 @@ Gets the last Error for a Win32::NetResource call.
 =item GetUNCName( $UNCName, $LocalPath );
 
 Returns the UNC name of the disk share connected to $LocalPath in $UNCName.
+$LocalPath should be a drive based path. e.g. "C:\\share\\subdir"
+
+=back
 
 =head2 NOTE
 
 $servername is optional for all the calls below. (if not given the
 local machine is assumed.)
+
+=over 4
 
 =item NetShareAdd(\%SHARE,$parm_err,$servername = NULL )
 
@@ -189,7 +208,27 @@ Add a share for sharing.
 
 =item NetShareCheck($device,$type,$servername = NULL )
 
-Check if a share is available for connection.
+Check if a directory or a device is available for connection from the
+network through a share.  This includes all directories that are
+reachable through a shared directory or device, meaning that if C:\foo
+is shared, C:\foo\bar is also available for sharing.  This means that
+this function is pretty useless, given that by default every disk
+volume has an administrative share such as "C$" associated with its
+root directory.
+
+$device must be a drive name, directory, or a device.  For example,
+"C:", "C:\dir", "LPT1", "D$", "IPC$" are all valid as the $device
+argument.  $type is an output argument that will be set to one of
+the following constants that describe the type of share:
+
+    STYPE_DISKTREE     Disk drive 
+    STYPE_PRINTQ       Print queue 
+    STYPE_DEVICE       Communication device 
+    STYPE_IPC          Interprocess communication (IPC) 
+    STYPE_SPECIAL      Special share reserved for interprocess
+                         communication (IPC$) or remote administration
+                         of the server (ADMIN$). Can also refer to
+                         administrative shares such as C$, D$, etc.
 
 =item NetShareDel( $netname, $servername = NULL )
 
@@ -208,6 +247,9 @@ Set the information for share $netname.
 
 =head1 EXAMPLE
 
+=over 4
+
+=item Enumerating all resources on the network
 
     #
     # This example displays all the share points in the entire
@@ -218,7 +260,7 @@ Set the information for share $netname.
     use Win32::NetResource qw(:DEFAULT GetSharedResources GetError);
     my $resources = [];
     unless(GetSharedResources($resources, RESOURCETYPE_ANY)) {
-	my $err = undef;
+	my $err;
 	GetError($err);
 	warn Win32::FormatMessage($err);
     }
@@ -230,6 +272,26 @@ Set the information for share $netname.
 	    print "$_: $href->{$_}\n";
 	}
     }
+
+=item Enumerating all resources on a particular host
+
+    #
+    # This example displays all the share points exported by the local
+    # host.
+    #
+
+    use strict;
+    use Win32::NetResource qw(:DEFAULT GetSharedResources GetError);
+    if (GetSharedResources(my $resources, RESOURCETYPE_ANY,
+			   { RemoteName => "\\\\" . Win32::NodeName() }))
+    {
+	foreach my $href (@$resources) {
+	    print "-----\n";
+	    foreach(keys %$href) { print "$_: $href->{$_}\n"; }
+	}
+    }
+
+=back
 
 =head1 AUTHOR
 
@@ -247,7 +309,7 @@ sub AUTOLOAD {
     my($constname);
     ($constname = $AUTOLOAD) =~ s/.*:://;
     #reset $! to zero to reset any current errors.
-    $!=0;
+    local $! = 0;
     my $val = constant($constname, @_ ? $_[0] : 0);
     if ($! != 0) {
         if ($! =~ /Invalid/) {
@@ -290,7 +352,7 @@ sub AddConnection
 sub GetSharedResources
 {
     die "GetSharedResources: ARRAY reference required"
-	unless ref($_[0]) eq "ARRAY";
+	if defined $_[0] and ref($_[0]) ne "ARRAY";
 
     my $aref = [];
 

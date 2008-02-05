@@ -39,7 +39,6 @@ VOID                    T_IV
 LPWSTR                  T_PV
 LPBYTE                  T_PV
 LPSTR			T_PV
-LPDWORD                 T_PV
 LPBYTE *                T_PTRREF
 HANDLE                  T_PTR
 LPCSTR                  T_PV

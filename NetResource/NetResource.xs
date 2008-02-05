@@ -193,6 +193,96 @@ constant(char* name,int arg)
 #endif
     break;
     case 'S':
+	switch (name[1]) {
+	case 'H':
+	if (strEQ(name, "SHARE_NETNAME_PARMNUM"))
+#ifdef SHARE_NETNAME_PARMNUM
+	    return SHARE_NETNAME_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_TYPE_PARMNUM"))
+#ifdef SHARE_TYPE_PARMNUM
+	    return SHARE_TYPE_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_REMARK_PARMNUM"))
+#ifdef SHARE_REMARK_PARMNUM
+	    return SHARE_REMARK_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_PERMISSIONS_PARMNUM"))
+#ifdef SHARE_PERMISSIONS_PARMNUM
+	    return SHARE_PERMISSIONS_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_MAX_USES_PARMNUM"))
+#ifdef SHARE_MAX_USES_PARMNUM
+	    return SHARE_MAX_USES_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_CURRENT_USES_PARMNUM"))
+#ifdef SHARE_CURRENT_USES_PARMNUM
+	    return SHARE_CURRENT_USES_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_PATH_PARMNUM"))
+#ifdef SHARE_PATH_PARMNUM
+	    return SHARE_PATH_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_PASSWD_PARMNUM"))
+#ifdef SHARE_PASSWD_PARMNUM
+	    return SHARE_PASSWD_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "SHARE_FILE_SD_PARMNUM"))
+#ifdef SHARE_FILE_SD_PARMNUM
+	    return SHARE_FILE_SD_PARMNUM;
+#else
+	    goto not_there;
+#endif
+	break;
+	case 'T':
+	if (strEQ(name, "STYPE_DISKTREE"))
+#ifdef STYPE_DISKTREE
+	    return STYPE_DISKTREE;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "STYPE_PRINTQ"))
+#ifdef STYPE_PRINTQ
+	    return STYPE_PRINTQ;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "STYPE_DEVICE"))
+#ifdef STYPE_DEVICE
+	    return STYPE_DEVICE;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "STYPE_IPC"))
+#ifdef STYPE_IPC
+	    return STYPE_IPC;
+#else
+	    goto not_there;
+#endif
+	if (strEQ(name, "STYPE_SPECIAL"))
+#ifdef STYPE_SPECIAL
+	    return STYPE_SPECIAL;
+#else
+	    goto not_there;
+#endif
+	break;
+	}
     break;
     case 'T':
     break;
@@ -488,8 +578,21 @@ PREINIT:
 CODE:
     {
         DWORD    BufferSize = sizeof(uniBuffer);
+	char *path = Nullch;
         
-        dwLastError = WNetGetUniversalNameA(LocalPath,UNIVERSAL_NAME_INFO_LEVEL,uniBuffer,&BufferSize);
+	if (strchr(LocalPath, '/')) {
+	    char *p;
+	    path = (char*)safemalloc(strlen(LocalPath)+1);
+	    strcpy(path,LocalPath);
+	    p = path;
+	    while ((p = strchr(p, '/')))
+		*p++ = '\\';
+	}
+        dwLastError = WNetGetUniversalNameA(path ? path : LocalPath,
+					    UNIVERSAL_NAME_INFO_LEVEL,
+					    uniBuffer,&BufferSize);
+	if (path)
+	    safefree(path);
         RETVAL = (dwLastError  == NO_ERROR );         
         if (RETVAL)
             UNCName = (char *) uniBuffer[0].lpUniversalName;
@@ -504,7 +607,7 @@ OUTPUT:
 BOOL 
 _NetShareAdd(tshare,parm_err,servername=NULL)
     PTSHARE_INFO    tshare
-    LPDWORD parm_err     
+    DWORD parm_err = NO_INIT
     LPSTR servername
 PREINIT:
     DWORD    parm;
@@ -530,9 +633,8 @@ CODE:
 
         Share_502.shi502_security_descriptor = NULL;
 
-        dwLastError = NetShareAdd(lpwServer,502,(LPBYTE)&Share_502,&parm);
+        dwLastError = NetShareAdd(lpwServer,502,(LPBYTE)&Share_502,&parm_err);
         RETVAL = (dwLastError == NO_ERROR);
-        parm_err = &parm;
                 
         /* Deallocate the wide strings */
 
@@ -550,7 +652,7 @@ OUTPUT:
 BOOL 
 NetShareCheck(device,type,servername=NULL)
     LPSTR device
-    LPDWORD type    
+    DWORD type = NO_INIT
     LPSTR servername
 CODE:
     {
@@ -558,7 +660,13 @@ CODE:
         AllocWideName( servername,lpwServer );
         AllocWideName( device, lpwDevice );
         
-        dwLastError = NetShareCheck(lpwServer,lpwDevice,type);
+	/* drive and device names should be uppercase */
+	if (*device >= 'a' && *device <= 'z' && device[1] == ':')
+	    lpwDevice[0] = (WCHAR)(*device - 'a' + 'A');
+	else if (!strchr(device, '\\') && !strchr(device, '/'))
+	    lpwDevice = _wcsupr(lpwDevice);
+
+        dwLastError = NetShareCheck(lpwServer,lpwDevice,&type);
         FreeWideName( lpwServer );
         FreeWideName( lpwDevice );
         
@@ -648,7 +756,7 @@ BOOL
 _NetShareSetInfo(netname,tshare,parm_err,servername=NULL)
     LPSTR netname
     PTSHARE_INFO tshare
-    LPDWORD parm_err     
+    DWORD parm_err = NO_INIT
     LPSTR servername
 CODE:
     {
@@ -664,6 +772,7 @@ CODE:
         Share_502.shi502_permissions = tshare->permissions;
         Share_502.shi502_max_uses = tshare->max_uses;
         Share_502.shi502_current_uses = tshare->current_uses;
+        Share_502.shi502_security_descriptor = NULL;
 
         /* Create the UNICODE strings. */
         AllocWideName( tshare->remark,Share_502.shi502_remark        );
@@ -671,7 +780,7 @@ CODE:
         AllocWideName( tshare->passwd, Share_502.shi502_passwd        );
         AllocWideName( tshare->path, Share_502.shi502_path            );
 
-        dwLastError = NetShareSetInfo(lpwServer,lpwNetname,502,(LPBYTE)&Share_502,parm_err);
+        dwLastError = NetShareSetInfo(lpwServer,lpwNetname,502,(LPBYTE)&Share_502,&parm_err);
         RETVAL = (dwLastError == NO_ERROR);
 
         /* Free the UNICODE strings. */

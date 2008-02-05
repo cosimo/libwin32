@@ -90,6 +90,7 @@ sub AUTOLOAD {
    
     my $constname;
     ($constname = $AUTOLOAD) =~ s/.*:://;
+    local $! = 0;
     my $val = constant($constname);
     if ($! != 0) {
 	if ($! =~ /Invalid/) {

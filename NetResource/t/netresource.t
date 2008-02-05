@@ -153,7 +153,3 @@ else {
 Win32::NetResource::NetShareDel("PerlTempShare") or print "not ";
 print "ok 7\n";
 err();
-
-
-
-
