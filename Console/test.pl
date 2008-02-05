@@ -1,3 +1,5 @@
+#these tests are useless in the automated build process
+exit if $ENV{ACTIVEPERL_SKIP_INTERACTIVE_TESTS};
 
 use Win32::Console;
 

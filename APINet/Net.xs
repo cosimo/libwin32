@@ -926,7 +926,7 @@ WCTMB(LPWSTR lpwStr, LPSTR lpStr, int size)
 	    sv = newSViv((BYTE)(((CAST)uiX)->field)[i++]);		\
 	    av_push(av, sv);						\
 	}								\
-	hv_store((HV*)hv, name, strlen(name), newRV_inc((SV*)av), 0);	\
+	hv_store((HV*)hv, name, strlen(name), newRV_noinc((SV*)av), 0);	\
     } STMT_END
 
 void

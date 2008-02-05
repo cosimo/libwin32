@@ -1,3 +1,5 @@
+#include <windows.h>
+
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -431,6 +433,25 @@ XS(w32_GetChipName)
     XSRETURN_IV(sysinfo.dwProcessorType);
 }
 
+XS(w32_GuidGen)
+{
+    dXSARGS;
+    GUID guid;
+    char szGUID[50] = {'\0'};
+    HRESULT  hr     = CoCreateGuid(&guid);
+
+    if (SUCCEEDED(hr)) {
+	LPOLESTR pStr = NULL;
+	StringFromCLSID(&guid, &pStr);
+	WideCharToMultiByte(CP_ACP, 0, pStr, wcslen(pStr), szGUID,
+			    sizeof(szGUID), NULL, NULL);
+
+	XSRETURN_PV(szGUID);
+    }
+    else
+	XSRETURN_UNDEF;
+}
+
 XS(boot_Win32)
 {
     dXSARGS;
@@ -449,6 +470,7 @@ XS(boot_Win32)
     newXS("Win32::UnregisterServer", w32_UnregisterServer, file);
     newXS("Win32::GetArchName", w32_GetArchName, file);
     newXS("Win32::GetChipName", w32_GetChipName, file);
+    newXS("Win32::GuidGen", w32_GuidGen, file);
 
     XSRETURN_YES;
 }

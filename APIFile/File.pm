@@ -839,7 +839,7 @@ value [and sets C<$^E> and C<regLastError()>] on failure.
 
 C<$sOldFileName> is the path to the file to be copied. 
 C<$sNewFileName> is the path to where the file should be copied. 
-Note that you can E<NOT> just specify a path to a directory in
+Note that you can B<NOT> just specify a path to a directory in
 C<$sNewFileName> to copy the file to that directory using the
 same file name.
 
@@ -907,8 +907,8 @@ can seriously damage your files or the function of your computer.
 Locking this for exclusive access doesn't prevent access to the
 physical drive that the partition is on so other processes can
 still access the raw sectors that way.  Locking this for exclusive
-access E<does> prevent other processes from opening the same raw
-partition and E<does> prevent access to the file system on it.  It
+access B<does> prevent other processes from opening the same raw
+partition and B<does> prevent access to the file system on it.  It
 even prevents the current process from accessing the file system
 on that partition.
 
@@ -1043,7 +1043,7 @@ or directory, providing the functionality of the B<subst> command.
 =item C<DeleteFile( $sFileName )>
 
 Deletes the named file.  Compared to Perl's C<unlink>, C<DeleteFile>
-has the advantage of not deleting read-only files.  For E<some>
+has the advantage of not deleting read-only files.  For B<some>
 versions of Perl, C<unlink> silently calls C<chmod> whether it needs
 to or not before deleting the file so that files that you have
 protected by marking them as read-only are not always protected from
@@ -1540,7 +1540,7 @@ at the end of the whole string [see C<GetLogicalDriveStrings> for
 a sample of this format].
 
 C<$lTargetBuf> is the size [in bytes] of the buffer to allocate for
-C<$osTargetPath>.  See L<Buffers Sizes> for more information.
+C<$osTargetPath>.  See L<Buffer Sizes> for more information.
 
 C<$olTargetLen> is set to the number of bytes written to
 C<$osTargetPath> but you can also use C<length($osTargetPath)>
@@ -1582,7 +1582,7 @@ the C<FILE_FLAG_OVERLAPPED> flag set.
 
 =item C<$uOldMode= SetErrorMode( $uNewMode )>
 
-Sets the mode controlling system error handling E<and> returns the
+Sets the mode controlling system error handling B<and> returns the
 previous mode value.  Both C<$uOldMode> and C<$uNewMode> will have
 zero or more of the following bits set:
 
@@ -2249,7 +2249,7 @@ The low-order and high-order [respectively] 4 bytes of the offset [in
 bytes] where the formatting should begin.
 
 =item C<$uLength>
-        
+
 The length [in bytes] of the section to be formatted.
 
 =back

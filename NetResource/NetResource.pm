@@ -4,7 +4,7 @@ require Exporter;
 require DynaLoader;
 require AutoLoader;
 
-$VERSION = '0.05';
+$VERSION = '0.051';
 
 @ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export
@@ -323,7 +323,7 @@ sub NetShareGetInfo
 {
     my ($netinfo,$val);
     $val = _NetShareGetInfo( $_[0],$netinfo,$_[2] || "");
-    $_[1] = _SHARE2hash( $netinfo );    
+    %{$_[1]} = %{_SHARE2hash( $netinfo )};    
     $val;
 }
 

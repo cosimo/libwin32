@@ -1,5 +1,10 @@
 Revision history for Perl extension Win32API::Net
 
+0.09	Tue Sep 05 2000
+	- fixed yet another memory leak pointed out again by Eamon Doyle.
+	  Macro HV_STORE_AV used newRV_inc instead of newRV_noinc
+	- Corrected minor typo in documentation
+
 0.081   Mon May 22 20:38:11 2000
         - support for building under Perl v5.6.0.
 	- fixed a leak due to improper freeing in UserGetInfo()

@@ -223,6 +223,9 @@ if(!$FTP) {
 ##############################################################################
 # HTTP STUFF
 
+exit; # 25Aug2000 Jan Dubois
+# Dada's server is often unavailalble, so we skip these test for the time being
+
 $host = "www.divinf.it";
 $user = "anonymous";
 $pass = "dada\@divinf.it";

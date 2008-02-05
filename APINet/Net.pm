@@ -64,7 +64,7 @@ require DynaLoader;
 }
 $EXPORT_TAGS{ALL}= \@EXPORT_OK;
 
-$VERSION = '0.081';
+$VERSION = '0.09';
 
 sub AUTOLOAD {
     my $constname;
@@ -219,7 +219,7 @@ C<priv>, C<homeDir>, C<comment>, C<flags>, C<scriptPath>. See
 L<USER INFO FIELDS> for more information on what these represent.
 
 
-=head1 Exports
+=head1 EXPORTS
 
 By default, Win32API::Net exports no symbols into the callers namespace.
 The following tags can be used to selectively import symbols into the
@@ -992,7 +992,7 @@ This function has not been implemented at present.
 
 =head2 GetDCName(server, domain, domain-controller)
 
-Gets the C<domain-controllder> name for C<server> and C<domain>.
+Gets the C<domain-controller> name for C<server> and C<domain>.
 
 =over 8
 
@@ -1747,7 +1747,6 @@ The groups name
 The groups 'comment'
 
 =back
-
 
 =head1 LOCAL GROUP FIELD ERRORS
 

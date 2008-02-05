@@ -49,7 +49,7 @@ $testUserFlags=( UF_ACCOUNTDISABLE() |
 @testLogonHours=( 255 ) x 21;
 %testUserInfo3=(
 	'name'          => $testUserName,
-	'password'      => "",							# don't worry - the account is disabled
+	'password'      => "password",							# don't worry - the account is disabled
 	'passwordAge'   => 0,
 	'priv'          => USER_PRIV_USER(),
 	'homeDir'       => $ENV{'TEMP'},
@@ -82,7 +82,7 @@ $testUserFlags=( UF_ACCOUNTDISABLE() |
 # this will fail if this account actually exists - this is a good thing.
 $fie=0;
 UserAdd($dc, 3, \%testUserInfo3, $fie) or die <<EOM;
-not ok 4
+not ok 5
 Can't add a user so there really isn't any point in continuing...
 EOM
 print "ok 5\n";

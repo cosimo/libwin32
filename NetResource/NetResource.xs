@@ -425,10 +425,11 @@ BOOL
 GetConnection(LocalName,RemoteName)
     LPCSTR    LocalName
     LPCSTR    RemoteName = NO_INIT
+PREINIT:
+    BYTE szRemote[4192];
 CODE:
     {
-        BYTE szRemote[4192];
-        DWORD cbBuffer = sizeof(szRemote);
+	DWORD cbBuffer = sizeof(szRemote);
         dwLastError = WNetGetConnectionA(LocalName,(char*)szRemote,&cbBuffer);
         RETVAL = (dwLastError == NO_ERROR);
         if (!RETVAL)
@@ -446,9 +447,10 @@ WNetGetLastError(ErrorCode,Description,Name)
     DWORD    ErrorCode = NO_INIT
     LPCSTR    Description    = NO_INIT
     LPCSTR    Name = NO_INIT
-CODE:
+PREINIT:
     BYTE    abDesc[2048];
     BYTE    abName[2048];
+CODE:
     DWORD   cbDesc = sizeof(abDesc);
     DWORD   cbName = sizeof(abName);
     dwLastError = WNetGetLastErrorA(&ErrorCode,(char *)abDesc,cbDesc,(char *)abName,cbName);
@@ -480,9 +482,10 @@ BOOL
 GetUNCName(UNCName,LocalPath)
     LPCSTR UNCName = NO_INIT
     LPCSTR    LocalPath
+PREINIT:
+    UNIVERSAL_NAME_INFO   uniBuffer[1024];
 CODE:
     {
-        UNIVERSAL_NAME_INFO   uniBuffer[1024];
         DWORD    BufferSize = sizeof(uniBuffer);
         
         dwLastError = WNetGetUniversalNameA(LocalPath,UNIVERSAL_NAME_INFO_LEVEL,uniBuffer,&BufferSize);
@@ -502,9 +505,10 @@ _NetShareAdd(tshare,parm_err,servername=NULL)
     PTSHARE_INFO    tshare
     LPDWORD parm_err     
     LPSTR servername
+PREINIT:
+    DWORD    parm;
 CODE:
     {
-        DWORD    parm;
         SHARE_INFO_502     Share_502;
         LPWSTR    lpwServer;
         AllocWideName( servername,lpwServer );
@@ -589,10 +593,11 @@ _NetShareGetInfo(netname,ReturnInfo,servername=NULL)
     LPSTR netname
     PTSHARE_INFO ReturnInfo = NO_INIT
     LPSTR servername
+PREINIT:
+    TSHARE_INFO    tRet;    
 CODE:
     {
         BOOL bRet;
-        TSHARE_INFO    tRet;    
         PSHARE_INFO_502    pShareInfo;
         LPWSTR    lpwServer,lpwNetname;
 
