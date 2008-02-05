@@ -965,7 +965,7 @@ PerfLibGetHelp(machine,help)
 	    RETVAL = RegQueryInfoKeyA(remote_perfkey, NULL, NULL, NULL, NULL,
 				 NULL, NULL, NULL, NULL, &value_len, NULL, NULL);
 	}
-	if (!RETVAL && GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+	if (RETVAL && RETVAL != ERROR_MORE_DATA) {
 	    RegCloseKey(remote_lmkey);
 	    RegCloseKey(remote_perfkey);
 	    XSRETURN_NO;

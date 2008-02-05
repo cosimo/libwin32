@@ -146,7 +146,7 @@ constant(name)
 bool
 GetAttributes(filename,attribs)
 	char *filename
-	DWORD attribs
+	DWORD attribs = NO_INIT
     CODE:
 	if (USING_WIDE()) {
 	    WCHAR wbuffer[MAX_PATH+1];

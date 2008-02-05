@@ -219,14 +219,14 @@ not_there:
  
 
 BOOL
-EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType) 
-{ 
-    DWORD dwResult, dwResultEnum; 
-    HANDLE hEnum; 
+EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
+{
+    DWORD dwResult, dwResultEnum;
+    HANDLE hEnum;
     DWORD cbBuffer = 16384; /* 16K is reasonable size                 */
     DWORD cEntries = 0xFFFFFFFF; /* enumerate all possible entries    */
     LPNETRESOURCEA lpnrLocal;     /* pointer to enumerated structures  */
-    DWORD i; 
+    DWORD i;
     HV*     phvNet;
     SV*        svNetRes;
     AV*	av;
@@ -235,18 +235,19 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
 	croak("Usage: EnumerateFunc(arrayref,lpresource,type)");
 
     dwResult = WNetOpenEnumA(
-	RESOURCE_GLOBALNET, 
-        dwType, 
-        0,                 /* enumerate all resources                 */ 
-        lpnr,              /* NULL first time this function is called */ 
-        &hEnum);           /* handle to resource                      */ 
+	RESOURCE_GLOBALNET,
+        dwType,
+        0,                 /* enumerate all resources                 */
+        lpnr,              /* NULL first time this function is called */
+        &hEnum);           /* handle to resource                      */
  
-    if (dwResult != NO_ERROR){ 
+    if (dwResult != NO_ERROR){
          dwLastError = dwResult;
-         return FALSE; 
+	 /*PerlIO_printf(Perl_debug_log,"quit1 %ld\n",dwResult);*/
+         return FALSE;
     }
  
-    do { 
+    do {
  
         /* Allocate memory for NETRESOURCE structures. */ 
  
@@ -289,7 +290,10 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
 		    == (lpnrLocal[i].dwUsage & RESOURCEUSAGE_CONTAINER)) 
 		{
                     if (!EnumerateFunc(ARef, &lpnrLocal[i], dwType)) {
-			if (dwLastError != ERROR_ACCESS_DENIED) {
+			if (dwLastError != ERROR_ACCESS_DENIED &&
+			    dwLastError != ERROR_BAD_NETPATH &&
+			    dwLastError != ERROR_INVALID_ADDRESS)
+			{
 			    safefree(lpnrLocal);
 			    return FALSE;
 			}
@@ -300,6 +304,7 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
         else if (dwResultEnum != ERROR_NO_MORE_ITEMS)
 	{ 
             dwLastError = dwResultEnum;
+	    /*PerlIO_printf(Perl_debug_log,"quit2 %ld\n",dwLastError);*/
             safefree(lpnrLocal);
             return(FALSE);
         } 
@@ -310,12 +315,13 @@ EnumerateFunc(SV* ARef, LPNETRESOURCEA lpnr,DWORD dwType)
  
     if(dwResult != NO_ERROR){
         dwLastError = dwResult;
+	/*PerlIO_printf(Perl_debug_log,"quit3 %ld\n",dwLastError); */
         return FALSE;
     } 
     
     dwLastError = NO_ERROR;
     return TRUE; 
-} 
+}
  
 /*
  * wide character allocation routines used to convert from

@@ -484,7 +484,7 @@ _RegEnumValueA(hKey,uIndex,osName,iolName,pNull,ouType,opData,iolData)
 	}
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing '\0' from REG*_SZ values if iolData was C<[]>: */
-	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType  &&  *iolData
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(7))  &&  '\0' == opData[*iolData-1]  )
 	    --*iolData;
@@ -529,6 +529,7 @@ _RegEnumValueW(hKey,uIndex,oswName,iolwName,pNull,ouType,opData,iolData)
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing L'\0' from REG*_SZ values if iolData was C<[]>: */
 	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	 &&  *iolData >= sizeof(WCHAR)
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(7))
 	 &&  L'\0' == ((WCHAR *)opData)[(*iolData/sizeof(WCHAR))-1]  )
@@ -901,7 +902,7 @@ _RegQueryValueExA( hKey, sName, pNull, ouType, opData, iolData )
 	}
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing '\0' from REG*_SZ values if iolData was C<[]>: */
-	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType  &&  *iolData
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(5))  &&  '\0' == opData[*iolData-1]  )
 	    --*iolData;
@@ -938,6 +939,7 @@ _RegQueryValueExW( hKey, swName, pNull, ouType, opData, iolData )
 	RETVAL= ErrorRet( uErr );
 	/* Traim trailing L'\0' from REG*_SZ vals if iolData was C<[]>: */
 	if(  RETVAL  &&  NULL != opData  &&  NULL != ouType
+	 &&  *iolData >= sizeof(WCHAR)
 	 &&  ( REG_SZ == *ouType || REG_EXPAND_SZ == *ouType )
 	 &&  null_arg(ST(5))
 	 &&  L'\0' == ((WCHAR *)opData)[(*iolData/sizeof(WCHAR))-1]  )

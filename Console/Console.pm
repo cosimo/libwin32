@@ -1,7 +1,7 @@
 package Win32::Console;
 #######################################################################
 #
-# Win32::Console - Perl Module for Windows Clipboard Interaction
+# Win32::Console - Win32 Console and Character Mode Functions
 # ^^^^^^^^^^^^^^
 # Version: 0.03  (07 Apr 1997)
 # Version: 0.031 (24 Sep 1999) - fixed typo in GenerateCtrlEvent()

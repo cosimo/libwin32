@@ -350,7 +350,7 @@ Get(filename, hv)
 			    );
 		    }
 
-		    if (bResult) {
+		    if (!bResult) {
 			Name = NoName ;
 			bDName = 0;
 			bName = strlen(Name);
