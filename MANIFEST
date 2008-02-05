@@ -74,6 +74,7 @@ Internet/docs/toc.html
 Internet/test-async.pl
 Internet/test.pl
 Internet/typemap
+Internet/WININET.H
 MANIFEST
 Makefile.PL
 Mutex/Changes
@@ -193,3 +194,5 @@ WinError/MANIFEST
 WinError/Makefile.PL
 WinError/WinError.pm
 WinError/WinError.xs
+perlwin-400_1.patch
+

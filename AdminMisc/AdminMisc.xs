@@ -7,9 +7,15 @@
 
 */
 
-#define WIN32_LEAN_AND_MEAN
+/*#define WIN32_LEAN_AND_MEAN */
 #define _ADMINMISC_H_
-#include <math.h>
+
+#ifdef __BORLANDC__
+typedef wchar_t wctype_t; /* in tchar.h, but unavailable unless _UNICODE */
+#endif
+
+#include <stdlib.h>	// Borland braindamage
+#include <math.h>	// MS braindamage
 #include <windows.h>
 #include <winsock.h>
 #include <lmcons.h>     // LAN Manager common definitions
@@ -697,7 +703,9 @@ XS(XS_NT__AdminMisc_DNSCacheCount)
 
 
 
-
+#if defined(__cplusplus)
+extern "C"
+#endif
 XS(boot_Win32__AdminMisc)
 {
 	dXSARGS;

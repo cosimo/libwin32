@@ -1,8 +1,7 @@
 use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'	=> 'Win32::Console',
-    'VERSION_FROM' => 'Console.pm', # finds $VERSION
+    'VERSION_FROM' => 'Console.pm',
     'dist'	=> {COMPRESS => 'gzip -9f', SUFFIX => 'gz'},
-    'dynamic_lib' => { 'OTHERLDFLAGS' => q[advapi32.lib user32.lib] },
 #    'INC'	=> '-I.\\include',
 );

@@ -21,6 +21,7 @@
 */
 
 #define WIN32_LEAN_AND_MEAN
+#include <stdlib.h>
 #include <math.h>
 #include <windows.h>
 
@@ -402,7 +403,9 @@ XS(XS_WIN32__Pipe_Info)
 }
 
 
-
+#if defined(__cplusplus)
+extern "C"
+#endif
 XS(boot_Win32__Pipe)
 {
 	dXSARGS;

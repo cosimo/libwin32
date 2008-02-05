@@ -1,12 +1,13 @@
 use ExtUtils::MakeMaker;
+use Config;
+$BORLAND = 1 if $Config{'cc'} =~ /^bcc32/i;
 WriteMakefile(
-    'INC'	=> '-GX',
+    'INC'	=> ($BORLAND ? '' : '-GX'),
     'OBJECT'	=> 'Dns$(OBJ_EXT) AdminMisc$(OBJ_EXT)',
     'NAME'	=> 'Win32::AdminMisc',
     'VERSION_FROM' => 'AdminMisc.pm',
     'XS'	=> { 'AdminMisc.xs' => 'AdminMisc.cpp' },
     'dist'	=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-    'dynamic_lib' => { 'OTHERLDFLAGS' => q[wsock32.lib netapi32.lib advapi32.lib] },
 );
 
 sub MY::xs_c {
@@ -16,9 +17,3 @@ sub MY::xs_c {
 ';
 }
 
-sub MY::c_o {
-    '
-.cpp$(OBJ_EXT):
-	$(CCCMD) $(CCCDLFLAGS) -I$(PERL_INC) $(DEFINE) -Tp$*.cpp
-';
-}

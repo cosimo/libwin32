@@ -1,6 +1,6 @@
 package Win32::AdminMisc;
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 #
 #AdminMisc.pm

@@ -23,6 +23,7 @@
 #define	__WIN32_ODBC__
 
 #define WIN32_LEAN_AND_MEAN
+#include <stdlib.h>
 #include <math.h>	// VC-5.0 brainmelt
 #include <windows.h>
 #include <stdio.h>
@@ -2572,6 +2573,9 @@ int InitExtension(){
 	return iRetCode;
 }
 
+#if defined(__cplusplus)
+extern "C"
+#endif
 XS(boot_Win32__ODBC)
 {
 	dXSARGS;

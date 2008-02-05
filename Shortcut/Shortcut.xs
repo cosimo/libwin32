@@ -10,6 +10,7 @@
  */
 
 #define  WIN32_LEAN_AND_MEAN
+#include <stdlib.h>
 #include <math.h>
 #include <windows.h>
 
@@ -475,8 +476,8 @@ _Save(ilink,ifile,filename)
 PPCODE:
     HRESULT hres;
     unsigned short wfilename[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, filename, -1, wfilename, MAX_PATH);
-    hres = ifile->Save(wfilename, TRUE);
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, (wchar_t *)wfilename, MAX_PATH);
+    hres = ifile->Save((wchar_t *)wfilename, TRUE);
     if (SUCCEEDED(hres))
 	XSRETURN_YES;
     else
@@ -491,8 +492,8 @@ _Load(ilink,ifile,filename)
 PPCODE:
     HRESULT hres;
     unsigned short wfilename[MAX_PATH];
-    MultiByteToWideChar(CP_ACP, 0, filename, -1, wfilename, MAX_PATH);
-    hres = ifile->Load(wfilename, STGM_READ);
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, (wchar_t *)wfilename, MAX_PATH);
+    hres = ifile->Load((wchar_t *)wfilename, STGM_READ);
     if (SUCCEEDED(hres))
 	XSRETURN_YES;
     else

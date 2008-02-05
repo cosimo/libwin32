@@ -22,6 +22,7 @@
 
 
 #define WIN32_LEAN_AND_MEAN
+#include <stdlib.h>
 #include <math.h>		// VC-5.0 brain melt
 #include <windows.h>
 

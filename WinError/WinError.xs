@@ -5878,12 +5878,6 @@ constant(char *name, int arg)
     case 'Z':
 	break;
     case '_':
-	if (strEQ(name, "_WINERROR_"))
-#ifdef _WINERROR_
-	    return _WINERROR_;
-#else
-	    goto not_there;
-#endif
 	break;
     }
     errno = EINVAL;

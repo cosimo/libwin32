@@ -32,7 +32,7 @@
 
 /* check first chars before _stricmp should short-circuit */
 #undef    compstr
-#define compstr( str1, str2 ) tolower( *str1 ) == tolower( *str2 ) && ! _stricmp( str1, str2 )
+#define compstr( str1, str2 ) tolower( *str1 ) == tolower( *str2 ) && ! stricmp( str1, str2 )
 
 /* change Safefree to LocalFree to use Win32 */
 #undef checkfree
@@ -428,7 +428,7 @@ Set(filename, hv)
 
 		if ( lpszServer != NULL ) {
 		    for ( i = 0; szLocalLookup[i] != NULL; i++ ) {
-			if ( _stricmp( szLocalLookup[i], lpszServer ) ) {
+			if ( stricmp( szLocalLookup[i], lpszServer ) ) {
 			    lpszServer = NULL ;
 			    break ;
 			}
