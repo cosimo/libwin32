@@ -1,6 +1,10 @@
 Revision history for Perl extension Win32::Registry.
 
 
+0.05  Tue Sep 15 12:29:06 1998
+	- support setting REG_NONE
+	- clean up the perl (somewhat)
+
 0.04  Thu Apr 16 23:00:26 1998
 	- export compatibility symbols RegFoo() (courtesy Tye McQueen
 	  <tye@metronet.com>)

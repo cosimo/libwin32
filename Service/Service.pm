@@ -7,7 +7,7 @@ package Win32::Service;
 # subsequently hacked by Gurusamy Sarathy <gsar@umich.edu>
 #
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 require Exporter;
 require DynaLoader;
@@ -62,7 +62,11 @@ Get the status of a service.
 
 =item ResumeService(hostName, serviceName)
 
-=item GetServices(hostName, list) 
+=item GetServices(hostName, hashref) 
+
+Enumerates both active and inactive Win32 services at the specified host.
+The hashref is populated with the descriptive service names as keys
+and the short names as the values.
 
 =back
 

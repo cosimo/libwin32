@@ -9,17 +9,9 @@
 //
 //--------------------------------------------------------------------
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-
-#if defined(__cplusplus)
-}
-#endif
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

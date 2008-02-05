@@ -4,21 +4,24 @@ package Win32::Registry;
 # This module creates an object oriented interface to the Win32
 # Registry.
 #
-# NOTE: This package exports four instantiated keys to
-# the main:: name space.  ( The pre-defined keys )
-# these keys:
-# $main::CLASSES_ROOT
-# $main::CURRENT_USER
-# $main::LOCAL_MACHINE
-# $main::USERS
+# NOTE: This package exports the following "key" objects to
+# the main:: name space.
+#
+# $main::HKEY_CLASSES_ROOT
+# $main::HKEY_CURRENT_USER
+# $main::HKEY_LOCAL_MACHINE
+# $main::HKEY_USERS
+# $main::HKEY_PERFORMANCE_DATA
+# $main::HKEY_CURRENT_CONFIG
+# $main::HKEY_DYN_DATA
 #
 #######################################################################
 
-require Exporter;       #to export the constants to the main:: space
-require DynaLoader;     # to dynuhlode the module.
-use Win32::WinError; 		# for windows constants.
+require Exporter;
+require DynaLoader;
+use Win32::WinError;
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 @ISA= qw( Exporter DynaLoader );
 @EXPORT = qw(
@@ -101,7 +104,7 @@ bootstrap Win32::Registry;
 sub import
 {
     my( $pkg )= shift;
-    if(  "Win32" eq $_[0]  ) {
+    if (  $_[0] && "Win32" eq $_[0]  ) {
 	Exporter::export( $pkg, "Win32", @EXPORT_OK );
 	shift;
     }
@@ -137,28 +140,19 @@ sub AUTOLOAD {
 # _new is a private constructor, not intended for public use.
 #
 
-sub show_me
-{
-	$self=shift;
-	print $self->{'handle'};
-}
-
 sub _new
 {
-	my $self={};
-	if ($_[0]){
-		$self->{'handle'} = $_[0];
-		bless $self
-	}
-	else{
-		undef($self);
-	}
-	$self;
+    my $self;
+    if ($_[0]) {
+	$self->{'handle'} = $_[0];
+	bless $self;
+    }
+    $self;
 }
 
 #define the basic registry objects to be exported.
 #these had to be hardwired unfortunately.
-
+# XXX Yuck!
 
 $main::HKEY_CLASSES_ROOT	= _new(&HKEY_CLASSES_ROOT);
 $main::HKEY_CURRENT_USER	= _new(&HKEY_CURRENT_USER);
@@ -169,9 +163,6 @@ $main::HKEY_CURRENT_CONFIG	= _new(&HKEY_CURRENT_CONFIG);
 $main::HKEY_DYN_DATA		= _new(&HKEY_DYN_DATA);
 
 
-
-
-
 #######################################################################
 #Open
 # creates a new Registry object from an existing one.
@@ -180,29 +171,18 @@ $main::HKEY_DYN_DATA		= _new(&HKEY_DYN_DATA);
 
 sub Open
 {
-	my $self = shift;
-	
-	if( @_ != 2 ){
-		die 'usage: Open( $SubKey, $ObjRef )';
-	}
-	
-	($SubKey) = @_;
-	local ($Result,$SubHandle);
+    my $self = shift;
+    die 'usage: Open( $SubKey, $ObjRef )' if @_ != 2;
+    
+    my ($subkey) = @_;
+    my ($result,$subhandle);
 
-	$Result = RegOpenKey($self->{'handle'},$SubKey,$SubHandle);
-	$_[1] = _new( $SubHandle );
-	
-	if (!$_[1] ){
-		return 0;
-	}
-
- 	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-
-	# return a boolean value
-	return($Result);
-
+    $result = RegOpenKey($self->{'handle'},$subkey,$subhandle);
+    $_[1] = _new( $subhandle );
+    
+    return 0 unless $_[1];
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -211,20 +191,12 @@ sub Open
 #
 sub Close
 {
-	my $self = shift;
-	
-	if( @_ != 0 ){
-		die "usage: Close()";
-	}
+    my $self = shift;
+    die "usage: Close()" if @_ != 0;
 
-	$Result = RegCloseKey( $self->{'handle'});
-	undef($self);
-
-	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-
-	return($Result);
+    my $result = RegCloseKey($self->{'handle'});
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -235,30 +207,18 @@ sub Close
 
 sub Connect
 {
-	local ($Node);
-	my $self = shift;
-	 
-	if( @_ != 2 )
-	{
-		die 'usage: Connect( $NodeName, $ObjRef )';
-	}
-	 
-	($Node) = @_;
-	local ($Result,$SubHandle);
+    my $self = shift;
+    die 'usage: Connect( $NodeName, $ObjRef )' if @_ != 2;
+     
+    my ($node) = @_;
+    my ($result,$subhandle);
 
-	$Result = RegConnectRegistry ($Node, $self->{'handle'}, $SubHandle);
-	$_[1] = _new( $SubHandle );
+    $result = RegConnectRegistry ($node, $self->{'handle'}, $subhandle);
+    $_[1] = _new( $subhandle );
 
-	if (!$_[1] ){
-		return 0;
-	}
-
-	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-
-	# return a boolean value
-	return($Result);
+    return 0 unless $_[1];
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }  
 
 #######################################################################
@@ -268,29 +228,18 @@ sub Connect
 
 sub Create
 {
-	my $self = shift;
+    my $self = shift;
+    die 'usage: Create( $SubKey,$ScalarRef )' if @_ != 2;
 
-	if( @_ != 2 ){
-		die 'usage: Create( $SubKey,$ScalarRef )';
-	}
+    my ($subkey) = @_;
+    my ($result,$subhandle);
 
-	($SubKey) = @_;
-	local ($Result,$SubHandle);
+    $result = RegCreateKey($self->{'handle'},$subkey,$subhandle);
+    $_[1] = _new ( $subhandle );
 
-	#call the API, and create the object.
-	$Result = RegCreateKey($self->{'handle'},$SubKey,$SubHandle);
-	$_[1] = _new ( $SubHandle );
-	if (!$_[1]){
-		return(0);
-	}
-	#error checking
-
- 	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-
-	return($Result);
-
+    return 0 unless $_[1];
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -300,40 +249,20 @@ sub Create
 
 sub SetValue
 {
-	my $self = shift;
-	if( @_ != 3 ){
-		die 'usage: SetValue($SubKey,$Type,$value )';
-	}
-
-	local($SubKey,$type,$value) = @_;
-
-	# set the value.
-	$Result = RegSetValue( $self->{'handle'},$SubKey,$type,$value);
-	
- 	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-
-	return($Result);
-
+    my $self = shift;
+    die 'usage: SetValue($SubKey,$Type,$value )' if @_ != 3;
+    my $result = RegSetValue( $self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 sub SetValueEx
 {
-	my $self = shift;
-	if( @_ != 4 ){
-		die 'usage: SetValueEx( $SubKey,$Reserved,$type,$value )';
-	}
-
-	local( $SubKey,$Reserved,$type,$value) =@_;
-
-	$Result = RegSetValueEx( $self->{'handle'},$SubKey,$Reserved,$type,$value);
-	
-	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-
-	return($Result);
+    my $self = shift;
+    die 'usage: SetValueEx( $SubKey,$Reserved,$type,$value )' if @_ != 4;
+    my $result = RegSetValueEx( $self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -343,45 +272,27 @@ sub SetValueEx
 
 sub QueryValue
 {
-	my $self = shift;
-
-	if( @_ != 2 ){
-		die 'usage: QueryValue( $SubKey,$valueref )';
-	}
-
-	#Query the value.
-	$Result = RegQueryValue( $self->{'handle'}, $_[0], $_[1]);
-
-	#check the results.
-
- 	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-
-	return($Result);
+    my $self = shift;
+    die 'usage: QueryValue( $SubKey,$valueref )' if @_ != 2;
+    my $result = RegQueryValue( $self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 sub QueryKey
 {
-	my $garbage;
-	my $self = shift;
+    my $garbage;
+    my $self = shift;
+    die 'usage: QueryKey( $classref, $numberofSubkeys, $numberofVals )'
+    	if @_ != 3;
 
-	if( @_ != 3 ){
-		die 'usage: QueryKey( $classref, $numberofSubkeys, $numberofVals )';
-	}
+    my $result = RegQueryInfoKey($self->{'handle'}, $_[0],
+    				 $garbage, $garbage, $_[1],
+			         $garbage, $garbage, $_[2],
+			         $garbage, $garbage, $garbage, $garbage);
 
-	local ($Result);
-
-	$Result = RegQueryInfoKey( $self->{'handle'}, $_[0],
-				   $garbage, $garbage, $_[1],
-				   $garbage, $garbage, $_[2],
-				   $garbage, $garbage, $garbage, $garbage);
-
-
- 	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-	return($Result);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -390,22 +301,11 @@ sub QueryKey
 
 sub QueryValueEx
 {
-	my $self = shift;
-
-	if( @_ != 3 ){
-		die 'usage: QueryValueEx( $SubKey,$type,$valueref )';
-	}
-
-	#Query the value.
-	$Result = RegQueryValueEx( $self->{'handle'}, $_[0], NULL, $_[1], $_[2] );
-
-	#check the results.
-
- 	if(!$Result) {
-		$! = Win32::GetLastError();
-	}
-
-	return($Result);
+    my $self = shift;
+    die 'usage: QueryValueEx( $SubKey,$type,$valueref )' if @_ != 3;
+    my $result = RegQueryValueEx( $self->{'handle'}, $_[0], NULL, $_[1], $_[2] );
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -414,29 +314,23 @@ sub QueryValueEx
 #       $myobj->GetKeys( \@mylist )
 sub GetKeys
 {
-	my $self = shift;
-	if( @_ != 1 ){
-		die 'usage: GetKeys( $arrayref )';
+    my $self = shift;
+    die 'usage: GetKeys( $arrayref )' if @_ != 1 or ref($_[0]) ne 'ARRAY';
+
+    my ($result, $i, $keyname);
+    $keyname = "DummyVal";
+    $i = 0;
+    $result = 1;
+    
+    while ( $result ) {
+	$result = RegEnumKey( $self->{'handle'},$i++, $keyname );
+	if ($result) {
+	    push( @{$_[0]}, $keyname );
 	}
-
-	if (ref $_[0] ne ARRAY){
-		die "GetKeys requires a list reference as an arguement";
-	}
-
-	local ($Result,$ValueName,$i,$keyname);
-
-	$ValueName="DummyVal";$i=0;
-	$Result = 1;
-	
-	while( $Result ){
-		$Result = RegEnumKey( $self->{'handle'},$i++, $keyname );
-		if ($Result){
-			push( @{$_[0]}, $keyname );
-		}
-	}
-	return(1);
-
+    }
+    return(1);
 }
+
 #######################################################################
 #GetValues
 # GetValues creates a hash containing 'name'=> ( name,type,data )
@@ -444,28 +338,22 @@ sub GetKeys
 
 sub GetValues
 {
-	my $self = shift;
+    my $self = shift;
+    die 'usage: GetValues( $hashref )' if @_ != 1;
 
-	if( @_ != 1 ){
-		die 'usage: GetValues( $hashref )';
-	}
-
-	local ($Result,$ValueName,$i);
-
-	$ValueName="DummyVal";$i=0;
-	while( $Result=RegEnumValue( $self->{'handle'},
-					$i++,
-					$ValueName,
-					NULL,
-					$ValueType,
-					$ValueData )){
-
-		$aref = [ $ValueName, $ValueType,$ValueData ];
-
-		$_[0]->{$ValueName} = $aref;
-	}
-		
-	return(1);
+    my ($result,$name,$type,$data,$i);
+    $name = "DummyVal";
+    $i = 0;
+    while ( $result=RegEnumValue( $self->{'handle'},
+				  $i++,
+				  $name,
+				  NULL,
+				  $type,
+				  $data ))
+    {
+	$_[0]->{$name} = [ $name, $type, $data ];
+    }
+    return(1);
 }
 
 #######################################################################
@@ -476,21 +364,11 @@ sub GetValues
 
 sub DeleteKey
 {
-	my $self = shift;
-	local($Result);
-	if( @_ != 1 ){
-		die 'usage: DeleteKey( $SubKey )';
-	}
-
-	local( $name ) = @_;
-
-	$Result=RegDeleteKey($self->{'handle'},$name);
-
- 	if(!$Result){
-		$! = Win32::GetLastError();
-	}
-	return($Result);
-
+    my $self = shift;
+    die 'usage: DeleteKey( $SubKey )' if @_ != 1;
+    my $result = RegDeleteKey($self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -500,23 +378,11 @@ sub DeleteKey
 
 sub DeleteValue
 {
-	my $self = shift;
-	local( $Result );
-
-	if( @_ != 1 ){
-		die 'usage: DeleteValue( $SubKey )';
-	}
-
-	local( $name )=@_;
-	
-	$Result=RegDeleteValue( $self->{'handle'},$name);
-	
-	if( !$Result){
-		$!=Win32::GetLastError();
-	}
-
-	return($Result);
-
+    my $self = shift;
+    die 'usage: DeleteValue( $SubKey )' if @_ != 1;
+    my $result = RegDeleteValue($self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -526,21 +392,11 @@ sub DeleteValue
 
 sub Save
 {
-	my $self=shift;
-
-	if( @_ != 1 ){
-		die 'usage: Save( $FileName )';
-	}
-
-	local( $FileName ) = @_;
-
-	$Result=RegSaveKey( $self->{'handle'},$FileName );
-
-	if( !$Result){
-		$!=Win32::GetLastError();
-	}
-
-	return($Result);
+    my $self = shift;
+    die 'usage: Save( $FileName )' if @_ != 1;
+    my $result = RegSaveKey($self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -549,20 +405,11 @@ sub Save
 
 sub Load
 {
-	my $self = shift;
-	if( @_ != 2 ){
-		die 'usage: Load( $SubKey,$FileName )';
-	}
-
-	local( $SubKey,$FileName) = @_;
-
-	$Result=RegLoadKey( $self->{'handle'},$SubKey,$FileName);
-
-	if( !$Result){
-		$!=Win32::GetLastError();
-	}
-
-	return($Result);
+    my $self = shift;
+    die 'usage: Load( $SubKey,$FileName )' if @_ != 2;
+    my $result = RegLoadKey($self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 
 #######################################################################
@@ -571,20 +418,11 @@ sub Load
 
 sub UnLoad
 {
-	my $self = shift;
-	if ( @_ != 1 ) {
-		die 'usage: UnLoad( $SubKey )';
-	}
-
-	local( $SubKey) = @_;
-
-	$Result=RegUnLoadKey( $self->{'handle'},$SubKey);
-
-	if( !$Result){
-		$!=Win32::GetLastError();
-	}
-
-	return($Result);
+    my $self = shift;
+    die 'usage: UnLoad( $SubKey )' if @_ != 1;
+    my $result = RegUnLoadKey($self->{'handle'}, @_);
+    $! = Win32::GetLastError() unless $result;
+    return $result;
 }
 #######################################################################
 

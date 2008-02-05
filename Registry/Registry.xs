@@ -708,7 +708,7 @@ RegQueryValue(hkey,valuename,data)
 	unsigned char databuffer[TMPBUFSZ*2];
 	DWORD datasz = sizeof(databuffer);
 	RETVAL = SUCCESS(RegQueryValue(hkey, valuename, (char*)databuffer,
-				       &datasz));
+				       (PLONG)&datasz));
 	/* return includes the null terminator so delete it */
     OUTPUT:
 	RETVAL
@@ -859,6 +859,7 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 	char *buffer;
 	switch (type) 
 	{
+		case REG_NONE:
 		case REG_SZ:
 		case REG_MULTI_SZ:
 		case REG_EXPAND_SZ:
@@ -876,7 +877,7 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 						   (PBYTE)&val, sizeof(DWORD)));
 		    break;
 		default:
-			croak("Type not specified, cannot set %s\n", valname);
+			croak("Type not supported, cannot set %s\n", valname);
 	}
     OUTPUT:
 	RETVAL

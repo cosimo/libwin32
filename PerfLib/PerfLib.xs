@@ -1,29 +1,32 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winreg.h>
 #include <winperf.h>
+#if (defined(__cplusplus) && !defined(PERL_OBJECT))
+extern "C" {
+#endif
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-#ifdef __cplusplus
+#if (defined(__cplusplus) && !defined(PERL_OBJECT))
 }
 #endif
+#if !defined PERL_OBJECT
+#ifndef CPERLarg_
+#define CPERLarg_
+#endif /* CPERLarg_ */
+#ifndef PERL_OBJECT_THIS_
+#define PERL_OBJECT_THIS_
+#endif /* PERL_OBJECT_THIS_ */
+#endif
+#if (defined (PERL_OBJECT) && defined (NT_BUILD_NUMBER))
+#define PERL_OBJECT_THIS_ pPerl,
+#define PL_na na
+#define boolSV(b) ((b) ? &sv_yes : &sv_no)
+#endif
 
-static int
-not_here(s)
-char *s;
-{
-    croak("%s not implemented on this architecture", s);
-    return -1;
-}
 
-static double
-constant(name, arg)
-char *name;
-int arg;
+DWORD constant(CPERLarg_ char *name)
 {
     errno = 0;
     switch (*name) {
@@ -581,7 +584,7 @@ PPERF_COUNTER_DEFINITION NextCounter( PPERF_COUNTER_DEFINITION PerfCntr )
 				       PerfCntr->ByteLength));
 }
 
-HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
+HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
 		PPERF_INSTANCE_DEFINITION PerfInst)
 {
     PPERF_COUNTER_DEFINITION PerfCntr, CurCntr;
@@ -594,7 +597,7 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
     char buffer[TEMPBUF];
     HV *hvCounter;
     HV *hvCounterNum;
-    DWORD debug = 0;
+    DWORD PerfLib_debug = 0;
     
     PerfCntr = FirstCounter(PerfObj);
     hvCounterNum = newHV();
@@ -602,7 +605,7 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
     for(k=0;k<PerfObj->NumCounters;k++)
     {
 	hvCounter = newHV();
-	if(debug) printf("\tCounter: %d\n\tCounterType: 0x%08x\n",
+	if(PerfLib_debug) printf("\tCounter: %d\n\tCounterType: 0x%08x\n",
 			 CurCntr->CounterNameTitleIndex,
 			 CurCntr->CounterType);
 	size = CurCntr->CounterType & SIZE_MASK;
@@ -635,16 +638,24 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
 		 newSViv(CurCntr->DefaultScale), 0);
 	hv_store(hvCounter, "DetailLevel", strlen("DetailLevel"),
 		 newSViv(CurCntr->DetailLevel), 0);
-	lpCounterData = ((BYTE*)PerfInst
-			 + PerfInst->ByteLength
-			 + CurCntr->CounterOffset);
+ 	if ( PerfObj->NumInstances > 0 )
+ 	{
+ 		lpCounterData = ((BYTE*)PerfInst
+  			 + PerfInst->ByteLength
+  			 + CurCntr->CounterOffset);
+ 	}
+ 	else 
+ 	{
+ 		lpCounterData = ((BYTE*)PerfInst
+ 			 + CurCntr->CounterOffset);
+ 	}
 	switch(size)
 	{
 	case PERF_SIZE_DWORD:
 	    lpDWord = (DWORD*)lpCounterData;
 	    hv_store(hvCounter, "Counter", strlen("Counter"),
 		     newSViv(*lpDWord), 0);
-	    if(debug)
+	    if(PerfLib_debug)
 	    {
 		printf("\t\tdword: %ld", *lpDWord);
 	    }
@@ -656,7 +667,7 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
 		     newSVpv(buffer, strlen(buffer)), 0);
 #//         hv_store(hvCounter, "Counter", strlen("Counter"),
 #//		     newSVnv((double)lpLargeInt->QuadPart), 0);
-	    if(debug)
+	    if(PerfLib_debug)
 	    {
 		printf("\t\tlarge integer: 0x%016I64x (%I64u)",
 		       lpLargeInt->QuadPart,
@@ -664,20 +675,20 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
 	    }
 	    break;
 	case PERF_SIZE_ZERO:
-	    if(debug) printf("\t\tzero");
+	    if(PerfLib_debug) printf("\t\tzero");
 	    break;
 	case PERF_SIZE_VARIABLE_LEN:
-	    if(debug) printf("\t\tvariable length");
+	    if(PerfLib_debug) printf("\t\tvariable length");
 	    break;
 	default:
-	    if(debug) printf("\t\tunknown");
+	    if(PerfLib_debug) printf("\t\tunknown");
 	    break;
 	}
-	if(debug) printf("\n\t\tsize: %d\n", CurCntr->CounterSize );
+	if(PerfLib_debug) printf("\n\t\tsize: %d\n", CurCntr->CounterSize );
 	switch(type)
 	{
 	case PERF_TYPE_NUMBER:
-	    if(debug)
+	    if(PerfLib_debug)
 	    {
 		printf("\t\tnumber: ");
 		if(PERF_NUMBER_HEX == subtype)
@@ -689,7 +700,7 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
 	    }
 	    break;
 	case PERF_TYPE_COUNTER:
-	    if(debug)
+	    if(PerfLib_debug)
 	    {
 		printf("\t\tcounter: ");
 		if(PERF_COUNTER_VALUE == subtype)
@@ -717,7 +728,7 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
 	    }
 	    break;
 	case PERF_TYPE_TEXT:
-	    if(debug) printf("\t\ttext (%s)\n",
+	    if(PerfLib_debug) printf("\t\ttext (%s)\n",
 			     PERF_TEXT_ASCII == subtype ? "ASCII" : "UNICODE");
 	    break;
 	    
@@ -725,28 +736,28 @@ HV *GetCounters(PPERF_OBJECT_TYPE PerfObj,
 	switch(display)
 	{
 	case PERF_DISPLAY_NO_SUFFIX:
-	    if(debug) printf("\t\tno suffix\n");
+	    if(PerfLib_debug) printf("\t\tno suffix\n");
 	    break;
 	case PERF_DISPLAY_PER_SEC:
 	    hv_store(hvCounter, "Display", strlen("Display"),
 		     newSVpv("/sec", strlen("/sec")),0);
-	    if(debug) printf("\t\t/sec\n");
+	    if(PerfLib_debug) printf("\t\t/sec\n");
 	    break;
 	case PERF_DISPLAY_PERCENT:
 	    hv_store(hvCounter, "Display", strlen("Display"),
 		     newSVpv("%", strlen("%")),0);
-	    if(debug) printf("\t\t%%\n");
+	    if(PerfLib_debug) printf("\t\t%%\n");
 	    break;
 	case PERF_DISPLAY_SECONDS:
 	    hv_store(hvCounter, "Display", strlen("Display"),
 		     newSVpv("sec", strlen("sec")),0);
-	    if(debug) printf("\t\tsecs\n");
+	    if(PerfLib_debug) printf("\t\tsecs\n");
 	    break;
 	case PERF_DISPLAY_NOSHOW:
-	    if(debug) printf("\t\tnot displayed\n"); 
+	    if(PerfLib_debug) printf("\t\tnot displayed\n"); 
 	    break;
 	}
-	if(debug)
+	if(PerfLib_debug)
 	{
 	    if(calc_mod & PERF_DELTA_COUNTER)
 		printf("\t\tcompute difference\n");
@@ -770,11 +781,10 @@ MODULE = Win32::PerfLib		PACKAGE = Win32::PerfLib
 PROTOTYPES: DISABLE
 
 long
-constant(name,arg)
+constant(name)
 	char *name
-	int arg
     CODE:
-	RETVAL = constant(name, arg);
+	RETVAL = constant(PERL_OBJECT_THIS_ name);
     OUTPUT:
 	RETVAL
 
@@ -821,8 +831,9 @@ PerfLibGetNames(machine,counter)
 	    RegCloseKey(remote_lmkey);
 	    XSRETURN_NO;
 	}
-	RETVAL = RegQueryInfoKey(remote_perfkey, NULL, NULL, NULL, NULL,
-				 NULL, NULL, NULL, NULL, &value_len, NULL, NULL );
+
+        RETVAL = SUCCESS(RegQueryValueEx(remote_perfkey, "Counter", NULL, NULL,
+					 NULL, &value_len));
 	if(!RETVAL)
 	{
 	    RegCloseKey(remote_lmkey);
@@ -954,7 +965,7 @@ PerfLibGetObjects(handle,counter,data)
 	time_t stime;
 	FILETIME ft;
 	LARGE_INTEGER lft;
-	DWORD debug = 0;
+	DWORD PerfLib_debug = 0;
 	DWORD result;
 
 	if (SvROK(data))
@@ -962,7 +973,7 @@ PerfLibGetObjects(handle,counter,data)
 	    data = SvRV(data);
 	}
 	cbData = TEMPBUF;
-	lpData = (char *)malloc(cbData * sizeof(char));
+	lpData = (BYTE *)malloc(cbData * sizeof(char));
 	if(!lpData)
 	    XSRETURN_NO;
 	while(1)
@@ -971,7 +982,7 @@ PerfLibGetObjects(handle,counter,data)
 	    if(ERROR_MORE_DATA == result)
 	    {
 		cbData += TEMPBUF;
-		lpData = (char *)realloc(lpData, cbData * sizeof(char));
+		lpData = (BYTE *)realloc(lpData, cbData * sizeof(char));
 		if(!lpData)
 		    XSRETURN_NO;
 	    }
@@ -984,7 +995,7 @@ PerfLibGetObjects(handle,counter,data)
 	    }
 	}
 	PerfData = (PERF_DATA_BLOCK *)lpData;
-	if(debug)
+	if(PerfLib_debug)
 	{
 	    printf("cbData: %d\n", cbData );
 	    printf("NumObjectTypes: %d\n", PerfData->NumObjectTypes );
@@ -1010,7 +1021,7 @@ PerfLibGetObjects(handle,counter,data)
 	hv_store((HV*)data, "SystemName", strlen("SystemName"),
 		 newSVpv(buffer, strlen(buffer)),0);
 	PerfObj = FirstObject(PerfData);
-	if(debug)
+	if(PerfLib_debug)
 	{
 	    printf("NumCounters: %d\n", PerfObj->NumCounters );
 	    printf("NumInstances: %d\n", PerfObj->NumInstances );
@@ -1043,7 +1054,7 @@ PerfLibGetObjects(handle,counter,data)
 		hvInstanceNum = newHV();
 		for(j=1;j<=PerfObj->NumInstances;j++)
 		{
-		    if(debug)
+		    if(PerfLib_debug)
 			printf("Instance %S\n",
 			       (char *)((PBYTE)PerfInst + PerfInst->NameOffset));
 		    CurCntr = PerfCntr;
@@ -1060,7 +1071,7 @@ PerfLibGetObjects(handle,counter,data)
 		    hv_store(hvInstance, "ParentObjectInstance",
 			     strlen("ParentObjectInstance"),
 			     newSViv(PerfInst->ParentObjectInstance), 0);
-		    hvCounterNum = GetCounters(PerfObj, PerfInst);
+		    hvCounterNum = GetCounters(PERL_OBJECT_THIS_ PerfObj, PerfInst);
 		    hv_store(hvInstance, "Counters", strlen("Counters"),
 			     (SV*)newRV((SV*)hvCounterNum), 0);
 		    sprintf(buffer, "%d", j);
@@ -1073,7 +1084,7 @@ PerfLibGetObjects(handle,counter,data)
 	    }
 	    else
 	    {
-		hvCounterNum = GetCounters(PerfObj, PerfInst);
+		hvCounterNum = GetCounters(PERL_OBJECT_THIS_ PerfObj, PerfInst);
 		hv_store(hvObject, "Counters", strlen("Counters"),
 			 (SV*)newRV((SV*)hvCounterNum),0);
 	    }

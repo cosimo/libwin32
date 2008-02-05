@@ -84,13 +84,13 @@ require AutoLoader;
 	     PERF_TYPE_ZERO
 	    );
 
-$VERSION = '0.01';
+$VERSION = '0.03';
 
 sub AUTOLOAD {
    
     my $constname;
     ($constname = $AUTOLOAD) =~ s/.*:://;
-    my $val = constant($constname, @_ ? $_[0] : 0);
+    my $val = constant($constname);
     if ($! != 0) {
 	if ($! =~ /Invalid/) {
 	    $AutoLoader::AUTOLOAD = $AUTOLOAD;

@@ -1,5 +1,8 @@
 Revision history for Perl extension Win32::Service.
 
+0.04  Thu Sep 10 17:18:25 1998
+	- fix doc bug about GetServices()
+
 0.03  Thu Mar 19 22:10:06 1998
 	- report stopped services like ActiveState version
 

@@ -103,6 +103,13 @@ $sk0->SetValueEx( 'string2',NULL, REG_SZ, "data2" ) || print "not ";
 print "ok $bug\n";
 $bug++;
 
+$sk0->SetValueEx( 'none',NULL, REG_NONE, "" ) || print "not ";
+print "ok $bug\n";
+$bug++;
+$sk0->DeleteValue( 'none' ) || print "not ";
+print "ok $bug\n";
+$bug++;
+
 #$sk0->show_me();
 $sk0->GetValues( \%values );
 

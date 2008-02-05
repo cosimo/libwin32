@@ -367,7 +367,7 @@ GetServices(lpHostName, hv)
 	    RETVAL = FALSE;
 	    if (!(hv && SvROK(hv) &&
 		  (hv = SvRV(hv)) && SvTYPE(hv) == SVt_PVHV))
-		croak("third arg must be a HASHREF");
+		croak("second argument must be a HASHREF");
 	    
 	    if (lpHostName && *lpHostName == '\0')
 		lpHostName = NULL;
