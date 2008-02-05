@@ -76,6 +76,9 @@ ODBC.PM HISTORY:
 	   system DSNs (from Stergios Marinopoulos <stergios@onward-net.com>)
 	 - minor cosmetic edits to Constant.cpp for portability
 
+2000.05.22 Gurusamy Sarathy <gsar@activestate.com>
+	 - avoid warnings from GetData() (from Rex Livingston)
+	 - cosmetic fixes to indentation
 
 ODBC.PLL HISTORY:
 ----------------

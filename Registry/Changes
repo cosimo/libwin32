@@ -1,6 +1,18 @@
 Revision history for Perl extension Win32::Registry.
 
 
+0.07  Mon May 22 21:47:32 2000
+	- added retry for RegQueryValueEx (courtesy Tye McQueen
+	  <tye@metronet.com>)
+	- add DESTROY() for proper cleanup (from Jenda Krynicky
+	  <Jenda@Krynicky.cz>)
+	- added POD documentation
+	- failed API calls now call SetLastError() making it visible
+	  via $^E; RegEnumKeyEx() added to XS code (thanks to Jenda
+	  Krynicky)
+	- *DO NOT USE THIS MODULE* in new code; use Win32::TieRegistry
+	  instead
+
 0.06  Sat Nov 14 23:05:24 1998
 	- missing SetPrivilege() in UnLoadKey()
 

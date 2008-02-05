@@ -2,18 +2,36 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#if defined(__cplusplus)
+#include <stdlib.h>
+#include <math.h>
+extern "C" {
+#endif
+
+#include <EXTERN.h>
+#include "perl.h"
+#include "XSub.h"
+
+#if defined(__cplusplus)
+}
+#endif
+
+#include "../ppport.h"
+
 #include "CPipe.hpp"
 #include "pipe.h"
 
 CPipe::CPipe(char *szName, DWORD dWait){
 	int	iTemp;
 	int	iFlag = 1;
+	WCHAR	wbuffer[MAX_PATH+1];
+	dTHX;
 	
 	hPipe = 0;                 
 	dBufferSize = BUFFER_SIZE;
 	dBytes = 0;
 			              	
-	lpName[PIPE_NAME_SIZE + 1];				
+	char szPipeName[PIPE_NAME_SIZE + 1];				
 	dwOpenMode = PIPE_ACCESS_DUPLEX;		
 	dwPipeMode = 	PIPE_TYPE_BYTE	 |      
 					PIPE_READMODE_BYTE	 |  
@@ -32,40 +50,69 @@ CPipe::CPipe(char *szName, DWORD dWait){
 	}
 
 	memset((void *)szError, 0, ERROR_TEXT_SIZE);
-	memset((void *)lpName, 0, PIPE_NAME_SIZE + 1);
+	memset((void *)szPipeName, 0, PIPE_NAME_SIZE + 1);
 	if (strncmp((char *)szName, "\\\\", 2) == 0){
 		iPipeType = CLIENT;
 		iTemp = 0;
 	}else{
 		iPipeType = SERVER;
-		strcpy((char *)lpName, PIPE_NAME_PREFIX);
+		strcpy(szPipeName, PIPE_NAME_PREFIX);
 		iTemp = strlen(PIPE_NAME_PREFIX);
 	}
-	strncat((char *)lpName, szName, PIPE_NAME_SIZE - iTemp);
-
+	strncat(szPipeName, szName, PIPE_NAME_SIZE - iTemp);
+	if (USING_WIDE()) {
+	    A2WHELPER(szPipeName, wbuffer, sizeof(wbuffer));
+	}
 	if(iPipeType == SERVER){
-		hPipe = CreateNamedPipe((const char *)lpName,
-								dwOpenMode, 
-								dwPipeMode, 
-								nMaxInstances, 
-								nOutBufferSize, 
-								nInBufferSize, 
-								nDefaultTimeOut,
-								lpSecurityAttributes);
+	    if (USING_WIDE()) {
+		hPipe = CreateNamedPipeW(wbuffer,
+					dwOpenMode, 
+					dwPipeMode, 
+					nMaxInstances, 
+					nOutBufferSize, 
+					nInBufferSize, 
+					nDefaultTimeOut,
+					lpSecurityAttributes);
+	    }
+	    else {
+		hPipe = CreateNamedPipeA(szPipeName,
+					dwOpenMode, 
+					dwPipeMode, 
+					nMaxInstances, 
+					nOutBufferSize, 
+					nInBufferSize, 
+					nDefaultTimeOut,
+					lpSecurityAttributes);
+	    }
 	}else{
 		while(iFlag){
-			hPipe = CreateFile((LPCTSTR) lpName,
-								GENERIC_READ | GENERIC_WRITE, 
-								FILE_SHARE_READ	| FILE_SHARE_WRITE,
-								NULL,
-								OPEN_EXISTING,
-								FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
-								NULL);
-			if (GetLastError() == ERROR_PIPE_BUSY){
-				iFlag = WaitNamedPipe((LPCTSTR)lpName, dWait);
-			}else{
-				iFlag = 0;
-			}
+		    if (USING_WIDE()) {
+			hPipe = CreateFileW(wbuffer,
+					    GENERIC_READ | GENERIC_WRITE, 
+					    FILE_SHARE_READ	| FILE_SHARE_WRITE,
+					    NULL,
+					    OPEN_EXISTING,
+					    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
+					    NULL);
+		    }
+		    else {
+			hPipe = CreateFileA(szPipeName,
+					    GENERIC_READ | GENERIC_WRITE, 
+					    FILE_SHARE_READ	| FILE_SHARE_WRITE,
+					    NULL,
+					    OPEN_EXISTING,
+					    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
+					    NULL);
+		    }
+
+		    if (GetLastError() == ERROR_PIPE_BUSY){
+			if (USING_WIDE())
+			    iFlag = WaitNamedPipeW(wbuffer, dWait);
+			else
+			    iFlag = WaitNamedPipeA(szPipeName, dWait);
+		    }else{
+			    iFlag = 0;
+		    }
 		}
 	}
 	if (cBuffer == 0){

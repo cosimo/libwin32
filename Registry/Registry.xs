@@ -425,7 +425,10 @@ bool
 RegCloseKey(handle)
 	HKEY handle
     CODE:
-	RETVAL = SUCCESS(RegCloseKey(handle));
+	LONG result = RegCloseKey(handle);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -435,7 +438,10 @@ RegConnectRegistry(machine,hkey,ohandle)
 	HKEY hkey
 	HKEY ohandle = NO_INIT
     CODE:
-	RETVAL = SUCCESS(RegConnectRegistry(machine, hkey, &ohandle));
+	LONG result = RegConnectRegistry(machine, hkey, &ohandle);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 	ohandle
@@ -447,10 +453,13 @@ RegCreateKey(hkey,subkey,ohandle)
 	HKEY ohandle = NO_INIT
     CODE:
 	DWORD disposition;
-	RETVAL =  SUCCESS(RegCreateKeyEx(hkey, subkey, 0, NULL,
+	LONG result = RegCreateKeyEx(hkey, subkey, 0, NULL,
 					 REG_OPTION_NON_VOLATILE,
 					 KEY_ALL_ACCESS,
-					 NULL, &ohandle, &disposition));
+					 NULL, &ohandle, &disposition);
+	RETVAL =  SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
    OUTPUT:
 	RETVAL
 	ohandle
@@ -469,6 +478,7 @@ RegCreateKeyEx(hkey,subkey,res,kclass,options,sam,security,ohandle,disposition)
 	DWORD disposition = NO_INIT
     CODE:
 	unsigned sa_len;
+	LONG result;
 	SECURITY_ATTRIBUTES *psa = (SECURITY_ATTRIBUTES *)SvPV(security,sa_len);
 	SECURITY_ATTRIBUTES sa;
 	if (sa_len != sizeof(SECURITY_ATTRIBUTES)) {
@@ -476,9 +486,11 @@ RegCreateKeyEx(hkey,subkey,res,kclass,options,sam,security,ohandle,disposition)
 	    memset(&sa, 0, sizeof(SECURITY_ATTRIBUTES));
 	    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	}
-	RETVAL = SUCCESS(RegCreateKeyEx(hkey, subkey, 0, kclass,
-					options, sam, psa, &ohandle,
-					&disposition));
+	result = RegCreateKeyEx(hkey, subkey, 0, kclass, options,
+				sam, psa, &ohandle, &disposition);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
    OUTPUT:
 	RETVAL
 	ohandle
@@ -489,7 +501,10 @@ RegDeleteKey(hkey,subkey)
 	HKEY hkey
 	char *subkey
     CODE:
-	RETVAL = SUCCESS(RegDeleteKey(hkey, subkey));
+	LONG result = RegDeleteKey(hkey, subkey);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -498,7 +513,10 @@ RegDeleteValue(hkey,valname)
 	HKEY hkey
 	char *valname
     CODE:
-	RETVAL = SUCCESS(RegDeleteValue(hkey, valname));
+	LONG result = RegDeleteValue(hkey, valname);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -509,10 +527,37 @@ RegEnumKey(hkey,idx,subkey)
 	char *subkey = NO_INIT
     CODE:
 	char keybuffer[TMPBUFSZ];
-	RETVAL = SUCCESS(RegEnumKey(hkey, idx, keybuffer, sizeof(keybuffer)));
+	LONG result = RegEnumKey(hkey, idx, keybuffer, sizeof(keybuffer));
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 	subkey		if (RETVAL) { SETPV(2, keybuffer); }
+
+bool
+RegEnumKeyEx(hkey,idx,subkey,classname,lastwritetime)
+	HKEY hkey
+	DWORD idx
+	char *subkey = NO_INIT
+	char *classname = NO_INIT
+	FILETIME lastwritetime = NO_INIT
+    CODE:
+	char keybuffer[TMPBUFSZ];
+	DWORD keybuffersz = TMPBUFSZ;
+	char classbuffer[TMPBUFSZ];
+	DWORD classbuffersz = TMPBUFSZ;
+	FILETIME ft;
+	LONG result = RegEnumKeyEx(hkey, idx, keybuffer, &keybuffersz,
+				   0, classbuffer, &classbuffersz, &ft);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
+    OUTPUT:
+	RETVAL
+	subkey		if (RETVAL) { SETPV(2, keybuffer); }
+	classname	if (RETVAL) { SETPV(3, classbuffer); }
+	lastwritetime	if (RETVAL) { SETNV(4, ft2timet(&ft)); }
 
 bool
 RegEnumValue(hkey,idx,name,reserved,type,value)
@@ -527,32 +572,47 @@ RegEnumValue(hkey,idx,name,reserved,type,value)
 	char  myvalbuf[MAX_LENGTH];
 	char  mynambuf[MAX_LENGTH];
 	DWORD namesz, valsz;
+	unsigned char *ptr;
+	LONG result;
 
 	/* If this is a new key, find out how big the maximum name and value
 	 * sizes are and allocate space for them. Free any old storage and
 	 * set the old key value to the current key.
 	 */
-	if(hkey != (HKEY)last_hkey) {
+	if (hkey != (HKEY)last_hkey) {
 	    char keyclass[TMPBUFSZ];
-	    DWORD classsz, subkeys, maxsubkey, maxclass, maxnamesz;
+	    DWORD subkeys, maxsubkey, maxclass, maxnamesz;
 	    DWORD maxvalsz, values, salen;
 	    FILETIME ft;
-	    classsz = sizeof(keyclass);
-	    RETVAL = SUCCESS(RegQueryInfoKey(hkey, keyclass, &classsz, 0,
+	    DWORD classsz = sizeof(keyclass);
+	    LONG result = RegQueryInfoKey(hkey, keyclass, &classsz, 0,
 					     &subkeys, &maxsubkey, &maxclass,
 					     &values, &maxnamesz,&maxvalsz,
-					     &salen, &ft));
-	    if (!RETVAL)
+					     &salen, &ft);
+	    if (!SUCCESS(result)) {
+		SetLastError(result);
 		XSRETURN_NO;
-	    
+	    }
 	    memset( myvalbuf,0,MAX_LENGTH );
 	    memset( mynambuf,0,MAX_LENGTH );
 	}
 	last_hkey = hkey;
 	namesz = MAX_LENGTH;
 	valsz = MAX_LENGTH;
-	RETVAL = SUCCESS(RegEnumValue(hkey, idx, mynambuf, &namesz, 0,
-				      &type, (LPBYTE) myvalbuf, &valsz));
+
+	ptr = (unsigned char *) myvalbuf;
+	result = RegEnumValue(hkey, idx, mynambuf, &namesz, 0,
+			      &type, (LPBYTE) myvalbuf, &valsz);
+	while (result == ERROR_MORE_DATA) {
+	    /* We must be processing HKEY_PERFORMANCE_DATA */
+	    if (ptr != (unsigned char *)myvalbuf)
+		Safefree(ptr);
+  	    valsz *= 2;
+	    New(0, ptr, valsz+1, BYTE); 
+	    result = RegEnumValue(hkey, idx, mynambuf, &namesz, 0,
+				  &type, ptr, &valsz);
+	}
+	RETVAL = SUCCESS(result);
 	if (RETVAL) {
 	    SETPV(2, mynambuf);
 	    SETIV(4, type);
@@ -566,25 +626,30 @@ RegEnumValue(hkey,idx,name,reserved,type,value)
 		    --valsz;
 		/* FALL THROUGH */
 	    case REG_BINARY:
-	        SETPVN(5, myvalbuf, valsz);
+	        SETPVN(5, ptr, valsz);
 		break;
 	    case REG_DWORD_BIG_ENDIAN:
 		{
-		    BYTE tmp = myvalbuf[0];
-		    myvalbuf[0] = myvalbuf[3];
-		    myvalbuf[3] = tmp;
-		    tmp = myvalbuf[1];
-		    myvalbuf[1] = myvalbuf[2];
-		    myvalbuf[2] = tmp;
+		    BYTE tmp = ptr[0];
+		    ptr[0] = ptr[3];
+		    ptr[3] = tmp;
+		    tmp = ptr[1];
+		    ptr[1] = ptr[2];
+		    ptr[2] = tmp;
 		}
 		/* FALL THROUGH */
 	    case REG_DWORD_LITTLE_ENDIAN:
-		SETNV(5, (double)*((DWORD*)myvalbuf));
+		SETNV(5, (double)*((DWORD*)ptr));
 		break;
 	    default:
 		break;
 	    }
 	}
+	else {
+	    SetLastError(result);
+	}
+	if (ptr != (unsigned char *)myvalbuf)
+	    Safefree(ptr);
     OUTPUT:
 	RETVAL
 
@@ -592,7 +657,10 @@ bool
 RegFlushKey(hkey)
 	HKEY hkey
     CODE:
-	RETVAL = SUCCESS(RegFlushKey(hkey));
+	LONG result = RegFlushKey(hkey);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -605,9 +673,12 @@ RegGetKeySecurity(hkey,sec_info,sec_desc)
     CODE:
 	SECURITY_DESCRIPTOR sd;
 	DWORD sdsz;
-	RETVAL = SUCCESS(RegGetKeySecurity(hkey, sec_info, &sd, &sdsz));
+	LONG result = RegGetKeySecurity(hkey, sec_info, &sd, &sdsz);
+	RETVAL = SUCCESS(result);
 	if (RETVAL)
 	    SETPVN(2, &sd, sdsz);
+	else
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -623,6 +694,8 @@ RegLoadKey(hkey,subkey,filename)
 	dwLastError = RegLoadKey(hkey, subkey, filename);
 	SetPrivilege(SE_RESTORE_NAME, FALSE);
 	RETVAL = SUCCESS(dwLastError);
+	if (!RETVAL)
+	    SetLastError(dwLastError);
     OUTPUT:
 	RETVAL
 
@@ -634,8 +707,11 @@ RegNotifyChangeKeyValue(hkey,watch_subtree,notify_filt,evt,async_flag)
 	HANDLE evt
 	bool async_flag
     CODE:
-	RETVAL = SUCCESS(RegNotifyChangeKeyValue(hkey, watch_subtree,
-						 notify_filt, evt, async_flag));
+	LONG result = RegNotifyChangeKeyValue(hkey, watch_subtree,
+					      notify_filt, evt, async_flag);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -645,7 +721,10 @@ RegOpenKey(hkey,subkey,ohandle)
 	char *subkey
 	HKEY ohandle = NO_INIT
     CODE:
-	RETVAL = SUCCESS(RegOpenKey(hkey, subkey, &ohandle));
+	LONG result = RegOpenKey(hkey, subkey, &ohandle);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 	ohandle
@@ -658,7 +737,10 @@ RegOpenKeyEx(hkey,subkey,res,sam,ohandle)
 	REGSAM sam
 	HKEY ohandle = NO_INIT
     CODE:
-	RETVAL = SUCCESS(RegOpenKeyEx(hkey, subkey, 0, sam, &ohandle));
+	LONG result = RegOpenKeyEx(hkey, subkey, 0, sam, &ohandle);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 	ohandle
@@ -680,12 +762,16 @@ RegQueryInfoKey(hkey,kclass,classsz,reserved,numsubkeys,maxsubkeylen,maxclasslen
     CODE:
 	char keyclass[TMPBUFSZ];
 	FILETIME ft;
+	LONG result;
 	classsz = sizeof(keyclass);
-	RETVAL = SUCCESS(RegQueryInfoKey(hkey, keyclass, &classsz, 0,
-					 &numsubkeys, &maxsubkeylen,
-					 &maxclasslen, &numvalues,
-					 &maxvalnamelen, &maxvaldatalen,
-					 &secdesclen, &ft));
+	result = RegQueryInfoKey(hkey, keyclass, &classsz, 0,
+				 &numsubkeys, &maxsubkeylen,
+				 &maxclasslen, &numvalues,
+				 &maxvalnamelen, &maxvaldatalen,
+				 &secdesclen, &ft);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 	kclass			SETPV(1, keyclass);
@@ -707,8 +793,11 @@ RegQueryValue(hkey,valuename,data)
     CODE:
 	unsigned char databuffer[TMPBUFSZ*2];
 	DWORD datasz = sizeof(databuffer);
-	RETVAL = SUCCESS(RegQueryValue(hkey, valuename, (char*)databuffer,
-				       (PLONG)&datasz));
+	LONG result = RegQueryValue(hkey, valuename, (char*)databuffer,
+				       (PLONG)&datasz);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
 	/* return includes the null terminator so delete it */
     OUTPUT:
 	RETVAL
@@ -728,14 +817,20 @@ RegQueryValueEx(hkey,valuename,reserved,type,data)
 	DWORD datasz = sizeof(databuffer);
 	LONG result = RegQueryValueEx(hkey, valuename, NULL, &type,
 				      ptr, &datasz);
-	if (result == ERROR_MORE_DATA) {
+	while (result == ERROR_MORE_DATA) {
+	    /* We must be processing HKEY_PERFORMANCE_DATA */
+	    if (ptr != databuffer)
+		Safefree(ptr);
+
+	    datasz *= 2;
 	    New(0, ptr, datasz+1, BYTE); 
 	    result = RegQueryValueEx(hkey, valuename, NULL, &type,
 				     ptr, &datasz);
 	}
+	RETVAL = SUCCESS(result);
 	/* return includes the null terminator so delete it if
 	 * REG_SZ, REG_MULTI_SZ or REG_EXPAND_SZ */
-	if (SUCCESS(result)) {
+	if (RETVAL) {
 	    SETIV(3, type);
 
 	    switch (type) {
@@ -765,9 +860,11 @@ RegQueryValueEx(hkey,valuename,reserved,type,data)
 		break;
 	    }
 	}
+	else {
+	    SetLastError(result);
+	}
 	if (ptr != databuffer)
 	    Safefree(ptr);
-	RETVAL = SUCCESS(result);
     OUTPUT:
 	RETVAL
 
@@ -784,6 +881,8 @@ RegReplaceKey(hkey,subkey,newfile,oldfile)
 	dwLastError = RegReplaceKey(hkey, subkey, newfile, oldfile);
 	SetPrivilege(SE_RESTORE_NAME, FALSE);
 	RETVAL = SUCCESS(dwLastError);
+	if (!RETVAL)
+	    SetLastError(dwLastError);
     OUTPUT:
 	RETVAL
 
@@ -801,6 +900,8 @@ RegRestoreKey(hkey,filename, ...)
 	dwLastError = RegRestoreKey(hkey, filename, flags);
 	SetPrivilege(SE_RESTORE_NAME, FALSE);
 	RETVAL = SUCCESS(dwLastError);
+	if (!RETVAL)
+	    SetLastError(dwLastError);
     OUTPUT:
 	RETVAL
 
@@ -815,6 +916,8 @@ RegSaveKey(hkey,filename)
 	dwLastError = RegSaveKey(hkey, filename, NULL);
 	SetPrivilege(SE_BACKUP_NAME, FALSE);
 	RETVAL = SUCCESS(dwLastError);
+	if (!RETVAL)
+	    SetLastError(dwLastError);
     OUTPUT:
 	RETVAL
 
@@ -825,8 +928,11 @@ RegSetKeySecurity(hkey,sec_info,sec_desc)
 	DWORD sec_info
 	char *sec_desc
     CODE:
-	RETVAL = SUCCESS(RegSetKeySecurity(hkey, sec_info,
-					   (SECURITY_DESCRIPTOR*)sec_desc));
+	LONG result = RegSetKeySecurity(hkey, sec_info,
+					(SECURITY_DESCRIPTOR*)sec_desc);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -839,10 +945,14 @@ RegSetValue(hkey,subkey,type,data)
     CODE:
 	unsigned int size;
 	char *buffer;
-	if(type != REG_SZ)
-		croak("Type was not REG_SZ, cannot set %s\n", subkey);
+	LONG result;
+	if (type != REG_SZ)
+	    croak("Type was not REG_SZ, cannot set %s\n", subkey);
 	buffer = SvPV(data, size);
-	RETVAL = SUCCESS(RegSetValue(hkey, subkey, REG_SZ, buffer, size));
+	result = RegSetValue(hkey, subkey, REG_SZ, buffer, size);
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -857,6 +967,7 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 	DWORD val;
 	unsigned int size;
 	char *buffer;
+	LONG result;
 	switch (type) 
 	{
 		case REG_NONE:
@@ -867,18 +978,21 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 		    buffer = SvPV(data, size);
 		    if (type != REG_BINARY)
 			size++;		/* include null terminator in size */
-		    RETVAL = SUCCESS(RegSetValueEx(hkey,valname,0,type,
-						   (PBYTE) buffer, size));
+		    result = RegSetValueEx(hkey,valname,0,type,
+						   (PBYTE) buffer, size);
 		    break;
 		case REG_DWORD_BIG_ENDIAN:
 		case REG_DWORD_LITTLE_ENDIAN: /* Same as REG_DWORD */
 		    val = (DWORD) SvIV(data);
-		    RETVAL = SUCCESS(RegSetValueEx(hkey,valname, 0, type,
-						   (PBYTE)&val, sizeof(DWORD)));
+		    result = RegSetValueEx(hkey,valname, 0, type,
+						   (PBYTE)&val, sizeof(DWORD));
 		    break;
 		default:
 			croak("Type not supported, cannot set %s\n", valname);
 	}
+	RETVAL = SUCCESS(result);
+	if (!RETVAL)
+	    SetLastError(result);
     OUTPUT:
 	RETVAL
 
@@ -893,6 +1007,8 @@ RegUnLoadKey(hkey, subkey)
        dwLastError = RegUnLoadKey(hkey, subkey);
        SetPrivilege(SE_RESTORE_NAME, FALSE);
        RETVAL = SUCCESS(dwLastError);
+       if (!RETVAL)
+	   SetLastError(dwLastError);
     OUTPUT:
 	RETVAL
 

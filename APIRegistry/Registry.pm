@@ -3,20 +3,17 @@
 package Win32API::Registry;
 
 use strict;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $AUTOLOAD);
-$VERSION = '0.17';
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS); #@EXPORT_FAIL);
+$VERSION= '0.22';
 
 require Exporter;
 require DynaLoader;
+@ISA= qw(Exporter DynaLoader);
 
-@ISA = qw(Exporter DynaLoader);
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
 @EXPORT= qw();
 %EXPORT_TAGS= (
-    Func =>	[qw(		AllowPriv
-	AbortSystemShutdown	InitiateSystemShutdown
+    Func =>	[qw(		regConstant		regLastError
+    	AllowPriv		AbortSystemShutdown	InitiateSystemShutdown
 	RegCloseKey		RegConnectRegistry	RegCreateKey
 	RegCreateKeyEx		RegDeleteKey		RegDeleteValue
 	RegEnumKey		RegEnumKeyEx		RegEnumValue
@@ -66,100 +63,130 @@ require DynaLoader;
 	REG_DWORD_BIG_ENDIAN	REG_LINK		REG_MULTI_SZ
 	REG_RESOURCE_LIST	REG_FULL_RESOURCE_DESCRIPTOR
 	REG_RESOURCE_REQUIREMENTS_LIST )],
+    SE_ =>	[qw(
+	SE_ASSIGNPRIMARYTOKEN_NAME	SE_AUDIT_NAME
+	SE_BACKUP_NAME			SE_CHANGE_NOTIFY_NAME
+	SE_CREATE_PAGEFILE_NAME		SE_CREATE_PERMANENT_NAME
+	SE_CREATE_TOKEN_NAME		SE_DEBUG_NAME
+	SE_INCREASE_QUOTA_NAME		SE_INC_BASE_PRIORITY_NAME
+	SE_LOAD_DRIVER_NAME		SE_LOCK_MEMORY_NAME
+	SE_MACHINE_ACCOUNT_NAME		SE_PROF_SINGLE_PROCESS_NAME
+	SE_REMOTE_SHUTDOWN_NAME		SE_RESTORE_NAME
+	SE_SECURITY_NAME		SE_SHUTDOWN_NAME
+	SE_SYSTEMTIME_NAME		SE_SYSTEM_ENVIRONMENT_NAME
+	SE_SYSTEM_PROFILE_NAME		SE_TAKE_OWNERSHIP_NAME
+	SE_TCB_NAME			SE_UNSOLICITED_INPUT_NAME )],
 );
 @EXPORT_OK= ();
 { my $ref;
     foreach $ref (  values(%EXPORT_TAGS)  ) {
-	push( @EXPORT_OK, @$ref );
+	push( @EXPORT_OK, @$ref )   unless  $ref->[0] =~ /^SE_/;
     }
 }
-$EXPORT_TAGS{ALL}= \@EXPORT_OK;
-
-# Since AUTOLOAD() now declares constant functions with void prototypes
-# so they can be in-lined [optimized], we need to make sure they get
-# imported with compatible prototypes to avoid warnings.  We could
-# just prototype them several ways, as long as it happens before the
-# actual importing happens.  However, Exporter.pm offers this method
-# for failing to import constants not defined on a given platform, and
-# preloading constants at this point is simple and efficient.
-
-use vars qw( @EXPORT_FAIL );
-@EXPORT_FAIL= (
-  @{$EXPORT_TAGS{HKEY_}}, @{$EXPORT_TAGS{KEY_}}, @{$EXPORT_TAGS{REG_}}
-);
-sub export_fail {
-    my $self= shift @_;
-    my( $sym, $val, @failed );
-    foreach $sym (  @_  ) {
-	$!= 0;
-	$val= constant($sym);
-	if(  0 == $!  ) {
-	    eval "sub $sym () { $val }";
-	} elsif(  $! =~ /Invalid/  ) {
-	    die "Non-constant ($sym) appears in \@EXPORT_FAIL",
-	      " (this module is broken)";
-	} else {
-	    push( @failed, $sym );
-	}
-    }
-    return @failed;
-}
-
-#######################################################################
-# This AUTOLOAD is used to 'autoload' constants from the constant()
-# XS function.  If a constant is not found then control is passed
-# to the AUTOLOAD in AutoLoader.
-
-sub AUTOLOAD {
-    my($constname);
-    ($constname = $AUTOLOAD) =~ s/.*:://;
-    #reset $! to zero to reset any current errors.
-    $!= 0;
-    my $val = constant($constname);
-    if ($! != 0) {
-	if ($! =~ /Invalid/) {
-	    $AutoLoader::AUTOLOAD = $AUTOLOAD;
-	    goto &AutoLoader::AUTOLOAD;
-	}
-	else {
-	    my($pack,$file,$line)= caller;
-	    die "Your vendor has not defined ", __PACKAGE__,
-		" macro $constname, used at $file line $line.";
-	}
-    }
-    eval "sub $AUTOLOAD () { $val }";
-    goto &$AUTOLOAD;
-}
+$EXPORT_TAGS{ALL}= [ @EXPORT_OK ];	# \@EXPORT_OK once SE_* settles down.
+# push( @EXPORT_OK, "JHEREG_TACOSALAD" );	# Used to test Mkconst2perl
+push( @EXPORT_OK, @{$EXPORT_TAGS{SE_}} );
 
 bootstrap Win32API::Registry $VERSION;
 
 # Preloaded methods go here.
 
+# To convert C constants to Perl code in cRegistry.pc
+# [instead of C or C++ code in cRegistry.h]:
+#    * Modify F<Makefile.PL> to add WriteMakeFile() =>
+#      CONST2PERL/postamble => [[ "Win32API::Registry" => ]] WRITE_PERL => 1.
+#    * Either comment out C<#include "cRegistry.h"> from F<Registry.xs>
+#      or make F<cRegistry.h> an empty file.
+#    * Make sure the following C<if> block is not commented out.
+#    * "nmake clean", "perl Makefile.PL", "nmake"
+
+if(  ! defined &REG_NONE  ) {
+    require "Win32API/Registry/cRegistry.pc";
+}
+
+# This would be convenient but inconsistant and hard to explain:
+#push( @{$EXPORT_TAGS{ALL}}, @{$EXPORT_TAGS{SE_}} )
+#  if  defined &SE_TCB_NAME;
+
+sub regConstant
+{
+    my( $name )= @_;
+    if(  1 != @_  ||  ! $name  ||  $name =~ /\W/  ) {
+	require Carp;
+	Carp::croak( 'Usage: ',__PACKAGE__,'::regConstant("CONST_NAME")' );
+    }
+    my $proto= prototype $name;
+    if(  defined \&$name
+     &&  defined $proto
+     &&  "" eq $proto  ) {
+	no strict 'refs';
+	return &$name;
+    }
+    return undef;
+}
+
+# We provide this for backwards compatibility:
+sub constant
+{
+    my( $name )= @_;
+    my $value= regConstant( $name );
+    if(  defined $value  ) {
+	$!= 0;
+	return $value;
+    }
+    $!= 11; # EINVAL
+    return 0;
+}
+
+BEGIN {
+    my $code= 'return _regLastError(@_)';
+    local( $!, $^E )= ( 1, 1 );
+    if(  $! ne $^E  ) {
+	$code= '
+	    local( $^E )= _regLastError(@_);
+	    my $ret= $^E;
+	    return $ret;
+	';
+    }
+    eval "sub regLastError { $code }";
+    die "$@"   if  $@;
+}
+
+# Since we ISA DynaLoader which ISA AutoLoader, we ISA AutoLoader so we
+# need this next chunk to prevent Win32API::Registry->nonesuch() from
+# looking for "nonesuch.al" and producing confusing error messages:
+use vars qw($AUTOLOAD);
+sub AUTOLOAD {
+    require Carp;
+    Carp::croak(
+      "Can't locate method $AUTOLOAD via package Win32API::Registry" );
+}
+
 # Replace "&rout;" with "goto &rout;" when that is supported on Win32.
 
 # Let user omit all buffer sizes:
 sub RegEnumKeyExA {
-    if(  6 == @_  ) {	splice(@_,4,0,[]);  splice(@_,2,0,[]); }
+    if(  6 == @_  ) {	splice(@_,4,0,[]);  splice(@_,2,0,[]);  }
     &_RegEnumKeyExA;
 }
 sub RegEnumKeyExW {
-    if(  6 == @_  ) {	splice(@_,4,0,[]);  splice(@_,2,0,[]); }
+    if(  6 == @_  ) {	splice(@_,4,0,[]);  splice(@_,2,0,[]);  }
     &_RegEnumKeyExW;
 }
 sub RegEnumValueA {
-    if(  6 == @_  ) {	splice(@_,2,0,[]);  push(@_,[]); }
+    if(  6 == @_  ) {	splice(@_,2,0,[]);  push(@_,[]);  }
     &_RegEnumValueA;
 }
 sub RegEnumValueW {
-    if(  6 == @_  ) {	splice(@_,2,0,[]);  push(@_,[]); }
+    if(  6 == @_  ) {	splice(@_,2,0,[]);  push(@_,[]);  }
     &_RegEnumValueW;
 }
 sub RegQueryInfoKeyA {
-    if(  11 == @_  ) {	splice(@_,2,0,[]); }
+    if(  11 == @_  ) {	splice(@_,2,0,[]);  }
     &_RegQueryInfoKeyA;
 }
 sub RegQueryInfoKeyW {
-    if(  11 == @_  ) {	splice(@_,2,0,[]); }
+    if(  11 == @_  ) {	splice(@_,2,0,[]);  }
     &_RegQueryInfoKeyW;
 }
 
@@ -241,8 +268,6 @@ sub RegSetValue			{ &RegSetValueA; }
 sub RegSetValueEx		{ &RegSetValueExA; }
 sub RegUnLoadKey		{ &RegUnLoadKeyA; }
 
-# Autoload methods go after =cut, and are processed by the autosplit program.
-
 1;
 __END__
 
@@ -252,20 +277,23 @@ Win32API::Registry - Low-level access to Win32 system API calls from WINREG.H
 
 =head1 SYNOPSIS
 
-  use Win32API::Registry 0.13 qw( :ALL );
+  use Win32API::Registry 0.21 qw( :ALL );
 
   RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SYSTEM\\Disk", 0, KEY_READ, $key );
-    or  die "Can't open HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: $^E\n";
+    or  die "Can't open HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: ",
+	    regLastError(),"\n";
   RegQueryValueEx( $key, "Information", [], $type, $data, [] );
-    or  die "Can't read HKEY_L*MACHINE\\SYSTEM\\Disk\\Information: $^E\n";
+    or  die "Can't read HKEY_L*MACHINE\\SYSTEM\\Disk\\Information: ",
+	    regLastError(),"\n";
   [...]
   RegCloseKey( $key )
-    or  die "Can't close HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: $^E\n";
+    or  die "Can't close HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: ",
+	    regLastError(),"\n";
 
 =head1 DESCRIPTION
 
 This provides fairly low-level access to the Win32 System API
-calls dealing with the Registry (mostly from WINREG.H).  This
+calls dealing with the Registry [mostly from WINREG.H].  This
 is mostly intended to be used by other modules such as
 C<Win32::TieRegistry> [which provides an extremely Perl-friendly
 method for using the Registry].
@@ -280,13 +308,13 @@ Beyond raw access to the API calls and related constants, this module
 handles smart buffer allocation and translation of return codes.
 
 All calls return a true value for success and a false value for
-failure.  After any failure, C<$^E> should automatically be set to
-indicate the reason.  If you have a version of Perl that does not
-yet connect C<$^E> to C<GetLastError()> under Win32, then you can
-use C<$iError= Win32::GetLastError()> to get the numeric error
-code and pass that to C<Win32::FormatMessage($iError)> to to get
-the descriptive string, or just
-C<Win32::FormatMessage(Win32::GetLastError())>.
+failure.  After any failure, C<$^E> should automatically be set
+to indicate the reason.  However, current versions of Perl often
+overwrite C<$^E> too quickly, so you can use C<regLastError()>
+instead, which is only set by Win32API::Registry routines. 
+C<regLastError()> is also good if you have a really old version
+of Perl that does not connect C<$^E> to C<GetLastError()> on
+Win32.
 
 Note that C<$!> is not set by these routines except by
 C<Win32API::Registry::constant()> when a constant is not defined.
@@ -310,30 +338,38 @@ The basic function names:
 
 =over
 
-=item AllowPriv( $sPrivName, $bEnable )
+=item AllowPriv
+
+=item C<AllowPriv( $sPrivName, $bEnable )>
 
 Not a Win32 API call.  Enables or disables a specific privilege for
 the current process.  Returns a true value if successful and a false
-value [and sets C<$^E>] on failure.  This routine does not provide
-a way to tell if a privilege is current enabled.
+value [and sets C<$^E>/C<regLastError()>] on failure.  This routine
+does not provide a way to tell if a privilege is currently enabled.
 
-C<$sPrivname> is a Win32 privilege name [see the C<SE_*_NAME>
-macros of F<winnt.h>].  For example, C<"SeBackupPrivilege"> [a.k.a.
-C<SE_BACKUP_NAME>] controls whether you can use C<RegSaveKey()>
-and C<"SeRestorePrivilege"> [a.k.a. C<SE_RESTORE_NAME>] controls
-whether you can use C<RegLoadKey()>.
+C<$sPrivname> is a Win32 privilege name [see L</:SE_>].  For example,
+C<"SeBackupPrivilege"> [a.k.a. C<SE_BACKUP_NAME>] controls whether
+you can use C<RegSaveKey()> and C<"SeRestorePrivilege"> [a.k.a.
+C<SE_RESTORE_NAME>] controls whether you can use C<RegLoadKey()>.
 
 If C<$bEnable> is true, then C<AllowPriv()> tries to enable the
 privilege.  Otherwise it tries to disable the privilege.
 
-=item AbortSystemShutdown( $sComputerName )
+=item AbortSystemShutdown
+
+=item C<AbortSystemShutdown( $sComputerName )>
 
 Tries to abort a remote shutdown request previously made via
-C<InitiateSystemShutdown()>.
+C<InitiateSystemShutdown()>.  Returns a true value if successful
+and a false value [and sets C<$^E>/C<regLastError()>] on failure.
 
-=item InitiateSystemShutdown( $sComputer, $sMessage, $uTimeoutSecs, $bForce, $bReboot )
+=item InitiateSystemShutdown
+
+=item C<InitiateSystemShutdown( $sComputer, $sMessage, $uTimeoutSecs, $bForce, $bReboot )>
 
 Requests that a [remote] computer be shutdown or rebooted.
+Returns a true value if successful and a false value [and
+sets C<$^E>/C<regLastError()>] on failure.
 
 C<$sComputer> is the name [or address] of the computer to be
 shutdown or rebooted.  You can use C<[]> [for C<NULL>] or C<"">
@@ -342,8 +378,8 @@ to indicate the local computer.
 C<$sMessage> is the message to be displayed in a pop-up window
 on the desktop of the computer to be shutdown or rebooted until
 the timeout expires or the shutdown is aborted via
-C<AbortSystemShutdown()>.  With C<$iTimeoutSecs == 0>, the message
-will never be visible.
+C<AbortSystemShutdown()>.  With C<$iTimeoutSecs == 0>, the
+message will never be visible.
 
 C<$iTimeoutSecs> is the number of seconds to wait before starting
 the shutdown.
@@ -376,34 +412,62 @@ on the remote computer for this call to succeed.  If shutting
 down the local computer, then the calling process must have
 the C<"SeShutdownPrivilege"> privilege and have it enabled.
 
-=item RegCloseKey( $hKey )
+=item RegCloseKey
+
+=item C<RegCloseKey( $hKey )>
 
 Closes the handle to a Registry key returned by C<RegOpenKeyEx()>,
 C<RegConnectRegistry()>, C<RegCreateKeyEx()>, or a few other
-routines.
+routines.  Returns a true value if successful and a false value
+[and sets C<$^E>/C<regLastError()>] on failure.
 
-=item RegConnectRegistry( $sComputer, $hRootKey, $ohKey )
+=item RegConnectRegistry
+
+=item C<RegConnectRegistry( $sComputer, $hRootKey, $ohKey )>
 
 Connects to one of the root Registry keys of a remote computer.
+Returns a true value if successful and a false value [and
+sets C<$^E>/C<regLastError()>] on failure.
 
-C<$sComputer> is the name [or address] of a remote computer you
+C<$sComputer> is the name [or address] of a remote computer
 whose Registry you wish to access.
 
 C<$hKey> must be either C<HKEY_LOCAL_MACHINE> or C<HKEY_USERS>
 and specifies which root Registry key on the remote computer
 you wish to have access to.
 
-C<$phKey> will be set to the handle to be used to access the remote
-Registry key.
+C<$phKey> will be set to the handle to be used to access the
+remote Registry key if the call succeeds.
 
-=item RegCreateKey( $hKey, $sSubKey, $ohSubKey )
+=item regConstant
+
+=item C<$value= regConstant( $sConstantName )>
+
+Fetch the value of a constant.  Returns C<undef> if C<$sConstantName>
+is not the name of a constant supported by this module.  Never sets
+C<$!> nor C<$^E>.
+
+This function is rarely used since you will usually get the value of a
+constant by having that constant imported into your package by listing
+the constant name in the C<use Win32API::Registry> statement and then
+simply using the constant name in your code [perhaps followed by
+C<()>].  This function is useful for verifying constant names not in
+Perl code, for example, after prompting a user to type in a constant
+name.
+
+=item RegCreateKey
+
+=item C<RegCreateKey( $hKey, $sSubKey, $ohSubKey )>
 
 This routine is meant only for compatibility with Windows version
 3.1.  Use C<RegCreateKeyEx()> instead.
 
-=item RegCreateKeyEx( $hKey, $sSubKey, $uZero, $sClass, $uOpts, $uAccess, $pSecAttr, $ohNewKey, $ouDisp )
+=item RegCreateKeyEx
 
-Creates a new Registry subkey.
+=item C<RegCreateKeyEx( $hKey, $sSubKey, $uZero, $sClass, $uOpts, $uAccess, $pSecAttr, $ohNewKey, $ouDisp )>
+
+Creates a new Registry subkey.  Returns a true value if successful and
+a false value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -421,8 +485,8 @@ be used here.
 C<$iOpts> is a numeric value containing bits that control options
 used while creating the new subkey.  C<REG_OPTION_NON_VOLATILE>
 is the default.  C<REG_OPTION_VOLATILE> [which is ignored on
-Windows 95] means the data stored under this key is not kept in a
-file and will not be preserved when the system reboots.
+Windows 95] means the data stored under this key is not kept
+in a file and will not be preserved when the system reboots.
 C<REG_OPTION_BACKUP_RESTORE> [also ignored on Windows 95] means
 ignore the C<$iAccess> parameter and try to open the new key with
 the access required to backup or restore the key.
@@ -433,58 +497,73 @@ access is desired when opening the new subkey.  See C<RegOpenKeyEx()>.
 C<$pSecAttr> is a C<SECURITY_ATTRIBUTES> structure packed into
 a Perl string which controls whether the returned handle can be
 inherited by child processes.  Normally you would pass C<[]> for
-this argument to have C<NULL> passed to the underlying API
+this parameter to have C<NULL> passed to the underlying API
 indicating that the handle cannot be inherited.  If not under
 Windows95, then C<$pSecAttr> also allows you to specify
 C<SECURITY_DESCRIPTOR> that controls which users will have
 what type of access to the new key -- otherwise the new key
 inherits its security from its parent key.
 
-C<$phKey> will be set to the handle to be used to access the new subkey.
+C<$phKey> will be set to the handle to be used to access the new
+subkey if the call succeeds.
 
 C<$piDisp> will be set to either C<REG_CREATED_NEW_KEY> or
 C<REG_OPENED_EXISTING_KEY> to indicate for which reason the
 call succeeded.  Can be specified as C<[]> if you don't care.
 
-If C<$phKey> and C<$piDisp> start out is integers, then they will
+If C<$phKey> and C<$piDisp> start out as integers, then they will
 probably remain unchanged if the call fails.
 
-=item RegDeleteKey( $hKey, $sSubKey )
+=item RegDeleteKey
+
+=item C<RegDeleteKey( $hKey, $sSubKey )>
 
 Deletes a subkey of an open Registry key provided that the subkey
 contains no subkeys of its own [but the subkey may contain values].
+Returns a true value if successful and a false value [and sets
+C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
 
 C<$sSubKey> is the name of the subkey to be deleted.
 
-=item RegDeleteValue( $hKey, $sValueName )
+=item RegDeleteValue
 
-Deletes a values from an open Registry key provided.
+=item C<RegDeleteValue( $hKey, $sValueName )>
+
+Deletes a value from an open Registry key.  Returns a true value if
+successful and a false value [and sets C<$^E>/C<regLastError()>] on
+failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
 
 C<$sValueKey> is the name of the value to be deleted.
 
-=item RegEnumKey( $hKey, $uIndex, $osName, $ilNameSize )
+=item RegEnumKey
+
+=item C<RegEnumKey( $hKey, $uIndex, $osName, $ilNameSize )>
 
 This routine is meant only for compatibility with Windows version
 3.1.  Use C<RegEnumKeyEx()> instead.
 
-=item RegEnumKeyEx( $hKey, $uIndex, $osName, $iolName, $pNull, $osClass, $iolClass, $opftLastWrite )
+=item RegEnumKeyEx
+
+=item C<RegEnumKeyEx( $hKey, $uIndex, $osName, $iolName, $pNull, $osClass, $iolClass, $opftLastWrite )>
 
 Lets you enumerate the names of all of the subkeys directly under
-an open Registry key.
+an open Registry key.  Returns a true value if successful and a false
+value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
 
-C<$iIndex> is the sequence number of the immediate subkey that you
-want information on.  Start with this value as C<0> then repeat
-the call incrementing this value each time until the call fails
-with C<ERROR_NO_MORE_ITEMS>.
+C<$iIndex> is the sequence number of the immediate subkey that
+you want information on.  Start with this value as C<0> then
+repeat the call incrementing this value each time until the
+call fails with C<$^E>/C<regLastError()> numerically equal to
+C<ERROR_NO_MORE_ITEMS>.
 
 C<$sName> will be set to the name of the subkey.  Can be C<[]> if
 you don't care about the name.
@@ -512,10 +591,13 @@ Can be C<[]>.
 You may omit both C<$plName> and C<$plClass> to get the same effect
 as passing in C<[]> for each of them.
 
-=item RegEnumValue( $hKey, $uIndex, $osValName, $iolValName, $pNull, $ouType, $opValData, $iolValData )
+=item RegEnumValue
+
+=item C<RegEnumValue( $hKey, $uIndex, $osValName, $iolValName, $pNull, $ouType, $opValData, $iolValData )>
 
 Lets you enumerate the names of all of the values contained in an
-open Registry key.
+open Registry key.  Returns a true value if successful and a false
+value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -552,28 +634,37 @@ more information.
 You may omit both C<$plValName> and C<$plValData> to get the same
 effect as passing in C<[]> for each of them.
 
-=item RegFlushKey( $hKey )
+=item RegFlushKey
 
-Forces that data stored under an open Registry key to be flushed
+=item C<RegFlushKey( $hKey )>
+
+Forces the data stored under an open Registry key to be flushed
 to the disk file where the data is preserved between reboots.
 Forced flushing is not guaranteed to be efficient so this routine
-should almost never be called.
+should almost never be called.  Returns a true value if successful
+and a false value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
 
-=item RegGetKeySecurity( $hKey, $uSecInfo, $opSecDesc, $iolSecDesc )
+=item RegGetKeySecurity
+
+=item C<RegGetKeySecurity( $hKey, $uSecInfo, $opSecDesc, $iolSecDesc )>
 
 Retrieves one of the C<SECURITY_DESCRIPTOR> structures describing
-part of the security for an open Registry key.
+part of the security for an open Registry key.  Returns a true value
+if successful and a false value [and sets C<$^E>/C<regLastError()>]
+on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
 
 C<$iSecInfo> is a numeric C<SECURITY_INFORMATION> value that
-specifies which C<SECURITY_DESCRIPTOR> structure to retrieve.  Should
-be C<OWNER_SECURITY_INFORMATION>, C<GROUP_SECURITY_INFORMATION>,
-C<DACL_SECURITY_INFORMATION>, or C<SACL_SECURITY_INFORMATION>.
+specifies which parts of the C<SECURITY_DESCRIPTOR> structure
+to retrieve.  Should be C<OWNER_SECURITY_INFORMATION>,
+C<GROUP_SECURITY_INFORMATION>, C<DACL_SECURITY_INFORMATION>, or
+or C<SACL_SECURITY_INFORMATION> or two or more of these bits
+combined using C<|>.
 
 C<$pSecDesc> will be set to the requested C<SECURITY_DESCRIPTOR>
 structure [packed into a Perl string].
@@ -584,13 +675,43 @@ security descriptor.  See L<Buffer sizes> for more information.
 You may omit this parameter to get the same effect as passing in
 C<[]> for it.
 
-=item RegLoadKey( $hKey, $sSubKey, $sFileName )
+=item regLastError
+
+=item C<$svError= regLastError();>
+
+=item C<regLastError( $uError );>
+
+Returns the last error encountered by a routine from this module. 
+It is just like C<$^E> except it isn't changed by anything except
+routines from this module.  Ideally you could just use C<$^E>, but
+current versions of Perl often overwrite C<$^E> before you get a
+chance to check it and really old versions of Perl don't really
+support C<$^E> under Win32.
+
+Just like C<$^E>, in a numeric context C<regLastError()> returns
+the numeric error value while in a string context it returns a
+text description of the error [actually it returns a Perl scalar
+that contains both values so C<$x= regLastError()> causes C<$x>
+to give different values in string vs. numeric contexts].  On old
+versions of Perl where C<$^E> isn't tied to C<GetLastError()>,
+C<regLastError> simply returns the number of the error and you'll
+need to use <Win32::FormatMessage> to get the error string.
+
+The last form sets the error returned by future calls to
+C<regLastError()> and should not be used often.  C<$uError> must
+be a numeric error code.  Also returns the dual-valued version
+of C<$uError>.
+
+=item RegLoadKey
+
+=item C<RegLoadKey( $hKey, $sSubKey, $sFileName )>
 
 Loads a hive file.  That is, it creates a new subkey in the
 Registry and associates that subkey with a disk file that contains
 a Registry hive so that the new subkey can be used to access the
 keys and values stored in that hive.  Hives are usually created
-via C<RegSaveKey()>.
+via C<RegSaveKey()>.  Returns a true value if successful and a
+false value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key that can have hives
 loaded to it.  This must be C<HKEY_LOCAL_MACHINE>, C<HKEY_USERS>,
@@ -603,15 +724,25 @@ with the hive file.
 C<$sFileName> is the name of the hive file to be loaded.  This
 file name is interpretted relative to the
 C<%SystemRoot%/System32/config> directory on the computer where
-the C<$hKey> key resides.
+the C<$hKey> key resides.  If C<$sFileName> is on a FAT file
+system, then its name must not have an extension.
 
-Loading of hive files located on network shares may fail or
-corrupt the hive and so should not be attempted.
+You must have the C<SE_RESTORE_NAME> privilege to use this routine.
 
-=item RegNotifyChangeKeyValue( $hKey, $bWatchSubtree, $uNotifyFilter, $hEvent, $bAsync )
+WARNING:  Loading of hive files via a network share may silently
+corrupt the hive and so should not be attempted [this is a problem
+in at least some versions of the underlying API which this module
+does not try to fix or avoid].  To access a hive file located on a
+remote computer, connect to the remote computer's Registry and load
+the hive via that.
+
+=item RegNotifyChangeKeyValue
+
+=item C<RegNotifyChangeKeyValue( $hKey, $bWatchSubtree, $uNotifyFilter, $hEvent, $bAsync )>
 
 Arranges for your process to be notified when part of the Registry
-is changed.
+is changed.  Returns a true value if successful and a false value
+[and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call] for which you wish to be notified when any changes
@@ -625,19 +756,19 @@ is a numeric value containing one or more of the following bit masks:
 
 =over
 
-=item REG_NOTIFY_CHANGE_NAME
+=item C<REG_NOTIFY_CHANGE_NAME>
 
 Notify if a subkey is added or deleted to a monitored key.
 
-=item REG_NOTIFY_CHANGE_LAST_SET
+=item C<REG_NOTIFY_CHANGE_LAST_SET>
 
 Notify if a value in a monitored key is added, deleted, or modified.
 
-=item REG_NOTIFY_CHANGE_SECURITY
+=item C<REG_NOTIFY_CHANGE_SECURITY>
 
-Notify a security descriptor of a monitored key is changed.
+Notify if a security descriptor of a monitored key is changed.
 
-=item REG_NOTIFY_CHANGE_ATTRIBUTES
+=item C<REG_NOTIFY_CHANGE_ATTRIBUTES>
 
 Notify if any attributes of a monitored key are changed [class
 name or security descriptors].
@@ -655,14 +786,19 @@ not return until there is a change to be notified of.
 
 This routine does not work with Registry keys on remote computers.
 
-=item RegOpenKey( $hKey, $sSubKey, $ohSubKey )
+=item RegOpenKey
+
+=item C<RegOpenKey( $hKey, $sSubKey, $ohSubKey )>
 
 This routine is meant only for compatibility with Windows version
 3.1.  Use C<RegOpenKeyEx()> instead.
 
-=item RegOpenKeyEx( $hKey, $sSubKey, $uOptions, $uAccess, $ohSubKey )
+=item RegOpenKeyEx
 
-Opens an existing Registry key.
+=item C<RegOpenKeyEx( $hKey, $sSubKey, $uOptions, $uAccess, $ohSubKey )>
+
+Opens an existing Registry key.  Returns a true value if successful
+and a false value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -672,8 +808,8 @@ Can be C<""> or C<[]> to open an additional handle to the
 key specified by C<$hKey>.
 
 C<$iOptions> is a numeric value containing bits that control options
-used while open the subkey.  There are currently no supported options
-so this parameters should be specified as C<0>.
+used while opening the subkey.  There are currently no supported
+options so this parameter should be specified as C<0>.
 
 C<$iAccess> is a numeric mask of bits specifying what type of
 access is desired when opening the new subkey.  Should be a
@@ -681,44 +817,53 @@ combination of one or more of the following bit masks:
 
 =over
 
-=item KEY_ALL_ACCESS
+=item C<KEY_ALL_ACCESS>
 
     KEY_READ | KEY_WRITE | KEY_CREATE_LINK
 
-=item KEY_READ
+=item C<KEY_READ>
 
     KEY_QUERY_VALUE | KEY_ENUMERATE_SUBKEYS | KEY_NOTIFY | STANDARD_RIGHTS_READ
 
-=item KEY_WRITE
+=item C<KEY_WRITE>
 
     KEY_SET_VALUE | KEY_CREATE_SUB_KEY | STANDARD_RIGHTS_WRITE
 
-=item KEY_QUERY_VALUE
+=item C<KEY_QUERY_VALUE>
 
-=item KEY_SET_VALUE
+=item C<KEY_SET_VALUE>
 
-=item KEY_ENUMERATE_SUB_KEYS
+=item C<KEY_ENUMERATE_SUB_KEYS>
 
-=item KEY_CREATE_SUB_KEY
+=item C<KEY_CREATE_SUB_KEY>
 
-=item KEY_NOTIFY
+=item C<KEY_NOTIFY>
 
-=item KEY_EXECUTE
+Allows you to use C<RegNotifyChangeKeyValue()> on the opened key.
+
+=item C<KEY_EXECUTE>
 
 Same as C<KEY_READ>.
 
-=item KEY_CREATE_LINK
+=item C<KEY_CREATE_LINK>
 
-Allows you to create a symbolic link like C<HKEY_CLASSES_ROOT>
-and C<HKEY_CURRENT_USER> if the method for doing so were documented.
+Gives you permission to create a symbolic link like
+C<HKEY_CLASSES_ROOT> and C<HKEY_CURRENT_USER>, though the method for
+doing so is not documented [and probably requires use of the mostly
+undocumented "native" routines, C<Nt*()> a.k.a. C<Zw*()>].
 
 =back
 
-C<$phKey> will be set to the handle to be used to access the new subkey.
+C<$phKey> will be set to the handle to be used to access the new subkey
+if the call succeeds.
 
-=item RegQueryInfoKey( $hKey, $osClass, $iolClass, $pNull, $ocSubKeys, $olSubKey, $olSubClass, $ocValues, $olValName, $olValData, $olSecDesc, $opftTime )
+=item RegQueryInfoKey
+
+=item C<RegQueryInfoKey( $hKey, $osClass, $iolClass, $pNull, $ocSubKeys, $olSubKey, $olSubClass, $ocValues, $olValName, $olValData, $olSecDesc, $opftTime )>
 
 Gets miscellaneous information about an open Registry key.
+Returns a true value if successful and a false value [and
+sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -732,10 +877,10 @@ key's class name.  See L<Buffer sizes> for more information.
 You may omit this parameter to get the same effect as passing in
 C<[]> for it.
 
-C<$pNull> is reserved for future used and should be passed as C<[]>.
+C<$pNull> is reserved for future use and should be passed as C<[]>.
 
-C<$pcSubKeys> will be set to the count of the number of subkeys directly
-under this key.  Can be C<[]>.
+C<$pcSubKeys> will be set to the count of the number of subkeys
+directly under this key.  Can be C<[]>.
 
 C<$plSubKey> will be set to the length of the longest subkey name.
 Can be C<[]>.
@@ -752,26 +897,30 @@ in this key.  Can be C<[]>.
 C<$plValData> will be set to the length of the longest value data
 in this key.  Can be C<[]>.
 
-C<$plSecDesc> will be set to the length of this key's [longest?]
-security descriptor.
+C<$plSecDesc> will be set to the length of this key's full security
+descriptor.
 
 C<$pftTime> will be set to a C<FILETIME> structure packed
 into a Perl string and indicating when this key was last changed.
 Can be C<[]>.
 
-=item RegQueryMultipleValues( $hKey, $ioarValueEnts, $icValueEnts, $opBuffer, $iolBuffer )
+=item RegQueryMultipleValues
 
-Allows you to use a single call to query several values from a
-single open Registry key to maximize efficiency.
+=item C<RegQueryMultipleValues( $hKey, $ioarValueEnts, $icValueEnts, $opBuffer, $iolBuffer )>
+
+Allows you to use a single call to query several values from a single
+open Registry key to maximize efficiency.  Returns a true value if
+successful and a false value [and sets C<$^E>/C<regLastError()>] on
+failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
 
 C<$pValueEnts> should contain a list of C<VALENT> structures packed
 into a single Perl string.  Each C<VALENT> structure should have
-the C<ve_valuename> entry pointing to a string containing the name
-of a value stored in this key.  The remaining fields are set if
-the function succeeds.
+the C<ve_valuename> entry [the first 4 bytes] pointing to a string
+containing the name of a value stored in this key.  The remaining
+fields are set if the function succeeds.
 
 C<$cValueEnts> should contain the count of the number of C<VALENT>
 structures contained in C<$pValueEnts>.
@@ -787,6 +936,7 @@ effect as passing in C<[]> for it.
 
 Here is sample code to populate C<$pValueEnts>:
 
+    # @ValueNames= ...list of value name strings...;
     $cValueEnts= @ValueNames;
     $pValueEnts= pack( " p x4 x4 x4 " x $cValueEnts, @ValueNames );
 
@@ -800,7 +950,7 @@ Given the above, and assuming you haven't modified C<$sBuffer> since
 the call, you can also extract the value data strings from C<$sBuffer>
 by using the pointers returned in C<$pValueEnts>:
 
-    @Data=    unpack(  join( "", map(" x4 x4 P$_ x4 ",@Lengths) ),
+    @Data=    unpack(  join( "", map {" x4 x4 P$_ x4 "} @Lengths ),
     		$pValueEnts  );
 
 Much better is to use the lengths and extract directly from
@@ -808,16 +958,22 @@ C<$sBuffer> using C<unpack()> [or C<substr()>]:
 
     @Data= unpack( join("",map("P$_",@Lengths)), $sBuffer );
 
-=item RegQueryValue( $hKey, $sSubKey, $osValueData, $iolValueData )
+=item RegQueryValue
+
+=item C<RegQueryValue( $hKey, $sSubKey, $osValueData, $iolValueData )>
 
 This routine is meant only for compatibility with Windows version
 3.1.  Use C<RegQueryValueEx()> instead.  This routine can only
-query unamed values (a.k.a. "default values").
+query unamed values [a.k.a. "default values"], that is, values with
+a name of C<"">.
 
-=item RegQueryValueEx( $hKey, $sValueName, $pNull, $ouType, $opValueData, $iolValueData )
+=item RegQueryValueEx
 
-Lets you look up value data using the name of the value stored in an
-open Registry key.
+=item C<RegQueryValueEx( $hKey, $sValueName, $pNull, $ouType, $opValueData, $iolValueData )>
+
+Lets you look up value data stored in an open Registry key by
+specifying the value name.  Returns a true value if successful
+and a false value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -838,14 +994,19 @@ don't care about the value data.
 
 C<$plValueData> initially specifies the [minimum] buffer size to be
 allocated for C<$sValueData> and will be set to the size [always
-in bytes] of the data to be written to C<$sValueData>.  See
-L<Buffer sizes> for more information.
+in bytes] of the data to be written to C<$sValueData>, even if
+C<$sValueData> is not successfully written to.  See L<Buffer sizes>
+for more information.
 
-=item RegReplaceKey( $hKey, $sSubKey, $sNewFile, $sOldFile )
+=item RegReplaceKey
 
-Lets you replace an entire hive when the system is next booted.
+=item C<RegReplaceKey( $hKey, $sSubKey, $sNewFile, $sOldFile )>
 
-C<$hKey> is the handle to a Registry key that has hives
+Lets you replace an entire hive when the system is next booted. 
+Returns a true value if successful and a false value [and sets
+C<$^E>/C<regLastError()>] on failure.
+
+C<$hKey> is the handle to a Registry key that has hive(s)
 loaded in it.  This must be C<HKEY_LOCAL_MACHINE>,
 C<HKEY_USERS>, or a remote version of one of these from
 a call to C<RegConnectRegistry()>.
@@ -859,10 +1020,20 @@ hive file when the system reboots.
 C<$sOldFile> is the file name to save the current hive file to
 when the system reboots.
 
-=item RegRestoreKey( $hKey, $sFileName, $uFlags )
+C<$sNewFile> and C<$sOldFile> are interpretted relative to the
+C<%SystemRoot%/System32/config> directory on the computer where
+the C<$hKey> key resides [I think].  If either file is [would be]
+on a FAT file system, then its name must not have an extension.
+
+You must have the C<SE_RESTORE_NAME> privilege to use this routine.
+
+=item RegRestoreKey
+
+=item C<RegRestoreKey( $hKey, $sFileName, $uFlags )>
 
 Reads in a hive file and copies its contents over an existing
-Registry tree.
+Registry tree.  Returns a true value if successful and a false
+value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -878,27 +1049,41 @@ key and then copies the hive contents into it.  This option only
 works if C<$hKey> is C<HKEY_LOCAL_MACHINE>, C<HKEY_USERS>, or a
 remote version of one of these from a call to C<RegConnectRegistry()>.
 
-=item RegSaveKey( $hKey, $sFileName, $pSecAttr )
+C<RegRestoreKey> does I<not> delete values nor keys from the
+existing Registry tree when there is no corresponding value/key
+in the hive file.
+
+=item RegSaveKey
+
+=item C<RegSaveKey( $hKey, $sFileName, $pSecAttr )>
 
 Dumps any open Registry key and all of its subkeys and values into
-a new hive file.
+a new hive file.  Returns a true value if successful and a false
+value [and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
 
-C<$sFileName> is the name of the file that the Registry tree should
-be saved to.  It is interpretted relative to the
+C<$sFileName> is the name of the file that the Registry tree
+should be saved to.  It is interpretted relative to the
 C<%SystemRoot%/System32/config> directory on the computer where
-the C<$hKey> key resides.
+the C<$hKey> key resides.  If C<$sFileName> is on a FAT file system,
+then it must not have an extension.
 
 C<$pSecAttr> contains a C<SECURITY_ATTRIBUTES> structure that specifies
 the permissions to be set on the new file that is created.  This can
 be C<[]>.
 
-=item RegSetKeySecurity( $hKey, $uSecInfo, $pSecDesc )
+You must have the C<SE_RESTORE_NAME> privilege to use this routine.
 
-Sets one of the C<SECURITY_DESCRIPTOR> structures describing part
-of the security for an open Registry key.
+=item RegSetKeySecurity
+
+=item C<RegSetKeySecurity( $hKey, $uSecInfo, $pSecDesc )>
+
+Sets [part of] the C<SECURITY_DESCRIPTOR> structure describing part
+of the security for an open Registry key.  Returns a true value if
+successful and a false value [and sets C<$^E>/C<regLastError()>] on
+failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -906,20 +1091,27 @@ a previous call].
 C<$uSecInfo> is a numeric C<SECURITY_INFORMATION> value that
 specifies which C<SECURITY_DESCRIPTOR> structure to set.  Should
 be C<OWNER_SECURITY_INFORMATION>, C<GROUP_SECURITY_INFORMATION>,
-C<DACL_SECURITY_INFORMATION>, or C<SACL_SECURITY_INFORMATION>.
+C<DACL_SECURITY_INFORMATION>, or C<SACL_SECURITY_INFORMATION>
+or two or more of these bits combined using C<|>.
 
 C<$pSecDesc> contains the new C<SECURITY_DESCRIPTOR> structure
 packed into a Perl string.
 
-=item RegSetValue( $hKey, $sSubKey, $uType, $sValueData, $lValueData )
+=item RegSetValue
+
+=item C<RegSetValue( $hKey, $sSubKey, $uType, $sValueData, $lValueData )>
 
 This routine is meant only for compatibility with Windows version
 3.1.  Use C<RegSetValueEx()> instead.  This routine can only
-set unamed values (a.k.a. "default values").
+set unamed values [a.k.a. "default values"].
 
-=item RegSetValueEx( $hKey, $sName, $uZero, $uType, $pData, $lData )
+=item RegSetValueEx
 
-Sets a value.
+=item C<RegSetValueEx( $hKey, $sName, $uZero, $uType, $pData, $lData )>
+
+Adds or replaces a value in an open Registry key.  Returns
+a true value if successful and a false value [and sets
+C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key [either C<HKEY_*> or from
 a previous call].
@@ -933,18 +1125,21 @@ be a C<REG_*> value.
 
 C<$pData> is the value data packed into a Perl string.
 
-C<$lData> the length of the value data that is stored in C<$pData>. 
+C<$lData> is the length of the value data that is stored in C<$pData>.
 You will usually omit this parameter or pass in C<0> to have
 C<length($pData)> used.  In both of these cases, if C<$iType> is
 C<REG_SZ> or C<REG_EXPAND_SZ>, C<RegSetValueEx()> will append a
 trailing C<'\0'> to the end of C<$pData> [unless there is already
 one].
 
-=item RegUnLoadKey( $hKey, $sSubKey )
+=item RegUnLoadKey
+
+=item C<RegUnLoadKey( $hKey, $sSubKey )>
 
 Unloads a previously loaded hive file.  That is, closes the
 hive file then deletes the subkey that was providing access
-to it.
+to it.  Returns a true value if successful and a false value
+[and sets C<$^E>/C<regLastError()>] on failure.
 
 C<$hKey> is the handle to a Registry key that has hives
 loaded in it.  This must be C<HKEY_LOCAL_MACHINE>, C<HKEY_USERS>,
@@ -956,9 +1151,9 @@ have unloaded.
 
 =item :FuncA
 
-The ASCI-specific function names.
+The ASCII-specific function names.
 
-Each of these is identical to version listed above without the
+Each of these is identical to the version listed above without the
 trailing "A":
 
 	AbortSystemShutdownA	InitiateSystemShutdownA
@@ -973,49 +1168,69 @@ trailing "A":
 =item :FuncW
 
 The UNICODE-specific function names.  These are the same as the
-version listed above without the trailing "W" except that string
+versions listed above without the trailing "W" except that string
 parameters are UNICODE strings rather than ASCII strings, as
 indicated.
 
-=item AbortSystemShutdownW( $swComputerName )
+=item AbortSystemShutdownW
+
+=item C<AbortSystemShutdownW( $swComputerName )>
 
 C<$swComputerName> is UNICODE.
 
-=item InitiateSystemShutdownW( $swComputer, $swMessage, $uTimeoutSecs, $bForce, $bReboot )
+=item InitiateSystemShutdownW
+
+=item C<InitiateSystemShutdownW( $swComputer, $swMessage, $uTimeoutSecs, $bForce, $bReboot )>
 
 C<$swComputer> and C<$swMessage> are UNICODE.
 
-=item RegConnectRegistryW( $swComputer, $hRootKey, $ohKey )
+=item RegConnectRegistryW
+
+=item C<RegConnectRegistryW( $swComputer, $hRootKey, $ohKey )>
 
 C<$swComputer> is UNICODE.
 
-=item RegCreateKeyW( $hKey, $swSubKey, $ohSubKey )
+=item RegCreateKeyW
+
+=item C<RegCreateKeyW( $hKey, $swSubKey, $ohSubKey )>
 
 C<$swSubKey> is UNICODE.
 
-=item RegCreateKeyExW( $hKey, $swSubKey, $uZero, $swClass, $uOpts, $uAccess, $pSecAttr, $ohNewKey, $ouDisp )
+=item RegCreateKeyExW
+
+=item C<RegCreateKeyExW( $hKey, $swSubKey, $uZero, $swClass, $uOpts, $uAccess, $pSecAttr, $ohNewKey, $ouDisp )>
 
 C<$swSubKey> and C<$swClass> are UNICODE.
 
-=item RegDeleteKeyW( $hKey, $swSubKey )
+=item RegDeleteKeyW
+
+=item C<RegDeleteKeyW( $hKey, $swSubKey )>
 
 C<$swSubKey> is UNICODE.
 
-=item RegDeleteValueW( $hKey, $swValueName )
+=item RegDeleteValueW
+
+=item C<RegDeleteValueW( $hKey, $swValueName )>
 
 C<$swValueName> is UNICODE.
 
-=item RegEnumKeyW( $hKey, $uIndex, $oswName, $ilwNameSize )
+=item RegEnumKeyW
+
+=item C<RegEnumKeyW( $hKey, $uIndex, $oswName, $ilwNameSize )>
 
 C<$oswName> is UNICODE and C<$ilwNameSize> is measured as number of
 C<WCHAR>s.
 
-=item RegEnumKeyExW( $hKey, $uIndex, $oswName, $iolwName, $pNull, $oswClass, $iolwClass, $opftLastWrite )
+=item RegEnumKeyExW
+
+=item C<RegEnumKeyExW( $hKey, $uIndex, $oswName, $iolwName, $pNull, $oswClass, $iolwClass, $opftLastWrite )>
 
 C<$swName> and C<$swClass> are UNICODE and C<$iolwName> and C<$iolwClass>
 are measured as number of C<WCHAR>s.
 
-=item RegEnumValueW( $hKey, $uIndex, $oswName, $iolwName, $pNull, $ouType, $opData, $iolData )
+=item RegEnumValueW
+
+=item C<RegEnumValueW( $hKey, $uIndex, $oswName, $iolwName, $pNull, $ouType, $opData, $iolData )>
 
 C<$oswName> is UNICODE and C<$iolwName> is measured as number
 of C<WCHAR>s.
@@ -1024,39 +1239,53 @@ C<$opData> is UNICODE if C<$piType> is C<REG_SZ>, C<REG_EXPAND_SZ>,
 or C<REG_MULTI_SZ>.  Note that C<$iolData> is measured as number
 of bytes even in these cases.
 
-=item RegLoadKeyW( $hKey, $swSubKey, $swFileName )
+=item RegLoadKeyW
+
+=item C<RegLoadKeyW( $hKey, $swSubKey, $swFileName )>
 
 C<$swSubKey> and C<$swFileName> are UNICODE.
 
-=item RegOpenKeyW( $hKey, $swSubKey, $ohSubKey )
+=item RegOpenKeyW
+
+=item C<RegOpenKeyW( $hKey, $swSubKey, $ohSubKey )>
 
 C<$swSubKey> is UNICODE.
 
-=item RegOpenKeyExW( $hKey, $swSubKey, $uOptions, $uAccess, $ohSubKey )
+=item RegOpenKeyExW
+
+=item C<RegOpenKeyExW( $hKey, $swSubKey, $uOptions, $uAccess, $ohSubKey )>
 
 C<$swSubKey> is UNICODE.
 
-=item RegQueryInfoKeyW( $hKey, $oswClass, $iolwClass, $pNull, $ocSubKeys, $olwSubKey, $olwSubClass, $ocValues, $olwValName, $olValData, $olSecDesc, $opftTime )
+=item RegQueryInfoKeyW
+
+=item C<RegQueryInfoKeyW( $hKey, $oswClass, $iolwClass, $pNull, $ocSubKeys, $olwSubKey, $olwSubClass, $ocValues, $olwValName, $olValData, $olSecDesc, $opftTime )>
 
 C<$swClass> is UNICODE.  C<$iolwClass>, C<$olwSubKey>, C<$olwSubClass>,
 and C<$olwValName> are measured as number of C<WCHAR>s.  Note that
 C<$olValData> is measured as number of bytes.
 
-=item RegQueryMultipleValuesW( $hKey, $ioarValueEnts, $icValueEnts, $opBuffer, $iolBuffer )
-bool _RegQueryMultipleValuesW(hKey,ioarValueEnts,icValueEnts,opBuffer,iolBuffer)
+=item RegQueryMultipleValuesW
 
-The C<ve_valuename> fields of the C<VALENT> structures in
-C<$ioarValueEnts> are UNICODE.  Values of type C<REG_SZ>,
+=item C<RegQueryMultipleValuesW( $hKey, $ioarValueEnts, $icValueEnts, $opBuffer, $iolBuffer )>
+
+The C<ve_valuename> fields of the C<VALENT> [actually C<VALENTW>]
+structures in C<$ioarValueEnts> are UNICODE.  Values of type C<REG_SZ>,
 C<REG_EXPAND_SZ>, and C<REG_MULTI_SZ> are written to C<$opBuffer>
 in UNICODE.  Note that C<$iolBuffer> and the C<ve_valuelen> fields
-of the C<VALENT> structures are measured as number of bytes.
+of the C<VALENT> [C<VALENTW>] structures are measured as number of
+bytes.
 
-=item RegQueryValueW( $hKey, $swSubKey, $oswValueData, $iolValueData )
+=item RegQueryValueW
+
+=item C<RegQueryValueW( $hKey, $swSubKey, $oswValueData, $iolValueData )>
 
 C<$swSubKey> and C<$oswValueData> are UNICODE.  Note that
 C<$iolValueData> is measured as number of bytes.
 
-=item RegQueryValueExW( $hKey, $swName, $pNull, $ouType, $opData, $iolData )
+=item RegQueryValueExW
+
+=item C<RegQueryValueExW( $hKey, $swName, $pNull, $ouType, $opData, $iolData )>
 
 C<$swName> is UNICODE.
 
@@ -1064,25 +1293,35 @@ C<$opData> is UNICODE if C<$ouType> is C<REG_SZ>, C<REG_EXPAND_SZ>,
 or C<REG_MULTI_SZ>.  Note that C<$iolData> is measured as number of
 bytes even in these cases.
 
-=item RegReplaceKeyW( $hKey, $swSubKey, $swNewFile, $swOldFile )
+=item RegReplaceKeyW
+
+=item C<RegReplaceKeyW( $hKey, $swSubKey, $swNewFile, $swOldFile )>
 
 C<$swSubKey>, C<$swNewFile>, and C<$swOldFile> are UNICODE.
 
-=item RegRestoreKeyW( $hKey, $swFileName, $uFlags )
+=item RegRestoreKeyW
+
+=item C<RegRestoreKeyW( $hKey, $swFileName, $uFlags )>
 
 C<$swFileName> is UNICODE.
 
-=item RegSaveKeyW( $hKey, $swFileName, $pSecAttr )
+=item RegSaveKeyW
+
+=item C<RegSaveKeyW( $hKey, $swFileName, $pSecAttr )>
 
 C<$swFileName> is UNICODE.
 
-=item RegSetValueW( $hKey, $swSubKey, $uType, $swValueData, $lValueData )
+=item RegSetValueW
+
+=item C<RegSetValueW( $hKey, $swSubKey, $uType, $swValueData, $lValueData )>
 
 C<$swSubKey> and C<$swValueData> are UNICODE.  Note that
 C<$lValueData> is measured as number of bytes even though
 C<$swValueData> is always UNICODE.
 
-=item RegSetValueExW( $hKey, $swName, $uZero, $uType, $pData, $lData )
+=item RegSetValueExW
+
+=item C<RegSetValueExW( $hKey, $swName, $uZero, $uType, $pData, $lData )>
 
 C<$swName> is UNICODE.
 
@@ -1090,7 +1329,9 @@ C<$pData> is UNICODE if C<$uType> is C<REG_SZ>, C<REG_EXPAND_SZ>,
 or C<REG_MULTI_SZ>.  Note that C<$lData> is measured as number of
 bytes even in these cases.
 
-=item RegUnLoadKeyW( $hKey, $swSubKey )
+=item RegUnLoadKeyW
+
+=item C<RegUnLoadKeyW( $hKey, $swSubKey )>
 
 C<$swSubKey> is UNICODE.
 
@@ -1116,12 +1357,15 @@ All C<KEY_*> constants:
 All C<REG_*> constants:
 
 	REG_CREATED_NEW_KEY		REG_OPENED_EXISTING_KEY
+
 	REG_LEGAL_CHANGE_FILTER		REG_NOTIFY_CHANGE_ATTRIBUTES
 	REG_NOTIFY_CHANGE_NAME		REG_NOTIFY_CHANGE_LAST_SET
 	REG_NOTIFY_CHANGE_SECURITY	REG_LEGAL_OPTION
+
 	REG_OPTION_BACKUP_RESTORE	REG_OPTION_CREATE_LINK
 	REG_OPTION_NON_VOLATILE		REG_OPTION_OPEN_LINK
 	REG_OPTION_RESERVED		REG_OPTION_VOLATILE
+
 	REG_WHOLE_HIVE_VOLATILE		REG_REFRESH_HIVE
 	REG_NO_LAZY_FLUSH
 
@@ -1135,6 +1379,30 @@ All C<REG_*> constants:
 =item :ALL
 
 All of the above.
+
+=item :SE_
+
+The strings for the following privilege names:
+
+	SE_ASSIGNPRIMARYTOKEN_NAME	SE_AUDIT_NAME
+	SE_BACKUP_NAME			SE_CHANGE_NOTIFY_NAME
+	SE_CREATE_PAGEFILE_NAME		SE_CREATE_PERMANENT_NAME
+	SE_CREATE_TOKEN_NAME		SE_DEBUG_NAME
+	SE_INCREASE_QUOTA_NAME		SE_INC_BASE_PRIORITY_NAME
+	SE_LOAD_DRIVER_NAME		SE_LOCK_MEMORY_NAME
+	SE_MACHINE_ACCOUNT_NAME		SE_PROF_SINGLE_PROCESS_NAME
+	SE_REMOTE_SHUTDOWN_NAME		SE_RESTORE_NAME
+	SE_SECURITY_NAME		SE_SHUTDOWN_NAME
+	SE_SYSTEMTIME_NAME		SE_SYSTEM_ENVIRONMENT_NAME
+	SE_SYSTEM_PROFILE_NAME		SE_TAKE_OWNERSHIP_NAME
+	SE_TCB_NAME			SE_UNSOLICITED_INPUT_NAME
+
+It can be difficult to successfully build this module in a way
+that makes these constants available.  So some builds of this
+module may not make them available.  For such builds, trying
+to export any of these constants will cause a fatal error.
+For this reason, none of these symbols are currently included
+in the C<":ALL"> grouping.
 
 =back
 
@@ -1157,8 +1425,13 @@ enhance than XS code.
 =item Allows those already familiar with the Win32 API to get
 off to a quick start.
 
-=item Provides an interactive tool [Perl] for exploring even
-obscure details of the Win32 API.
+=item Provides an interactive tool for exploring even obscure
+details of the Win32 API.
+
+It can be very useful to interactively explore ad-hoc calls into
+parts of the Win32 API using:
+
+    perl -de 0
 
 =item Ensures that native Win32 data structures can be used.
 
@@ -1166,7 +1439,7 @@ This allows maximum efficiency.  It also allows data from one
 module [for example, time or security information from the
 C<Win32API::Registry> or C<Win32API::File> modules] to be used
 with other modules [for example, C<Win32API::Time> and
-C<Win32API::Security>].
+C<Win32API::SecDesc>].
 
 =item Provides a single version of the XS interface to each API
 call where improvements can be collected.
@@ -1175,8 +1448,8 @@ call where improvements can be collected.
 
 =head2 Buffer sizes
 
-For each argument that specifies a buffer size, a value of C<0>
-can be passed.  For arguments that are pointers to buffer sizes,
+For each parameter that specifies a buffer size, a value of C<0>
+can be passed.  For parameter that are pointers to buffer sizes,
 you can also pass in C<NULL> by specifying an empty list reference,
 C<[]>.  Both of these cases will ensure that the variable has
 E<some> buffer space allocated to it and pass in that buffer's
@@ -1192,19 +1465,19 @@ If that size was insufficient, and the underlying call provides
 an easy method for determining the needed buffer size, then the
 buffer will be enlarged and the call repeated as above.
 
-The underlying calls define buffer size arguments as unsigned, so
+The underlying calls define buffer size parameter as unsigned, so
 negative buffer sizes are treated as very large positive buffer
 sizes which usually cause C<malloc()> to fail.
 
 To force the F<Registry.xs> code to pass in a specific value for
-a buffer size, preceed the size with C<"=">.  Buffer sizes that
-are passed in as strings starting with an equal sign will have
-the equal sign stripped and the remainder of the string interpretted
-as a number [via C's C<strtoul()> using only base 10] which will be
-passed to the underlying routine [even if the allocated buffer is
-actually larger].  The F<Registry.xs> code will enlarge the buffer
-to the specified size, if needed, but will not enlarge the buffer
-based on the underlying routine requesting more space.
+a buffer size, preceed the size with an equals sign via C<"=".>. 
+Buffer sizes that are passed in as strings starting with an equals
+sign will have the equal sign stripped and the remainder of the string
+interpretted as a number [via C's C<strtoul()> using only base 10]
+which will be passed to the underlying routine [even if the allocated
+buffer is actually larger].  The F<Registry.xs> code will enlarge the
+buffer to the specified size, if needed, but will not enlarge the
+buffer based on the underlying routine requesting more space.
 
 Some Reg*() calls may not currently set the buffer size when they
 return C<ERROR_MORE_DATA>.  But some that are not documented as
@@ -1221,12 +1494,12 @@ sizes would have been in units of wide characters.
 Note that the RegQueryValueEx*() and RegEnumValue*() calls
 will trim the trailing C<'\0'> [if present] from the returned data
 values of type C<REG_SZ> or C<REG_EXPAND_SZ> but only if the
-value data length argument is omitted [or specified as C<[]>].
+value data length parameter is omitted [or specified as C<[]>].
 
 The RegSetValueEx*() calls will add a trailing C<'\0'> [if
 missing] to the supplied data values of type C<REG_SZ> and
-C<REG_EXPAND_SZ> but only if the value data length argument is
-omitted [or specified as C<0>].
+C<REG_EXPAND_SZ> but only if the value data length parameter
+is omitted [or specified as C<0>].
 
 =head2 Hungarian Notation
 
@@ -1237,7 +1510,7 @@ the descriptive part of the parameter name.  Several of the following
 abbreviations can be combined into a single prefix.
 
 Probably not all of these prefix notations are used by this module. 
-This document section is included in each C<Win32API> module and
+This document section may be included in any C<Win32API> module and
 so covers some notations not used by this specific module.
 
 =over
@@ -1250,16 +1523,19 @@ it contains one.
 
 =item sw
 
-A wide (UNICODE) string.  In C, a C<L'\0'>-terminated C<WCHAR *>.
+A wide [UNICODE] string.  In C, a C<L'\0'>-terminated C<WCHAR *>.
 In Perl, a string that contains UNICODE data.  You can convert a
 string to UNICODE in Perl via:
 
     $string= "This is an example string";
     $unicode= pack( "S*", unpack("C*",$string), 0 );
 
-Note that an explicit C<L'\0'> must be added since Perl's implicit
-C<'\0'> that it puts after each of its strings is not wide enough to
-terminate a UNICODE string.
+Note how C<, 0> above causes an explicit C<L'\0'> to be added since
+Perl's implicit C<'\0'> that it puts after each of its strings is not
+wide enough to terminate a UNICODE string.  So UNICODE strings are
+different than regular strings in that the Perl version of a regular
+string will not include the trialing C<'\0'> while the Perl version
+of a UNICODE string must include the trailing C<L'\0'>.
 
 If a UNICODE string contains no non-ASCII characters, then you
 can convert it back into a normal string via:
@@ -1270,9 +1546,10 @@ can convert it back into a normal string via:
 =item p
 
 A pointer to some buffer [usually containing some C<struct>].  In C,
-a C<void *>.  In Perl, a string that is usually manipulated using
-C<pack> and C<unpack>.  The "p" is usually followed by more prefix
-character(s) to indicate what type of data is stored in the bufffer.
+a C<void *> or some other pointer type.  In Perl, a string that is
+usually manipulated using C<pack> and C<unpack>.  The "p" is usually
+followed by more prefix character(s) to indicate what type of data is
+stored in the bufffer.
 
 =item a
 
@@ -1320,16 +1597,16 @@ integer [UV].  Usually used in conjunction with a "vector" parameter
 
 =item l
 
-A length (in bytes).  In C, any integer data type.  In Perl, an
+A length [in bytes].  In C, any integer data type.  In Perl, an
 unsigned integer [UV].  Usually used in conjunction with a "string"
-or "pointer" parameters [see L</s> and L</p> above] to indicate the
+or "pointer" parameter [see L</s> and L</p> above] to indicate the
 buffer size or the size of the value stored in the buffer.
 
 For strings, there is no general rule as to whether the trailing
 C<'\0'> is included in such sizes.  For this reason, the C<Win32API>
-modules follows the Perl rule of always allocating one extra byte
-and reporting buffer sizes as being one smaller than allocated in case
-the C<'\0'> is not included in the size.
+modules follow the Perl rule of always allocating one extra byte
+and reporting buffer sizes as being one smaller than allocated in
+case the C<'\0'> is not included in the size.
 
 =item lw
 
@@ -1337,22 +1614,23 @@ A length measured as number of UNICODE characters.  In C, a count
 of C<WCHAR>s.  In Perl, an unsigned integer [UV] counting "shorts"
 [see "s" and "S" in C<pack> and C<unpack>].
 
-For UNICODE strings, the trailing C<L'\0'> may or may not be included
-in a length so, again, we always alllocate extra room for one and
-don't report that extra space.
+For UNICODE strings, the trailing C<L'\0'> may or may not be
+included in a length so, again, we always allocate extra room
+for one and don't report that extra space.
 
 =item h
 
-A handle.  In C, a C<HANDLE> or more-specific handle data type.  In
-Perl, a signed integer [IV].  In C, these handles are often actually
-some type of pointer, but Perl just treats them as opaque numbers,
-as it should.
+A handle.  In C, a C<HANDLE> or more-specific handle data type. 
+In Perl, an unsigned integer [UV].  In C, these handles are often
+actually some type of pointer, but Perl just treats them as opaque
+numbers, as it should.  This prefix is also used for other pointers
+that are treated as integers in Perl code.
 
 =item r
 
 A record.  In C, almost always a C<struct> or perhaps C<union>.  Note
 that C C<struct>s are rarely passed by value so the "r" is almost
-always preceeded by a "p" or " "a" [see L</p> and L</a> above].  For
+always preceeded by a "p" or "a" [see L</p> and L</a> above].  For
 the very rare unadorned "r", Perl stores the record in the same way
 as a "pr", that is, in a string.  For the very rare case where Perl
 explicitly stores a pointer to the C<struct> rather than storing the
@@ -1371,7 +1649,11 @@ C<struct> directly in a Perl string, the prefix "pp" or "ppr" or even
 
 A Perl data type.  Respectively, a scalar value [SV], a reference
 [RV] [usually to a scalar], a hash [HV], a Perl array [AV], or a Perl
-code reference [PVCV].  
+code reference [PVCV].  For the "hv", "av", and "cv" prefixes, a
+leading "rv" is usually assumed.  For a parameter to an XS subroutine,
+a prefix of "sv" means the parameter is a scalar and so may be a string
+or a number [or C<undef>] or even both at the same time.  So "sv"
+doesn't imply a leading "rv".
 
 =item Input or Output
 
@@ -1394,21 +1676,23 @@ function.  You should get an error if such a parameter is read-only.
 You can [usually] pass in C<[]> for such a parameter to have the
 parameter silently ignored.
 
-These parameters are written to directly, like the buffer argument to
-Perl's C<sysread()>.  This method is often avoided because such calls
-lack any visual cue that some parameters are being overwritten.   But
-this method closely matches the C API which is what we are trying to
-do.
+The output may be written directly into the Perl variable passed
+to the subroutine, the same way the buffer parameter to Perl's
+C<sysread()>.  This method is often avoided in Perl because
+the call then lacks any visual cue that some parameters are being
+overwritten.   But this method closely matches the C API which is
+what we are trying to do.
 
 =item io
 
 Input given to the API then overwritten with output taken from the
 API.  You should get a warning [if B<-w> is in effect] if such a
-parameter is C<undef> when you pass it into the function.  If the
-value is read-only, then [for most parameters] the output is silently
-not written.  This is because it is often convenient to pass in read-only
-constants for many such parameters.  You can also usually pass in
-C<[]> for such parameters.
+parameter is C<undef> when you pass it into the function [unless it
+is a buffer or buffer length parameter].  If the value is read-only,
+then [for most parameters] the output is silently not written.  This
+is because it is often convenient to pass in read-only constants for
+many such parameters.  You can also usually pass in C<[]> for such
+parameters.
 
 =back
 
@@ -1443,22 +1727,21 @@ ActiveState distributions of standard Perl 5.004 and beyond] do not support
 the tools for building extensions and so do not support this extension.
 
 No routines are provided for using the data returned in the C<FILETIME>
-buffers.  Those will be in C<Win32API::Time> when it becomes available.
+buffers.  Those are in the C<Win32API::Time> module.
 
-No routines are provided for dealing with UNICODE data
-effectively.  Such are available elsewhere.  See also
-F<test.pl> for some simple-minded UNICODE methods.
+No routines are provided for dealing with UNICODE data effectively. 
+See L</:FuncW> above for some simple-minded UNICODE methods.
 
 Parts of the module test will fail if used on a version of Perl
 that does not yet set C<$^E> based on C<GetLastError()>.
 
-On NT 4.0 (at least), the RegEnum* calls do not set the required
+On NT 4.0 [at least], the RegEnum*() calls do not set the required
 buffer sizes when returning C<ERROR_MORE_DATA> so this module will
 not grow the buffers in such cases.  C<Win32::TieRegistry> overcomes
 this by using values from C<RegQueryInfoKey()> for buffer sizes in
 RegEnum* calls.
 
-On NT 4.0 (at least), C<RegQueryInfoKey()> on C<HKEY_PERFORMANCE_DATA>
+On NT 4.0 [at least], C<RegQueryInfoKey()> on C<HKEY_PERFORMANCE_DATA>
 never succeeds.  Also, C<RegQueryValueEx()> on C<HKEY_PERFORMANCE_DATA>
 never returns the required buffer size.  To access C<HKEY_PERFORMANCE_DATA>
 you will need to keep growing the data buffer until the call succeeds.

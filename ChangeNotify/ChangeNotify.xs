@@ -13,6 +13,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "../ppport.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -95,7 +97,14 @@ _new(className,path,watchsubtree,filter)
     BOOL   watchsubtree
     DWORD  filter
 CODE:
-    RETVAL = FindFirstChangeNotification(path, watchsubtree, filter);
+    if (USING_WIDE()) {
+        WCHAR wbuffer[MAX_PATH+1];
+	A2WHELPER(path, wbuffer, sizeof(wbuffer));
+	RETVAL = FindFirstChangeNotificationW(wbuffer, watchsubtree, filter);
+    }
+    else {
+	RETVAL = FindFirstChangeNotificationA(path, watchsubtree, filter);
+    }
     if (RETVAL == INVALID_HANDLE_VALUE)
       XSRETURN_UNDEF;
 OUTPUT:

@@ -6,13 +6,14 @@ $OUT = new Win32::Console(STD_OUTPUT_HANDLE);
 $IN = new Win32::Console(STD_INPUT_HANDLE);
 
 $OUT->Title("Win32::Console version $Win32::Console::VERSION TEST SUITE");
+my($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
-explodeAttr($OUT, $FG_RED | $BG_YELLOW);
+explodeAttr($OUT, $FG_RED | $BG_YELLOW) if ($wLeft - $wRight);
 
 # explodeAttr($OUT, $ATTR_NORMAL);
 ($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
 
-showAbout();
+showAbout() if ($wLeft - $wRight);
 
 $OUT->Cls();
 ($wLeft, $wTop, $wRight, $wBottom) = $OUT->Window();
@@ -44,7 +45,7 @@ $OUT->Cursor($mX, $mY, 99, 1);
 
 # Main loop 
 while($key ne chr(27)) {
-
+    last unless ($wLeft - $wRight);
     @event = $IN->Input();
     
     $do = 0;
@@ -212,6 +213,7 @@ sub explodeAttr {
 
     my ($cip, $ciop);
     for $cip (0..$times) {
+	last if $times == 0;
         for $ciop ($top..$bottom) {
             $O->FillAttr($Attr, ($right-$left), $left, $ciop);
         }

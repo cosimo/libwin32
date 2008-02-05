@@ -1,10 +1,19 @@
 APIFile/Changes
+APIFile/ExtUtils/Myconst2perl.pm
 APIFile/File.pm
 APIFile/File.xs
 APIFile/Makefile.PL
 APIFile/MANIFEST
 APIFile/README
 APIFile/buffers.h
+APIFile/cFile.h
+APIFile/cFile.pc
+APIFile/const2perl.h
+APIFile/ex/CopyBoot.bat
+APIFile/ex/DiskGeom.plx
+APIFile/ex/FormatFloppy.plx
+APIFile/ex/ListDevs.plx
+APIFile/ppport.h
 APIFile/test.pl
 APIFile/typemap
 APINet/Changes
@@ -16,13 +25,17 @@ APINet/Net.xs
 APINet/mingw32.exc
 APINet/t/test.t
 APIRegistry/Changes
+APIRegistry/ExtUtils/Myconst2perl.pm
 APIRegistry/MANIFEST
 APIRegistry/Makefile.PL
 APIRegistry/README
 APIRegistry/Registry.pm
 APIRegistry/Registry.xs
 APIRegistry/buffers.h
-APIRegistry/mingw32.exc
+APIRegistry/cRegistry.h
+APIRegistry/cRegistry.pc
+APIRegistry/const2perl.h
+APIRegistry/ppport.h
 APIRegistry/test.pl
 APIRegistry/typemap
 ChangeNotify/ChangeNotify.pm
@@ -38,7 +51,11 @@ Clipboard/Clipboard.xs
 Clipboard/MANIFEST
 Clipboard/Makefile.PL
 Clipboard/README
-Clipboard/test.pl
+Clipboard/samples/bitmap.pl
+Clipboard/samples/monitor.pl
+Clipboard/samples/test-tie.pl
+Clipboard/samples/test.pl
+Clipboard/t/test.t
 Console/Console.pm
 Console/Console.xs
 Console/MANIFEST
@@ -155,12 +172,15 @@ OLE/Makefile.PL
 OLE/OLE.xs
 OLE/README
 OLE/ToDo
+OLE/hints/cygwin.pl
 OLE/lib/OLE.pm			Compatibility layer: old toplevel OLE.pm
 OLE/lib/Win32/OLE/Const.pm	Win32::OLE::Const module: TypeLib constants
 OLE/lib/Win32/OLE/Enum.pm	Win32::OLE::Enum module: Collection objects
 OLE/lib/Win32/OLE/Lite.pm	Lightweight OLE.pm not using ANY other modules
 OLE/lib/Win32/OLE/NEWS.pod	History of user visable changes
 OLE/lib/Win32/OLE/NLS.pm	Win32::OLE::NLS module: National Language Support
+OLE/lib/Win32/OLE/TPJ.pod	Win32::OLE article from "The Perl Journal" #10
+
 OLE/lib/Win32/OLE.pm
 OLE/lib/Win32/OLE/TypeInfo.pm	Win32::OLE::TypeInfo module
 OLE/lib/Win32/OLE/Variant.pm	Win32::OLE::Variant module: VARIANT variables
@@ -180,6 +200,7 @@ OLE/browser/Property.png
 OLE/browser/Type.png
 OLE/eg/constants.pl		Sample script prints all Excel defined constants
 OLE/eg/properties.pl		Sample script prints all Excel application properties
+OLE/eg/tpj.pl			Sample code from the Win32::OLE article in TPJ #10
 OLE/eg/typelibs.pl		Sample script prints all registered typelib names
 OLE/eg/word2pod.pl		Prototype of a Word -> POD translator
 OLE/eg/word2xxx.pl		Sample file type converter
@@ -189,6 +210,7 @@ OLE/t/3_ole.t			Regression tests for Win32::OLE using Excel 7 and above
 OLE/t/4_compat.t		Regression tests for OLE compatibility module
 OLE/t/5_unicode.t		Regression tests using the Unicode::String module
 OLE/t/6_event.t			Regression tests for OLE Events using Excel
+OLE/t/7_overload.t		Regression tests for overloaded number/string conversion
 PerfLib/Changes
 PerfLib/MANIFEST
 PerfLib/Makefile.PL
@@ -268,6 +290,7 @@ Sound/samples/welcome.wav
 Sound/samples/devices.pl
 Sound/samples/format.pl
 Sound/samples/sinus.pl
+TODO
 TieRegistry/Changes
 TieRegistry/Install.bat
 TieRegistry/MANIFEST
@@ -283,6 +306,4 @@ WinError/MANIFEST
 WinError/Makefile.PL
 WinError/WinError.pm
 WinError/WinError.xs
-install.bat
-instsup/ExtUtils/Install.pm
-instsup/Process.dll
+ppport.h

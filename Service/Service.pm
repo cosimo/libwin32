@@ -7,7 +7,7 @@ package Win32::Service;
 # subsequently hacked by Gurusamy Sarathy <gsar@activestate.com>
 #
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 require Exporter;
 require DynaLoader;
@@ -56,7 +56,10 @@ Stop the service serviceName on the machine hostName.
 
 =item GetStatus(hostName, serviceName, status) 
 
-Get the status of a service.
+Get the status of a service.  The third argument must be a hash
+reference that will be populated with entries corresponding
+to the SERVICE_STATUS structure of the Win32 API.  See the
+Win32 Platform SDK documentation for details of this structure.
 
 =item PauseService(hostName, serviceName)
 

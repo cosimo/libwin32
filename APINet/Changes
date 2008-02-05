@@ -1,5 +1,10 @@
 Revision history for Perl extension Win32API::Net
 
+0.081   Mon May 22 20:38:11 2000
+        - support for building under Perl v5.6.0.
+	- fixed a leak due to improper freeing in UserGetInfo()
+	  (thanks to Eamon Doyle <eamon.doyle@cp.net>)
+
 0.08	Thu Sep  24th 1999
 	- Changed logic relating to passing empty strings in as values
 	  in input hashes. The old behaviour turned such strings into

@@ -7,6 +7,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "../ppport.h"
+
 #if !defined(PERL_OBJECT)
 #  ifndef CPERLarg_
 #    define CPERLarg_
@@ -595,6 +597,7 @@ HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
     HV *hvCounter;
     HV *hvCounterNum;
     DWORD PerfLib_debug = 0;
+    dTHX;
     
     PerfCntr = FirstCounter(PerfObj);
     hvCounterNum = newHV();
@@ -791,7 +794,14 @@ PerfLibOpen(machine,ohandle)
 	char *machine
 	HKEY ohandle = NO_INIT
     CODE:
-	RETVAL = SUCCESS(RegConnectRegistry(machine, HKEY_PERFORMANCE_DATA, &ohandle));
+	if (USING_WIDE()) {
+	    WCHAR wmachine[MAX_PATH+1];
+	    A2WHELPER(machine, wmachine, sizeof(wmachine));
+	    RETVAL = SUCCESS(RegConnectRegistryW(wmachine, HKEY_PERFORMANCE_DATA, &ohandle));
+	}
+	else {
+	    RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_PERFORMANCE_DATA, &ohandle));
+	}
     OUTPUT:
 	RETVAL
 	ohandle
@@ -811,26 +821,45 @@ PerfLibGetNames(machine,counter)
     CODE:
 	HKEY remote_lmkey;
 	HKEY remote_perfkey;
-	char key[256] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
+	char akey[256] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
+	WCHAR wkey[256] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
 	BYTE *nameArray;
 	BYTE *p;
 	DWORD value_len;
 	DWORD type;
 	DWORD value;
 
-	RETVAL = SUCCESS(RegConnectRegistry(machine, HKEY_LOCAL_MACHINE, &remote_lmkey ));
+	if (USING_WIDE()) {
+	    WCHAR wmachine[MAX_PATH+1];
+	    A2WHELPER(machine, wmachine, sizeof(wmachine));
+	    RETVAL = SUCCESS(RegConnectRegistryW(wmachine, HKEY_LOCAL_MACHINE, &remote_lmkey));
+	}
+	else {
+	    RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_LOCAL_MACHINE, &remote_lmkey));
+	}
 	if (!RETVAL)
 	    XSRETURN_NO;
 
-	RETVAL = SUCCESS(RegOpenKeyEx(remote_lmkey, key, 0, KEY_READ, &remote_perfkey ));
+	if (USING_WIDE()) {
+	    RETVAL = SUCCESS(RegOpenKeyExW(remote_lmkey, wkey, 0, KEY_READ, &remote_perfkey));
+	}
+	else {
+	    RETVAL = SUCCESS(RegOpenKeyExA(remote_lmkey, akey, 0, KEY_READ, &remote_perfkey));
+	}
 	if (!RETVAL)
 	{
 	    RegCloseKey(remote_lmkey);
 	    XSRETURN_NO;
 	}
 
-        RETVAL = SUCCESS(RegQueryValueEx(remote_perfkey, "Counter", NULL, NULL,
+	if (USING_WIDE()) {
+	    RETVAL = SUCCESS(RegQueryValueExW(remote_perfkey, L"Counter", NULL, NULL,
 					 NULL, &value_len));
+	}
+	else {
+	    RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Counter", NULL, NULL,
+					 NULL, &value_len));
+	}
 	if (!RETVAL)
 	{
 	    RegCloseKey(remote_lmkey);
@@ -845,8 +874,14 @@ PerfLibGetNames(machine,counter)
 	    RegCloseKey(remote_perfkey);
 	    XSRETURN_NO;
 	}
-	RETVAL = SUCCESS(RegQueryValueEx(remote_perfkey, "Counter", NULL, &type,
+	if (USING_WIDE()) {
+	    RETVAL = SUCCESS(RegQueryValueExW(remote_perfkey, L"Counter", NULL, &type,
 					 (LPBYTE)nameArray, &value_len));
+	}
+	else {
+	    RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Counter", NULL, &type,
+					 (LPBYTE)nameArray, &value_len));
+	}
 	if (RETVAL)
 	{
 	    switch(type)
@@ -854,8 +889,23 @@ PerfLibGetNames(machine,counter)
 	    case REG_SZ:
 	    case REG_MULTI_SZ:
 	    case REG_EXPAND_SZ:
-		if (value_len)
+		if (value_len) {
+		    if (USING_WIDE()) {
+			BYTE* lpTemp;
+			Newz(0, lpTemp, value_len, BYTE);
+			if (!lpTemp)
+			{
+			    Safefree(nameArray);
+			    RegCloseKey(remote_lmkey);
+			    RegCloseKey(remote_perfkey);
+			    XSRETURN_NO;
+			}
+			W2AHELPER((WCHAR*)nameArray, ((char*)lpTemp), value_len);
+			Safefree(nameArray);
+			nameArray = lpTemp;
+		    }
 		    --value_len;
+		}
 		break;
 	    default:
 		break;
@@ -874,29 +924,48 @@ PerfLibGetHelp(machine,help)
     CODE:
 	HKEY remote_lmkey;
 	HKEY remote_perfkey;
-	char key[256] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
+	char akey[256] = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
+	WCHAR wkey[256] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009";
 	BYTE *helpArray;
 	BYTE *p;
 	DWORD value_len;
 	DWORD type;
 	DWORD value;
 
-	RETVAL = SUCCESS(RegConnectRegistry(machine, HKEY_LOCAL_MACHINE,
-					    &remote_lmkey ));
+	if (USING_WIDE()) {
+	    WCHAR wmachine[MAX_PATH+1];
+	    A2WHELPER(machine, wmachine, sizeof(wmachine));
+	    RETVAL = SUCCESS(RegConnectRegistryW(wmachine, HKEY_LOCAL_MACHINE,
+					    &remote_lmkey));
+	}
+	else {
+	    RETVAL = SUCCESS(RegConnectRegistryA(machine, HKEY_LOCAL_MACHINE,
+					    &remote_lmkey));
+	}
 	if (!RETVAL) {
 	    XSRETURN_NO;
 	}
 
-	RETVAL = SUCCESS(RegOpenKeyEx(remote_lmkey, key, 0, KEY_READ,
-				      &remote_perfkey ));
+	if (USING_WIDE()) {
+	    RETVAL = SUCCESS(RegOpenKeyExW(remote_lmkey, wkey, 0, KEY_READ, &remote_perfkey));
+	}
+	else {
+	    RETVAL = SUCCESS(RegOpenKeyExA(remote_lmkey, akey, 0, KEY_READ, &remote_perfkey));
+	}
 	if (!RETVAL) {
 	    RegCloseKey(remote_lmkey);
 	    XSRETURN_NO;
 	}
 
-	RETVAL = RegQueryInfoKey(remote_perfkey, NULL, NULL, NULL, NULL,
-				 NULL, NULL, NULL, NULL, &value_len, NULL, NULL );
-	if (!RETVAL) {
+	if (USING_WIDE()) {
+	    RETVAL = RegQueryInfoKeyW(remote_perfkey, NULL, NULL, NULL, NULL,
+				 NULL, NULL, NULL, NULL, &value_len, NULL, NULL);
+	}
+	else {
+	    RETVAL = RegQueryInfoKeyA(remote_perfkey, NULL, NULL, NULL, NULL,
+				 NULL, NULL, NULL, NULL, &value_len, NULL, NULL);
+	}
+	if (!RETVAL && GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
 	    RegCloseKey(remote_lmkey);
 	    RegCloseKey(remote_perfkey);
 	    XSRETURN_NO;
@@ -909,8 +978,14 @@ PerfLibGetHelp(machine,help)
 	    RegCloseKey(remote_perfkey);
 	    XSRETURN_NO;
 	}
-	RETVAL = SUCCESS(RegQueryValueEx(remote_perfkey, "Help", NULL, &type,
+	if (USING_WIDE()) {
+	    RETVAL = SUCCESS(RegQueryValueExW(remote_perfkey, L"Help", NULL, &type,
 					 (LPBYTE)helpArray, &value_len));
+	}
+	else {
+	    RETVAL = SUCCESS(RegQueryValueExA(remote_perfkey, "Help", NULL, &type,
+					 (LPBYTE)helpArray, &value_len));
+	}
 	if (RETVAL)
 	{
 	    switch(type)
@@ -918,8 +993,23 @@ PerfLibGetHelp(machine,help)
 	    case REG_SZ:
 	    case REG_MULTI_SZ:
 	    case REG_EXPAND_SZ:
-		if (value_len)
+		if (value_len) {
+		    if (USING_WIDE()) {
+			BYTE* lpTemp;
+			Newz(0, lpTemp, value_len, BYTE);
+			if (!lpTemp)
+			{
+			    Safefree(helpArray);
+			    RegCloseKey(remote_lmkey);
+			    RegCloseKey(remote_perfkey);
+			    XSRETURN_NO;
+			}
+			W2AHELPER((WCHAR*)helpArray, ((char*)lpTemp), value_len);
+			Safefree(helpArray);
+			helpArray = lpTemp;
+		    }
 		    --value_len;
+		}
 		break;
 	    default:
 		break;
@@ -967,12 +1057,21 @@ PerfLibGetObjects(handle,counter,data)
 	DWORD PerfLib_debug = 0;
 	DWORD result;
 	DWORD count = 0; // AS
+	WCHAR wcounter[MAX_PATH+1];
 
 	if (SvROK(data))
 	    data = SvRV(data);
 
+	if (USING_WIDE()) {
+	    A2WHELPER(counter, wcounter, sizeof(wcounter));
+	}
 	while (count < 500) {
-	    result = RegQueryValueEx(handle,counter,NULL,&type,lpData, &cbData );
+	    if (USING_WIDE()) {
+		result = RegQueryValueExW(handle,wcounter,NULL,&type,lpData, &cbData);
+	    }
+	    else {
+		result = RegQueryValueExA(handle,counter,NULL,&type,lpData, &cbData);
+	    }
 	    if (ERROR_MORE_DATA == result) {
 		cbData += TEMPBUFSZ;
 		if (lpData == databuf)

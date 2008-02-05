@@ -13,6 +13,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "../ppport.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -20,6 +22,7 @@
 static IV
 WaitForMultiple(AV* hArray, BOOL fWaitAll, DWORD dwTimeOut)
 {
+  dTHX;
   int	   count;
   SV **    svpp;
   HANDLE   handle;

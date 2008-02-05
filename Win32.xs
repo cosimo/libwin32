@@ -2,11 +2,16 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "ppport.h"
+
+#define SE_SHUTDOWN_NAMEA   "SeShutdownPrivilege"
+#define SE_SHUTDOWN_NAMEW   L"SeShutdownPrivilege"
+
 XS(w32_ExpandEnvironmentStrings)
 {
     dXSARGS;
     char *lpSource;
-    char buffer[2048];
+    BYTE buffer[4096];
     DWORD dwDataLen;
     STRLEN n_a;
 
@@ -14,9 +19,18 @@ XS(w32_ExpandEnvironmentStrings)
 	croak("usage: Win32::ExpandEnvironmentStrings($String);\n");
 
     lpSource = (char *)SvPV(ST(0), n_a);
-    dwDataLen = ExpandEnvironmentStrings(lpSource, buffer, sizeof(buffer));
 
-    XSRETURN_PV(buffer);
+    if (USING_WIDE()) {
+	WCHAR wSource[MAX_PATH+1];
+	WCHAR wbuffer[4096];
+	A2WHELPER(lpSource, wSource, sizeof(wSource));
+	dwDataLen = ExpandEnvironmentStringsW(wSource, wbuffer, sizeof(wbuffer)/2);
+	W2AHELPER(wbuffer, buffer, sizeof(buffer));
+    }
+    else
+	dwDataLen = ExpandEnvironmentStringsA(lpSource, (char*)buffer, sizeof(buffer));
+
+    XSRETURN_PV((char*)buffer);
 }
 
 XS(w32_LookupAccountName)
@@ -28,21 +42,43 @@ XS(w32_LookupAccountName)
     char Domain[256];
     DWORD DomLen;
     STRLEN n_a;
-
+    BOOL bResult;
+	
     if (items != 5)
 	croak("usage: Win32::LookupAccountName($system, $account, $domain, "
 	      "$sid, $sidtype);\n");
 
     SIDLen = sizeof(SID);
     DomLen = sizeof(Domain);
-    if (LookupAccountName(SvPV(ST(0), n_a),	/* System */
-			  SvPV(ST(1), n_a),	/* Account name */
-			  &SID,			/* SID structure */
-			  &SIDLen,		/* Size of SID buffer */
-			  Domain,		/* Domain buffer */
-			  &DomLen,		/* Domain buffer size */
-			  &snu))		/* SID name type */
-    {
+
+    if (USING_WIDE()) {
+	WCHAR wSID[sizeof(SID)];
+	WCHAR wDomain[sizeof(Domain)];
+	WCHAR wSystem[MAX_PATH+1];
+	WCHAR wAccount[MAX_PATH+1];
+	A2WHELPER(SvPV(ST(0),n_a), wSystem, sizeof(wSystem));
+	A2WHELPER(SvPV(ST(1),n_a), wAccount, sizeof(wAccount));
+	bResult = LookupAccountNameW(wSystem,	/* System */
+				  wAccount,	/* Account name */
+				  &wSID,	/* SID structure */
+				  &SIDLen,	/* Size of SID buffer */
+				  wDomain,	/* Domain buffer */
+				  &DomLen,	/* Domain buffer size */
+				  &snu);	/* SID name type */
+	if (bResult) {
+	    W2AHELPER(wSID, SID, SIDLen);
+	    W2AHELPER(wDomain, Domain, DomLen);
+	}
+    }
+    else
+	bResult = LookupAccountNameA(SvPV(ST(0),n_a),	/* System */
+				  SvPV(ST(1),n_a),	/* Account name */
+				  &SID,			/* SID structure */
+				  &SIDLen,		/* Size of SID buffer */
+				  Domain,		/* Domain buffer */
+				  &DomLen,		/* Domain buffer size */
+				  &snu);		/* SID name type */
+    if (bResult) {
 	sv_setpv(ST(2), Domain);
 	sv_setpvn(ST(3), SID, SIDLen);
 	sv_setiv(ST(4), snu);
@@ -66,20 +102,41 @@ XS(w32_LookupAccountSID)
     SID_NAME_USE snu;
     long retval;
     STRLEN n_a;
+    BOOL bResult;
 
     if (items != 5)
 	croak("usage: Win32::LookupAccountSID($system, $sid, $account, $domain, $sidtype);\n");
 
     sid = SvPV(ST(1), n_a);
     if (IsValidSid(sid)) {
-	if (LookupAccountSid(SvPV(ST(0), n_a),	/* System */
-			     sid,		/* SID structure */
-			     Account,		/* Account name buffer */
-			     &AcctLen,		/* name buffer length */
-			     Domain,		/* Domain buffer */
-			     &DomLen,		/* Domain buffer length */
-			     &snu))		/* SID name type */
-	{
+	if (USING_WIDE()) {
+	    WCHAR wSID[sizeof(SID)];
+	    WCHAR wDomain[sizeof(Domain)];
+	    WCHAR wSystem[MAX_PATH+1];
+	    WCHAR wAccount[sizeof(Account)];
+	    A2WHELPER(SvPV(ST(0),n_a), wSystem, sizeof(wSystem));
+
+	    bResult = LookupAccountSidW(wSystem,	/* System */
+				     sid,		/* SID structure */
+				     wAccount,		/* Account name buffer */
+				     &AcctLen,		/* name buffer length */
+				     wDomain,		/* Domain buffer */
+				     &DomLen,		/* Domain buffer length */
+				     &snu);		/* SID name type */
+	    if (bResult) {
+		W2AHELPER(wAccount, Account, AcctLen);
+		W2AHELPER(wDomain, Domain, DomLen);
+	    }
+	}
+	else
+	    bResult = LookupAccountSidA(SvPV(ST(0),n_a),	/* System */
+				     sid,		/* SID structure */
+				     Account,		/* Account name buffer */
+				     &AcctLen,		/* name buffer length */
+				     Domain,		/* Domain buffer */
+				     &DomLen,		/* Domain buffer length */
+				     &snu);		/* SID name type */
+	if (bResult) {
 	    sv_setpv(ST(2), Account);
 	    sv_setpv(ST(3), Domain);
 	    sv_setiv(ST(4), (double) snu);
@@ -102,6 +159,7 @@ XS(w32_InitiateSystemShutdown)
     HANDLE hToken;              /* handle to process token   */
     TOKEN_PRIVILEGES tkp;       /* pointer to token structure  */
     BOOL bRet;
+    WCHAR wbuffer[MAX_PATH+1];
     char *machineName, *message;
     STRLEN n_a;
 
@@ -110,14 +168,23 @@ XS(w32_InitiateSystemShutdown)
 	      "$timeOut, $forceClose, $reboot);\n");
 
     machineName = SvPV(ST(0), n_a);
+    if (USING_WIDE()) {
+	A2WHELPER(machineName, wbuffer, sizeof(wbuffer));
+    }
 
     if (OpenProcessToken(GetCurrentProcess(),
 			 TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
 			 &hToken))
     {
-	LookupPrivilegeValue(machineName,
-			     SE_SHUTDOWN_NAME,
-			     &tkp.Privileges[0].Luid);
+	if (USING_WIDE())
+	    LookupPrivilegeValueW(wbuffer,
+				 SE_SHUTDOWN_NAMEW,
+				 &tkp.Privileges[0].Luid);
+	else
+	    LookupPrivilegeValueA(machineName,
+				 SE_SHUTDOWN_NAMEA,
+				 &tkp.Privileges[0].Luid);
+
 	tkp.PrivilegeCount = 1; /* only setting one */
 	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
@@ -127,8 +194,18 @@ XS(w32_InitiateSystemShutdown)
     }
 
     message = SvPV(ST(1), n_a);
-    bRet = InitiateSystemShutdown(machineName, message,
-				  SvIV(ST(2)), SvIV(ST(3)), SvIV(ST(4)));
+    if (USING_WIDE()) {
+	WCHAR* pWBuf;
+	int length = strlen(message)+1;
+	New(0, pWBuf, length, WCHAR);
+	A2WHELPER(message, pWBuf, length*sizeof(WCHAR));
+	bRet = InitiateSystemShutdownW(wbuffer, pWBuf,
+				      SvIV(ST(2)), SvIV(ST(3)), SvIV(ST(4)));
+	Safefree(pWBuf);
+    }
+    else 
+	bRet = InitiateSystemShutdownA(machineName, message,
+				      SvIV(ST(2)), SvIV(ST(3)), SvIV(ST(4)));
 
     /* Disable shutdown privilege. */
     tkp.Privileges[0].Attributes = 0; 
@@ -146,19 +223,29 @@ XS(w32_AbortSystemShutdown)
     BOOL bRet;
     char *machineName;
     STRLEN n_a;
+    WCHAR wbuffer[MAX_PATH+1];
 
     if (items != 1)
 	croak("usage: Win32::AbortSystemShutdown($machineName);\n");
 
     machineName = SvPV(ST(0), n_a);
+    if (USING_WIDE()) {
+	A2WHELPER(machineName, wbuffer, sizeof(wbuffer));
+    }
 
     if (OpenProcessToken(GetCurrentProcess(),
 			 TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
 			 &hToken))
     {
-	LookupPrivilegeValue(machineName,
-			     SE_SHUTDOWN_NAME,
-			     &tkp.Privileges[0].Luid);
+	if (USING_WIDE())
+	    LookupPrivilegeValueW(wbuffer,
+				 SE_SHUTDOWN_NAMEW,
+				 &tkp.Privileges[0].Luid);
+	else
+	    LookupPrivilegeValueA(machineName,
+				 SE_SHUTDOWN_NAMEA,
+				 &tkp.Privileges[0].Luid);
+
 	tkp.PrivilegeCount = 1; /* only setting one */
 	tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
@@ -167,7 +254,11 @@ XS(w32_AbortSystemShutdown)
 			      (PTOKEN_PRIVILEGES)NULL, 0);
     }
 
-    bRet = AbortSystemShutdown(machineName);
+    if (USING_WIDE()) {
+        bRet = AbortSystemShutdownW(wbuffer);
+    }
+    else
+	bRet = AbortSystemShutdownA(machineName);
 
     /* Disable shutdown privilege. */
     tkp.Privileges[0].Attributes = 0;
@@ -185,6 +276,7 @@ XS(w32_MsgBox)
     char *title = "Perl";
     DWORD flags = MB_ICONEXCLAMATION;
     STRLEN n_a;
+    I32 result;
 
     if (items < 1 || items > 3)
 	croak("usage: Win32::MsgBox($message [, $flags [, $title]]);\n");
@@ -195,17 +287,44 @@ XS(w32_MsgBox)
 	if (items > 2)
 	    title = SvPV(ST(2), n_a);
     }
-    XSRETURN_IV(MessageBox(GetActiveWindow(), msg, title, flags));
+    if (USING_WIDE()) {
+	WCHAR* pMsg;
+	WCHAR* pTitle;
+	int length;
+	length = strlen(msg)+1;
+	New(0, pMsg, length, WCHAR);
+	A2WHELPER(msg, pMsg, length*sizeof(WCHAR));
+	length = strlen(title)+1;
+	New(0, pTitle, length, WCHAR);
+	A2WHELPER(title, pTitle, length*sizeof(WCHAR));
+	result = MessageBoxW(GetActiveWindow(), pMsg, pTitle, flags);
+	Safefree(pMsg);
+	Safefree(pTitle);
+    }
+    else
+	result = MessageBoxA(GetActiveWindow(), msg, title, flags);
+
+    XSRETURN_IV(result);
 }
 
 XS(w32_LoadLibrary)
 {
     dXSARGS;
     STRLEN n_a;
+    HANDLE hHandle;
+    char* lpName;
 
     if (items != 1)
 	croak("usage: Win32::LoadLibrary($libname)\n");
-    XSRETURN_IV((long)LoadLibrary((char *)SvPV(ST(0), n_a)));
+    lpName = (char *)SvPV(ST(0),n_a);
+    if (USING_WIDE()) {
+	WCHAR wbuffer[MAX_PATH+1];
+	A2WHELPER(lpName, wbuffer, sizeof(wbuffer));
+	hHandle = LoadLibraryW(wbuffer);
+    }
+    else
+	hHandle = LoadLibraryA(lpName);
+    XSRETURN_IV((long)hHandle);
 }
 
 XS(w32_FreeLibrary)
@@ -235,10 +354,20 @@ XS(w32_RegisterServer)
     HINSTANCE hnd;
     FARPROC func;
     STRLEN n_a;
+    char* lpName;
 
     if (items != 1)
 	croak("usage: Win32::RegisterServer($libname)\n");
-    hnd = LoadLibrary(SvPV(ST(0), n_a));
+
+    lpName = SvPV(ST(0),n_a);
+    if (USING_WIDE()) {
+	WCHAR wbuffer[MAX_PATH+1];
+	A2WHELPER(lpName, wbuffer, sizeof(wbuffer));
+	hnd = LoadLibraryW(wbuffer);
+    }
+    else
+	hnd = LoadLibraryA(lpName);
+
     if (hnd) {
 	func = GetProcAddress(hnd, "DllRegisterServer");
 	if (func && func() == 0)
@@ -258,10 +387,20 @@ XS(w32_UnregisterServer)
     HINSTANCE hnd;
     FARPROC func;
     STRLEN n_a;
+    char* lpName;
 
     if (items != 1)
 	croak("usage: Win32::UnregisterServer($libname)\n");
-    hnd = LoadLibrary(SvPV(ST(0), n_a));
+
+    lpName = SvPV(ST(0),n_a);
+    if (USING_WIDE()) {
+	WCHAR wbuffer[MAX_PATH+1];
+	A2WHELPER(lpName, wbuffer, sizeof(wbuffer));
+	hnd = LoadLibraryW(wbuffer);
+    }
+    else
+	hnd = LoadLibraryA(lpName);
+
     if (hnd) {
 	func = GetProcAddress(hnd, "DllUnregisterServer");
 	if (func && func() == 0)

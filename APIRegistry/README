@@ -1,16 +1,39 @@
 Win32API::Registry - Low-level access to Win32 system API calls from WINREG.H
 
+CHANGES
+
+This is version 0.21.  The previous commonly used release was 0.17. 
+There have been a lot of changes since then but most are fairly
+technical and had subtle or no effect on the module user.  Note that
+this version builds without warning under Perl-5.6.
+
+The most important change is that C<regLastError()> should now be used
+in place of C<$^E>, especially on Perl-5.6 which makes C<$^E> nearly
+useless.  The remaining changes that affect module users are:
+
+    * Added C<regConstant()> with better interface than C<constant()>.
+    * For C<BOOL> output, return C<PL_sv_no> [or a non-zero integer].
+    * For C<BOOL> input, treat C<"yes"> as true instead of as C<0>.
+    * Quietly translate C<[]> to C<0> for all integral arguments.
+    * Added C<SE_*> string constants.
+    * Disabled AUTOLOAD and the confusing error messages it generates.
+    * Changed MIN_GROW_SIZE from 8 to 128 so buffer sizes less needed.
+    * Handles are now unsigned to match more accurate constant conversions.
+
 SYNOPSIS
 
-  use Win32API::Registry 0.13 qw( :ALL );
+  use Win32API::Registry 0.21 qw( :ALL );
 
   RegOpenKeyEx( HKEY_LOCAL_MACHINE, "SYSTEM\\Disk", 0, KEY_READ, $key );
-    or  die "Can't open HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: $^E\n";
+    or  die "Can't open HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: ",
+	    regLastError(),"\n";
   RegQueryValueEx( $key, "Information", [], $type, $data, [] );
-    or  die "Can't read HKEY_L*MACHINE\\SYSTEM\\Disk\\Information: $^E\n";
+    or  die "Can't read HKEY_L*MACHINE\\SYSTEM\\Disk\\Information: ",
+	    regLastError(),"\n";
   [...]
   RegCloseKey( $key )
-    and  die "Can't close HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: $^E\n";
+    or  die "Can't close HKEY_LOCAL_MACHINE\\SYSTEM\\Disk: ",
+	    regLastError(),"\n";
 
 DESCRIPTION
 
@@ -27,53 +50,18 @@ many other useful modules for use on Win32 systems.
 Beyond raw access to the API calls and related constants, this module
 handles smart buffer allocation and translation of return codes.
 
-All calls return a true value for success and a false value for
-failure.  After any failure, $^E should automatically be set to
-indicate the reason.
+Nearly all calls return a true value for success and a false value
+for failure.  After any failure, $^E should automatically be set
+to indicate the reason.
 
 This and the other Win32API:: modules are meant to expose the
 nearly raw API calls so they can be used from Perl code in any
 way they might be used from C code.
 
-BUGS
-
-The ActiveState ports of Perl for Win32 do not support the tools
-for building extensions and so do not support this extension. 
-This does not include the ActiveState bundles of standard Perl
-5.004 and beyond which do support those tools and this extension.
-
-No routines are provided for using the data returned in the FILETIME
-buffers.  Those will be in Win32API::Time when it becomes available.  
-No routines are provided for dealing with UNICODE data effectively.
-Such are available elsewhere.
-
-Parts of the module test will fail if used on a version of Perl that
-does not yet set $^E based on GetLastError().
-
-On NT 4.0 [at least], the RegEnum* calls do not set the required
-buffer sizes when returning ERROR_MORE_DATA so this module will
-not grow the buffers in such cases.  Win32::TieRegistry overcomes
-this by using values from RegQueryInfoKey() for buffer sizes in
-RegEnum* calls.
-
-On NT 4.0 [at least], RegQueryInfoKey() on HKEY_PERFORMANCE_DATA
-never succeeds.  Also, RegQueryValueEx() on HKEY_PERFORMANCE_DATA
-never returns the required buffer size.  To access HKEY_PERFORMANCE_DATA
-you will need to keep growing the data buffer until the call succeeds.
-
-Because "goto &subroutine" seems to be buggy under Win32, it is not
-used in the stubs in Registry.pm.
-
-Using "undef" as an argument to any of the stubs in Registry.pm
-may cause warnings when the "undef" is then passed to the function
-from Registry.xs that does the real work.
-
-=head1 AUTHOR
+AUTHOR
 
 Tye McQueen, tye@metronet.com, http://www.metronet.com/~tye/.
 
-=head1 SEE ALSO
-
-Win32::TieRegistry, Win32::Registry, Win32API::Time.
-
-=cut
+Comments, additions, and bug reports are welcomed.  Please address
+technical questions that are not full bug reports to one of the Usenet
+newsgroups comp.lang.perl.modules or comp.lang.perl.moderated.

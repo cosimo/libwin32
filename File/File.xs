@@ -8,6 +8,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "../ppport.h"
+
 
 /* constant function for exporting NT definitions. */
 static long constant(char *name)
@@ -146,6 +148,14 @@ GetAttributes(filename,attribs)
 	char *filename
 	DWORD attribs
     CODE:
+	if (USING_WIDE()) {
+	    WCHAR wbuffer[MAX_PATH+1];
+	    A2WHELPER(filename, wbuffer, sizeof(wbuffer));
+	    attribs = GetFileAttributesW(wbuffer);
+	}
+	else {
+	    attribs = GetFileAttributesA(filename);
+	}
 	attribs = GetFileAttributes(filename);
 	RETVAL = (attribs != 0xffffffff);
     OUTPUT:
@@ -157,7 +167,14 @@ SetAttributes(filename,attribs)
 	char *filename
 	DWORD attribs
     CODE:
-	RETVAL = SetFileAttributes(filename, attribs);
+	if (USING_WIDE()) {
+	    WCHAR wbuffer[MAX_PATH+1];
+	    A2WHELPER(filename, wbuffer, sizeof(wbuffer));
+	    RETVAL = SetFileAttributesW(wbuffer, attribs);
+	}
+	else {
+	    RETVAL = SetFileAttributesA(filename, attribs);
+	}
     OUTPUT:
 	RETVAL
 

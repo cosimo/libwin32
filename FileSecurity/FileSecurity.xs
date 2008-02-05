@@ -17,6 +17,8 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#include "../ppport.h"
+
 #undef New
 #undef Newc
 
@@ -113,6 +115,7 @@ static long constant( char *name ) {
 
 void
 ErrorHandler( const char *ErrName ) {
+    dTHX;
     SV* sv = NULL ;
 
 /*    sv = perl_get_sv( "!", TRUE ) ; */
@@ -198,9 +201,9 @@ Get(filename, hv)
 	{
 	    SV*  sv;
 	    SV** psv;
-	    AV*  av ;
-	    PSECURITY_DESCRIPTOR pSecDesc = NULL ;
-	    SECURITY_DESCRIPTOR_CONTROL Control = 0 ;
+	    AV*  av;
+	    PSECURITY_DESCRIPTOR pSecDesc = NULL;
+	    SECURITY_DESCRIPTOR_CONTROL Control = 0;
 	    BOOL bDaclPresent, bDaclDefaulted ;
 	    PACL pDacl ;
 	    PACE_HEADER pAce ;
@@ -211,6 +214,7 @@ Get(filename, hv)
 	    SID_NAME_USE eUse ;
 	    DWORD nLength = 0, nLengthNeeded = 1, tries = 2, Revision = 0 ;
 	    DWORD error, i, j ;
+	    BOOL bResult;
 
 	    RETVAL = FALSE;
 	    
@@ -223,13 +227,28 @@ Get(filename, hv)
 	    while ( nLengthNeeded && tries ) {
 		tries-- ;
 
-		if ( GetFileSecurity(
-		    filename ,			/* address of string for file name */
-		    DACL_SECURITY_INFORMATION,	/* requested information */
-		    pSecDesc,                   /* address of security descriptor */
-		    nLength,                    /* size of security descriptor buffer */
-		    &nLengthNeeded              /* address of required size of buffer */
-		    ) ) {
+		if (USING_WIDE()) {
+		    WCHAR wbuffer[MAX_PATH+1];
+		    A2WHELPER(filename, wbuffer, sizeof(wbuffer));
+		    bResult = GetFileSecurityW(
+			wbuffer,			/* address of string for file name */
+			DACL_SECURITY_INFORMATION,	/* requested information */
+			pSecDesc,                   /* address of security descriptor */
+			nLength,                    /* size of security descriptor buffer */
+			&nLengthNeeded              /* address of required size of buffer */
+			);
+		}
+		else {
+		    bResult = GetFileSecurityA(
+			filename,			/* address of string for file name */
+			DACL_SECURITY_INFORMATION,	/* requested information */
+			pSecDesc,                   /* address of security descriptor */
+			nLength,                    /* size of security descriptor buffer */
+			&nLengthNeeded              /* address of required size of buffer */
+			);
+		}
+
+		if (bResult) {
 		    break ;
 		} else {
 		    if ( GetLastError() != ERROR_INSUFFICIENT_BUFFER ) {
@@ -301,15 +320,37 @@ Get(filename, hv)
 		case ACCESS_ALLOWED_ACE_TYPE :
 		    pAllAce = (PACCESS_ALLOWED_ACE) pAce ;
 		    bName = bDName = MAXIMUM_NAME_LENGTH ;
-		    if ( ! LookupAccountSid(
-			NULL,		/* CHANGE address of string for system name */
-			(PSID) &(pAllAce->SidStart),/* address of security identifier */
-			Name,		/* address of string for account name */
-			&bName,		/* address of size account string */
-			DName,		/* address of string for referenced domain */
-			&bDName,        /* address of size domain string */
-			&eUse           /* address of structure for SID type */
-			) ) {
+		    
+		    if (USING_WIDE()) {
+			WCHAR wName[MAXIMUM_NAME_LENGTH+1];
+			WCHAR wDName[MAXIMUM_NAME_LENGTH+1];
+			bResult = LookupAccountSidW(
+			    NULL,		/* CHANGE address of string for system name */
+			    (PSID) &(pAllAce->SidStart),/* address of security identifier */
+			    wName,		/* address of string for account name */
+			    &bName,		/* address of size account string */
+			    wDName,		/* address of string for referenced domain */
+			    &bDName,		/* address of size domain string */
+			    &eUse		/* address of structure for SID type */
+			    );
+			if (bResult) {
+			    W2AHELPER(wName, Name, bName);
+			    W2AHELPER(wDName, DName, bDName);
+			}
+		    }
+		    else {
+			bResult = LookupAccountSidA(
+			    NULL,		/* CHANGE address of string for system name */
+			    (PSID) &(pAllAce->SidStart),/* address of security identifier */
+			    Name,		/* address of string for account name */
+			    &bName,		/* address of size account string */
+			    DName,		/* address of string for referenced domain */
+			    &bDName,		/* address of size domain string */
+			    &eUse		/* address of structure for SID type */
+			    );
+		    }
+
+		    if (bResult) {
 			Name = NoName ;
 			bDName = 0;
 			bName = strlen(Name);
@@ -359,20 +400,21 @@ Set(filename, hv)
 	SV *hv
     CODE:
 	{
-	    SV* sv ;
+	    SV* sv;
 	    PACL pACLNew = NULL;
-	    PACCESS_ALLOWED_ACE pAllAce ;
+	    PACCESS_ALLOWED_ACE pAllAce;
 	    PSECURITY_DESCRIPTOR pSD = NULL; 
-	    DWORD cbACL = 1024, i ; 
+	    DWORD cbACL = 1024, i; 
 	    PSID pSID = NULL; 
-	    DWORD cbSID = 1024 ; 
-	    ACCESS_MASK AccountRights ;
-	    LPSTR    lpszAccount, lpszDomain, lpszServer, lpszTemp ;
-	    DWORD cchDomainName = 80, tries ; 
+	    DWORD cbSID = 1024; 
+	    ACCESS_MASK AccountRights;
+	    LPSTR    lpszAccount, lpszDomain, lpszServer, lpszTemp;
+	    DWORD cchDomainName = 80, tries; 
 	    PSID_NAME_USE psnuType = NULL; 
-	    I32 AccountLen ;
+	    I32 AccountLen;
+	    BOOL bResult;
 
-	    RETVAL = FALSE ;
+	    RETVAL = FALSE;
 
 	    if (!(hv && SvROK(hv) && (hv = SvRV(hv)) && SvTYPE(hv) == SVt_PVHV))
 		croak( "second arg must be HASHREF" ) ;
@@ -450,22 +492,43 @@ Set(filename, hv)
 
 		if ( lpszServer != NULL ) {
 		    for ( i = 0; szLocalLookup[i] != NULL; i++ ) {
-			if ( stricmp( szLocalLookup[i], lpszServer ) ) {
+			if ( stricmp( szLocalLookup[i], lpszServer ) == 0 ) {
 			    lpszServer = NULL ;
 			    break ;
 			}
 		    }
 		}
 
-		if (!LookupAccountName(
-		    (LPCSTR) lpszServer,
-		    (LPCSTR) lpszAccount, 
-		    pSID, 
-		    &cbSID, 
-		    lpszDomain, 
-		    &cchDomainName, 
-		    psnuType)) { 
-		    printf( "%s\\%s\n", lpszServer, lpszAccount ) ;
+		if (USING_WIDE()) {
+		    WCHAR wServer[MAX_PATH+1];
+		    WCHAR wAccount[MAX_PATH+1];
+		    WCHAR wDomain[MAX_PATH+1];
+		    A2WHELPER(lpszServer, wServer, sizeof(wServer));
+		    A2WHELPER(lpszAccount, wAccount, sizeof(wAccount));
+		    bResult = LookupAccountNameW(
+			    wServer,
+			    wAccount, 
+			    pSID, 
+			    &cbSID, 
+			    wDomain, 
+			    &cchDomainName, 
+			    psnuType);
+		    if(bResult) {
+			W2AHELPER(wDomain, lpszDomain, cchDomainName);
+		    }
+		}
+		else {
+		    bResult = LookupAccountNameA(
+			    (LPCSTR) lpszServer,
+			    (LPCSTR) lpszAccount, 
+			    pSID, 
+			    &cbSID, 
+			    lpszDomain, 
+			    &cchDomainName, 
+			    psnuType);
+		}
+		if (!bResult) { 
+		    printf( "%s\\%s\n", lpszServer ? lpszServer : "", lpszAccount ) ;
 		    ErrorHandler( "LookupAccountName"); 
 		    goto SetCleanup; 
 		}
@@ -533,9 +596,20 @@ Set(filename, hv)
 	    }
 	    
 	    /* Apply the new security descriptor to the file.  */
-	    if (!SetFileSecurity( filename , 
-				  DACL_SECURITY_INFORMATION, 
-				  pSD)) { 
+	    if (USING_WIDE()) {
+		WCHAR wbuffer[MAX_PATH+1];
+		A2WHELPER(filename, wbuffer, sizeof(wbuffer));
+		bResult = SetFileSecurityW(wbuffer,
+				      DACL_SECURITY_INFORMATION,
+				      pSD);
+	    }
+	    else {
+		bResult = SetFileSecurityA(filename,
+				      DACL_SECURITY_INFORMATION,
+				      pSD);
+	    }
+
+	    if (!bResult) { 
 		ErrorHandler( "SetFileSecurity"); 
 		goto SetCleanup; 
 	    } 
@@ -552,5 +626,3 @@ Set(filename, hv)
 	}
     OUTPUT:
 	RETVAL
-
-

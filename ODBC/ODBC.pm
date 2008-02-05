@@ -1,6 +1,6 @@
 package Win32::ODBC;
 
-$VERSION = '0.031';
+$VERSION = '0.032';
 
 # Win32::ODBC.pm
 #       +==========================================================+
@@ -246,7 +246,8 @@ sub FetchRow{
 
 sub GetData{
     my($self) = @_;
-    my(@Results, $num);
+    my @Results;
+    my $num = 0;
 
     @Results = ODBCGetData($self->{'connection'});
     if (!(@Results = processError($self, @Results))){
@@ -257,7 +258,7 @@ sub GetData{
         ####
     ClearError();
     foreach (@Results){
-        s/ +$//; # HACK
+        s/ +$// if defined $_; # HACK
         $self->{'data'}->{ ${$self->{'fnames'}}[$num] } = $_;
         $num++;
     }
