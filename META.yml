@@ -1,10 +1,10 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         libwin32
-version:      0.27
-version_from: 
-installdirs:  site
-requires:
-
+abstract: Comprehensive access to the Windows API.
+author: Jan Dubois <jand@activestate.com>
 distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30
+installdirs: site
+license: perl
+name: libwin32
+requires: 
+  perl: 5.6
+version: 0.28
+version_from: Bundle/libwin32.pm
