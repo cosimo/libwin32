@@ -46,6 +46,59 @@ typedef struct {
 typedef job_t *JOB_T;
 typedef PROCESS_INFORMATION *PROC_T;
 
+typedef struct {
+    LARGE_INTEGER PerProcessUserTimeLimit;
+    LARGE_INTEGER PerJobUserTimeLimit;
+    DWORD LimitFlags;
+    SIZE_T MinimumWorkingSetSize;
+    SIZE_T MaximumWorkingSetSize;
+    DWORD ActiveProcessLimit;
+#ifdef _WIN64
+    unsigned __int64 Affinity;
+#else
+    DWORD Affinity;
+#endif
+    DWORD PriorityClass;
+    DWORD SchedulingClass;
+}   MY_JOBOBJECT_BASIC_LIMIT_INFORMATION;
+
+typedef struct {
+    ULONGLONG ReadOperationCount;
+    ULONGLONG WriteOperationCount;
+    ULONGLONG OtherOperationCount;
+    ULONGLONG ReadTransferCount;
+    ULONGLONG WriteTransferCount;
+    ULONGLONG OtherTransferCount;
+} MY_IO_COUNTERS;
+
+typedef struct {
+    MY_JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+    MY_IO_COUNTERS IoInfo;
+    SIZE_T ProcessMemoryLimit;
+    SIZE_T JobMemoryLimit;
+    SIZE_T PeakProcessMemoryUsed;
+    SIZE_T PeakJobMemoryUsed;
+}   MY_JOBOBJECT_EXTENDED_LIMIT_INFORMATION;
+
+#define JobObjectExtendedLimitInformation 9
+static HANDLE
+create_job_object()
+{
+    MY_JOBOBJECT_EXTENDED_LIMIT_INFORMATION  jobinfo;
+    HANDLE job = CreateJobObject(NULL, NULL);
+
+    memset(&jobinfo, 0, sizeof(jobinfo));
+    if (job && QueryInformationJobObject(job, JobObjectExtendedLimitInformation,
+                                         &jobinfo, sizeof(jobinfo), NULL))
+    {
+        jobinfo.BasicLimitInformation.LimitFlags |= JOB_OBJECT_LIMIT_BREAKAWAY_OK;
+        SetInformationJobObject(job, JobObjectExtendedLimitInformation,
+                                &jobinfo, sizeof(jobinfo));
+    }
+    return job;
+}
+
+
 /* Called to resume all the threads by watch() and run() */
 static void
 resume_threads(pTHX_ AV *procs)
@@ -226,7 +279,7 @@ new(klass)
 	JOB_T	job;
     CODE:
 	Newz(NEWZ_CONST_INT, job, 1, job_t);
-	job->hJob  = CreateJobObject(NULL, NULL); /* unnamed job */
+	job->hJob  = create_job_object();
 	job->procs = newAV();
 	job->info  = newHV();
 	RETVAL = job;
@@ -306,10 +359,10 @@ spawn(self, svexe, args, ...)
 	    char *path = PerlEnv_getenv("PATH");
 	    char *curr = path;
 	    char *endp = strchr(curr, ';');
-	    int len;
+	    size_t len;
 	    Stat_t sbuf;
 	    while (endp) {
-		len = (int)(endp - curr);
+		len = endp - curr;
 		strncpy(pbuf, curr, len);
 		pbuf[len] = '\0';
 		if (pbuf[len-1] != '\\' && pbuf[len-1] != '/')
@@ -526,7 +579,8 @@ watch(self, callback, interval, ...)
 	BOOL	which = 1; /* wait for ALL processes to complete */
 	DWORD	ret, dwInterval;
 	HANDLE *hlist;
-	I32	i, imax, stop;
+	I32	i, imax;
+        IV      stop;
     CODE:
 	imax = AV_REAL_LEN(self->procs);
 	Newz(NEWZ_CONST_INT, hlist, imax, HANDLE);
