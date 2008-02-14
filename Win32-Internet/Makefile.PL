@@ -1,18 +1,13 @@
 use strict;
-use Config;
+use Config qw(%Config);
 use ExtUtils::MakeMaker;
 
-my $inetlib = "wininet.lib";
+my $inetlib = "";
 if ($^O eq "cygwin") {
     $inetlib = "-L/lib/w32api -lwininet -lversion";
 }
-elsif ($Config{cc} =~ /^bcc/i) {
-    $inetlib = "inet.lib";
-}
-elsif ($Config{cc} =~ /^gcc/i) {
-    # XXX This does not actually work! :(
-    # $inetlib = "-lwininet";
-    $inetlib = "";
+elsif ($Config{cc} =~ /^cl/i) {
+    $inetlib = "wininet.lib";
 }
 
 WriteMakefile(
@@ -30,12 +25,15 @@ WriteMakefile(
 );
 
 package MY;
-use Config;
+use Config qw(%Config);
 sub const_loadlibs {
     my ($self) = @_;
     if ($^O eq "MSWin32") {
 	if ($Config{cc} =~ /^gcc/i) {
 	    $self->{LDLOADLIBS} .= " -lwininet";
+	}
+	elsif ($Config{cc} =~ /^bcc/i) {
+	    $self->{LDLOADLIBS} .= " inet.lib";
 	}
 	elsif ($] == 5.006 && $Config{cc} =~ /^cl/i) {
 	    $self->{LDLOADLIBS} .= " wininet.lib";
