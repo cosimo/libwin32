@@ -1226,7 +1226,7 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	PUSER_INFO_0 pwzUsers = NULL;
-	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
 	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -1593,7 +1593,7 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	PGROUP_INFO_0 pwzGroups;
-	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
         DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -1670,7 +1670,7 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwGroup = MBTWC(group);
 	PGROUP_USERS_INFO_0 pwzGroupUsers;
-	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
         DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -1934,7 +1934,7 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	PLOCALGROUP_INFO_0 pwzLocalGroups;
-	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
 	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -2016,7 +2016,7 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwGroup = MBTWC(group);
 	PLOCALGROUP_MEMBERS_INFO_1 pwzMembersInfo;
-	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
 	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];

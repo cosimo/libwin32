@@ -6,7 +6,11 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..18\n"; }
+BEGIN {
+    $| = 1;
+    require Win32 unless defined &Win32::IsAdminUser;
+    printf "1..%d\n", Win32::IsAdminUser() ? 18 : 4;
+}
 END {print "not ok 1\n" unless $loaded;}
 use Win32API::Net qw/ :ALL /;
 $loaded = 1;
@@ -35,6 +39,8 @@ print "# ignore test 4 failure if network has no Primary Domain Controller\n";
 #print "# [$^E]\nnot " unless UserGetInfo($dc, $userName, 3, \%testUserInfo3);
 print "ok 4\n";
 undef %testUserInfo3;
+
+exit unless Win32::IsAdminUser();
 
 # test UserAdd() function
 # define some variables for level 3 user
@@ -82,10 +88,13 @@ $testUserFlags=( UF_ACCOUNTDISABLE() |
 
 # this will fail if this account actually exists - this is a good thing.
 $fie=0;
-UserAdd($dc, 3, \%testUserInfo3, $fie) or die <<EOM;
+unless (UserAdd($dc, 3, \%testUserInfo3, $fie)) {
+    print <<EOM;
 not ok 5
 Can't add a user so there really isn't any point in continuing...
 EOM
+    exit;
+}
 print "ok 5\n";
 
 # test UserGetInfo using the newly created account.
@@ -118,12 +127,36 @@ print "ok 10\n";
 print "not " unless LocalGroupEnum("", \@localGroups);
 print "ok 11\n";
 
-# Pick out out the Administrators and Guest group names for further tests
-# XXX Where is it defined that the 1st and 3rd group are always
-# XXX "Administrators" and "Guest"?
+# Try to pick out out the Administrators and Guests group names for
+# further tests.  This mechanism is not very reliable because some
+# Windows versions have additional groups defined between
+# Administrators and Guests.
 $Administrators = $localGroups[0];
-$Guest = $localGroups[2];
+$Guests = $localGroups[2];
 undef @localGroups;
+
+# If we have Win32::OLE and WMI available, then use that to determine
+# the group names from their "well-known SIDs".  This code is written
+# so that it should work with the version of WMI available on Windows
+# 2000 and later.
+sub GroupName {
+    my($wmi,$name,$sid)= @_;
+    # Domain = '$name' makes sure we only retrieve local accounts
+    my $account = $wmi->ExecQuery(<<QUERY);
+        SELECT * FROM Win32_Group
+            WHERE Domain = '$name' AND SID = '$sid'
+QUERY
+    return Win32::OLE::Enum->new($account)->Next->Name;
+}
+
+if (eval {require Win32::OLE}) {
+    my $name = Win32::NodeName;
+    my $wmi = Win32::OLE->GetObject("winmgmts:\\\\$name\\root\\cimv2");
+    if ($wmi) {
+	$Administrators = GroupName($wmi, $name, "S-1-5-32-544");
+	$Guests         = GroupName($wmi, $name, "S-1-5-32-546");
+    }
+}
 
 print "not " unless LocalGroupGetInfo($dc, $Administrators, 1,
 				      \%localGroupInfo);
@@ -137,7 +170,7 @@ $localGroupName="##Freds";
 print "not " unless LocalGroupAdd("", 1, \%localGroup, $fie);
 print "ok 13\n";
 
-@localGroupMembers=($testUserName, $Guest);
+@localGroupMembers=($testUserName, $Guests);
 print "not " unless LocalGroupAddMembers("", $localGroupName,
 					 \@localGroupMembers);
 print "ok 14\n";
@@ -149,7 +182,7 @@ print "not " unless LocalGroupGetMembers("", $localGroupName, \@lgMembers);
 print "ok 16\n";
 undef %lgMembers;
 
-@localGroupDelMembers=($Guest);
+@localGroupDelMembers=($Guests);
 print "not " unless LocalGroupDelMembers("", $localGroupName,
 					 \@localGroupDelMembers);
 print "ok 17\n";
