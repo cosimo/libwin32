@@ -30,10 +30,13 @@
 #include <stdio.h>
     
     //  ODBC Stuff
-#include <sql.h>
-#include <sqlext.h>
-#include <odbcinst.h>
-
+#ifdef __CYGWIN__
+#   include <iodbcinst.h>
+#else
+#   include <sql.h>
+#   include <sqlext.h>
+#   include <odbcinst.h>
+#endif
     //  Win32 Perl Stuff
 #if defined(__cplusplus)
 extern "C" {
@@ -366,7 +369,7 @@ void _NT_ODBC_Error(ODBC_TYPE * h, char *szFunction, char *szFunctionLevel){
     }
     strcpy((char *)h->Error->szSqlState, "");
     strcpy(h->Error->szError, "");
-    SQLError(h->henv, h->hdbc->hdbc, h->hstmt, (UCHAR *)h->Error->szSqlState, (long *)&(h->Error->ErrNum), (unsigned char *)h->Error->szError, ODBC_BUFF_SIZE, (short *)&cbErrorMsg);
+    SQLError(h->henv, h->hdbc->hdbc, h->hstmt, (SQLCHAR *)h->Error->szSqlState, (SQLINTEGER *)&(h->Error->ErrNum), (SQLCHAR *)h->Error->szError, ODBC_BUFF_SIZE, (SQLSMALLINT *)&cbErrorMsg);
 
         //  Next couple of lines should be NOT needed. If there is no error, then
         //  we should not have come here in the first place. If, however, there
