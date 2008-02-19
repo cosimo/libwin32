@@ -12,31 +12,80 @@ Bundle::libwin32 - install all modules that make up the libwin32 bundle
 
 =head1 SYNOPSIS
 
- perl -MCPAN -e 'install Bundle::libwin32'
+    perl -MCPAN -e 'install Bundle::libwin32'
 
 =head1 CONTENTS
 
-Win32              - CORE module in 5.8.7 and 5.10
+Win32
 
-Win32API::File     - CORE module in 5.8.9 and 5.10
+Win32::ChangeNotify
 
-Win32API::Registry - maintained separately on CPAN
+Win32::Clipboard
 
-Win32::TieRegistry - maintained separately on CPAN
+Win32::Console
 
-libwin32           - remaining modules not available separately
+Win32::Event
+
+Win32::EventLog
+
+Win32::File
+
+Win32::FileSecurity
+
+Win32::IPC
+
+Win32::Internet
+
+Win32::Job
+
+Win32::Mutex
+
+Win32::NetAdmin
+
+Win32::NetResource
+
+Win32::ODBC
+
+Win32::OLE
+
+Win32::PerfLib
+
+Win32::Pipe
+
+Win32::Process
+
+Win32::Registry
+
+Win32::Semaphore
+
+Win32::Service
+
+Win32::Shortcut
+
+Win32::Sound
+
+Win32::TieRegistry
+
+Win32::WinError
+
+Win32API::File
+
+Win32API::Net
+
+Win32API::Registry
 
 =head1 DESCRIPTION
 
-The libwin32 package on CPAN contains a bundle of Win32-specific modules
-that provide access to core Windows functionality.  Over time several
-modules have been removed from libwin32 because they became part of
-core Perl, or because they are maintained separately on CPAN.
+The libwin32 package on CPAN used to contain a set of Win32-specific modules
+that provide access to core Windows functionality.  Keeping all the modules
+together in a single distribution turned out to be a big maintenance problem
+because the releases of the modules were now linked.  This resulted in very
+slow release cycle. The modules are now all available on CPAN separately.
 
-The Bundle::libwin32 module provides an easy mechanism to install all
-the modules that originally were part of the libwin32 package with a
-single command. When you install the Bundle::libwin32, all modules
-mentioned in L</CONTENTS> above will be installed instead.
+The libwin32 package contains only a single pseudo-module Bundle::libwin32
+anymore that will pull in all the module originally contained in libwin32.
+When you install the Bundle::libwin32, all modules mentioned in L</CONTENTS>
+above will be installed instead.
 
 =head1 SEE ALSO
 
