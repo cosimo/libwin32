@@ -1,5 +1,9 @@
 Revision history for Perl extension Win32::Shortcut.
 
+0.05 November 2005
+    - The constructor now saves the filename even if the file does not yet exist.
+      This name is then used when the Save() method is called without arguments.
+
 0.04 September 2005
     - The Save() function now calls Win32::GetLongPathName() on the filename
       to make sure to use a fully qualified pathname.
