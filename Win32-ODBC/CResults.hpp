@@ -1,10 +1,12 @@
 #define	NULL_VALUE	""
 
-#ifndef SQLLEN
-#  define	SQLLEN	SDWORD
-#endif
-#ifndef SQLULEN
-#  define	SQLULEN	UDWORD
+#ifndef _WIN64
+#  ifndef SQLLEN
+#    define	SQLLEN	SDWORD
+#  endif
+#  ifndef SQLULEN
+#    define	SQLULEN	UDWORD
+#  endif
 #endif
 
 struct ODBC_Conn;
