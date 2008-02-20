@@ -3,4 +3,5 @@ FileSecurity.pm
 FileSecurity.xs
 MANIFEST
 Makefile.PL
+ppport.h
 test.pl

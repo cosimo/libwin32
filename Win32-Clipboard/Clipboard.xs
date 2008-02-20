@@ -38,7 +38,7 @@ extern "C" {
 }
 #endif
 
-#include "../ppport.h"
+#include "ppport.h"
 
 #undef WORD
 #define WORD __TEMP_WORD

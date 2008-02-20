@@ -7,7 +7,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../ppport.h"
+#include "ppport.h"
 
 #if !defined(PERL_OBJECT)
 #  ifndef CPERLarg_

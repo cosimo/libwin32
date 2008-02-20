@@ -16,7 +16,7 @@ extern "C" {
 }
 #endif
 
-#include "../ppport.h"
+#include "ppport.h"
 
 #include "CPipe.hpp"
 #include "pipe.h"

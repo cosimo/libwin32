@@ -8,7 +8,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../ppport.h"
+#include "ppport.h"
 
 
 /* constant function for exporting NT definitions. */

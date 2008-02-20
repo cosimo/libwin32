@@ -9,4 +9,5 @@ Pipe.xs
 README
 Server.pl
 hints/cygwin.pl
+ppport.h
 test.bat

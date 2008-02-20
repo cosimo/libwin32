@@ -17,7 +17,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../ppport.h"
+#include "ppport.h"
 
 static int
 not_here(char *s)

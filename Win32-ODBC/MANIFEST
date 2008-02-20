@@ -21,4 +21,5 @@ Test.pl
 docs/object.html
 docs/odbc.html
 hints/cygwin.pl
+ppport.h
 resource.h

@@ -17,7 +17,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../ppport.h"
+#include "ppport.h"
 
 #undef New
 #undef Newc

@@ -3,4 +3,5 @@ MANIFEST
 Makefile.PL
 Service.pm
 Service.xs
+ppport.h
 t/service.t

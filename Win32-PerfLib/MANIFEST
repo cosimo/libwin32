@@ -5,5 +5,6 @@ PerfLib.mak
 PerfLib.pm
 PerfLib.xs
 calc.html
+ppport.h
 test.pl
 typemap

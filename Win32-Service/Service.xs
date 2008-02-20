@@ -8,7 +8,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../ppport.h"
+#include "ppport.h"
 
 #define RETURNRESULT(x)		if ((x)){ XST_mYES(0); }\
                      		else { XST_mNO(0); }\

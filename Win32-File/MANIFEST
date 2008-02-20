@@ -3,5 +3,6 @@ File.pm
 File.xs
 MANIFEST
 Makefile.PL
+ppport.h
 t/file.t
 typemap
