@@ -2,7 +2,8 @@
 name: libwin32
 abstract: A bundle of popular Win32 modules
 version: 0.29
-author: Jan Dubois <jand@activestate.com>
+author:
+  - Jan Dubois <jand@activestate.com>
 license: perl
 requires: 
   perl: 5.6
