@@ -1,0 +1,41 @@
+$$Id$
+Win32-IPC version $%v%$
+
+[ REPLACE THIS...
+
+  The README is used to introduce the module and provide instructions on
+  how to install the module, any machine dependencies it may have (for
+  example C compilers and installed libraries) and any other information
+  that should be understood before the module is installed.
+]
+
+
+
+INSTALLATION
+
+To install these modules, run the following commands:
+
+	perl Build.PL
+	Build
+	Build test
+	Build install
+
+
+DEPENDENCIES
+
+None.
+
+
+
+COPYRIGHT AND LICENSE
+
+Copyright 1998-2008 Christopher J. Madsen
+
+ Created: 3 Feb 1998 from the ActiveWare version
+   (c) 1995 Microsoft Corporation. All rights reserved.
+       Developed by ActiveWare Internet Corp., http://www.ActiveWare.com
+
+   Other modifications (c) 1997 by Gurusamy Sarathy <gsar@activestate.com>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.

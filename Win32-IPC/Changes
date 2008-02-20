@@ -1,3 +1,14 @@
+Revision history for Perl extension Win32-IPC.
+
+1.06  Feb ? 2008
+	- Win32::IPC and its subclasses are now distributed separately
+	  from libwin32 (which has been broken up).  Prior to this
+	  release, each module had its own Changes file, and their
+	  version numbers were not synchronized.  Those files are
+	  appended below.
+
+
+======================================================================
 Revision history for Perl extension Win32::IPC.
 
 1.03  Fri Jul 11 15:40:00 2003
@@ -23,3 +34,89 @@ Revision history for Perl extension Win32::IPC.
 
 0.01  Sat Apr  5 14:24:55 1997
 	- original version; created by h2xs 1.18
+
+
+======================================================================
+Revision history for Perl extension Win32::ChangeNotify.
+
+1.05  2005/09/06
+	- Remove USING_WIDE() code and fix cygwin compiler warnings
+
+1.04  2002/12/18 21:48
+	- Fixed $subtree handling. Up till now it had to be a true numeric value
+	  contrary to what the docs say "a true value...." (Yves Orton)
+
+1.03  Mon May 22 2000 20:32:04
+        - support for passing Unicode strings to new() method
+
+1.02  Sun Jun 13 1999 12:33:09
+	- Bug fix to AUTOLOAD (FILE_NOTIFY_CHANGE_* constants now work)
+	  (courtesy Christopher J. Madsen)
+
+1.01  Sun Apr 26 1998 13:28:49
+	- Bug fixes to `new' and `close' methods (courtesy
+	  Chris Madsen)
+
+1.00  Fri Feb  6 1998 10:35:22
+	- Rewritten from ActiveWare version by Christopher J. Madsen
+	- Simplified code; converted from C++ to C
+	- New interface using lower-case method names
+
+0.01  Sat Apr  5 1997 14:24:50
+	- original version; created by h2xs 1.18
+
+
+======================================================================
+Revision history for Perl extension Win32::Event.
+
+1.01  Mon May 22 2000 20:56:41
+	- support for passing Unicode strings to the new() and open() methods
+	  under Perl 5.6.0 (thanks to Doug Lankshear <dougl@activestate.com>)
+
+1.00  Fri Feb  6 1998 10:35:22
+	- Rewritten from ActiveWare version by Christopher J. Madsen
+	- Simplified code; converted from C++ to C
+	- New interface using lower-case method names
+
+0.01  Mon Feb 2 1998 12:39:07
+	- original version; copied from Win32::Mutex 0.01 (libwin32 0.9)
+
+
+======================================================================
+Revision history for Perl extension Win32::Mutex.
+
+1.02  Mon May 22 21:19:43 2000
+	- support for passing Unicode strings to the new() and open()
+	  methods (thanks to Doug Lankshear <dougl@activestate.com>)
+
+1.01  Sun Feb  8 1998 20:17:15
+	- Added Open() function for compat
+
+1.00  Fri Feb  6 1998 10:56:09
+	- Rewritten from ActiveWare version by Christopher J. Madsen
+	- Simplified code; converted from C++ to C
+	- New interface using lower-case method names
+
+0.01  Sat Apr  5 14:25:17 1997
+	- original version; created by h2xs 1.18
+
+
+======================================================================
+Revision history for Perl extension Win32::Semaphore.
+
+1.02  Mon May 22 2000 21:53:04
+	- support for passing Unicode strings to new() and open() methods
+	  (Doug Lankshear <dougl@activestate.com>)
+
+1.01  Sun Feb  8 1998 20:16:56
+	- Add Open() function for compat
+
+1.00  Fri Feb  6 1998 11:01:57
+	- Rewritten from ActiveWare version by Christopher J. Madsen
+	- Simplified code; converted from C++ to C
+	- New interface using lower-case method names
+	- Created some tests in test.pl
+
+0.01  Sat Apr  5 14:24:13 1997
+	- original version; created by h2xs 1.18
+	- imported Activeware version

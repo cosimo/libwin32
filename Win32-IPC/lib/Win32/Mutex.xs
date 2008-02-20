@@ -2,10 +2,10 @@
 // $Id$
 //--------------------------------------------------------------------
 //
-//   Win32::Event
+//   Win32::Mutex
 //   Copyright 1998 by Christopher J. Madsen
 //
-//   XS file for the Win32::Event IPC module
+//   XS file for the Win32::Mutex IPC module
 //
 //--------------------------------------------------------------------
 
@@ -13,30 +13,29 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../ppport.h"
+/* #include "ppport.h" */
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 
-MODULE = Win32::Event		PACKAGE = Win32::Event
+MODULE = Win32::Mutex		PACKAGE = Win32::Mutex
 
 PROTOTYPES: ENABLE
 
 
 HANDLE
-new(className, manual=FALSE, initial=FALSE, name=NULL)
+new(className, initial=FALSE, name=NULL)
     char*  className
-    BOOL   manual
     BOOL   initial
     LPCSTR name
 PREINIT:
-    SECURITY_ATTRIBUTES  sec;
+      SECURITY_ATTRIBUTES  sec;
 CODE:
     sec.nLength = sizeof(SECURITY_ATTRIBUTES);
     sec.bInheritHandle = TRUE;        // allow inheritance
     sec.lpSecurityDescriptor = NULL;  // calling processes' security
-    RETVAL = CreateEventA(&sec,manual,initial,name);
+    RETVAL = CreateMutexA(&sec,initial,name);
     if (RETVAL == INVALID_HANDLE_VALUE)
       XSRETURN_UNDEF;
 OUTPUT:
@@ -48,7 +47,7 @@ open(className, name)
     char*  className
     LPCSTR name
 CODE:
-    RETVAL = OpenEventA(EVENT_ALL_ACCESS, TRUE, name);
+    RETVAL = OpenMutexA(MUTEX_ALL_ACCESS, TRUE, name);
     if (RETVAL == INVALID_HANDLE_VALUE)
       XSRETURN_UNDEF;
 OUTPUT:
@@ -56,36 +55,17 @@ OUTPUT:
 
 
 void
-DESTROY(event)
-    HANDLE event
+DESTROY(mutex)
+    HANDLE mutex
 CODE:
-    if (sv_derived_from(ST(0), "Win32::Event") &&
-        (event != INVALID_HANDLE_VALUE))
-      CloseHandle(event);
+    if (mutex != INVALID_HANDLE_VALUE)
+      CloseHandle(mutex);
 
 
 BOOL
-pulse(event)
-    HANDLE event
+release(mutex)
+    HANDLE mutex
 CODE:
-    RETVAL = PulseEvent(event);
-OUTPUT:
-    RETVAL
-
-
-BOOL
-reset(event)
-    HANDLE event
-CODE:
-    RETVAL = ResetEvent(event);
-OUTPUT:
-    RETVAL
-
-
-BOOL
-set(event)
-    HANDLE event
-CODE:
-    RETVAL = SetEvent(event);
+    RETVAL = ReleaseMutex(mutex);
 OUTPUT:
     RETVAL

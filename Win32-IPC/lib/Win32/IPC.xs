@@ -13,7 +13,7 @@
 #include "perl.h"
 #include "XSUB.h"
 
-#include "../ppport.h"
+#include "ppport.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
