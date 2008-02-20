@@ -1,5 +1,9 @@
 use ExtUtils::MakeMaker;
 
+unless ($^O eq "MSWin32" || $^O eq "cygwin") {
+    die "OS unsupported\n";
+}
+
 my %param = (
     NAME         => 'Win32::Console',
     VERSION_FROM => 'Console.pm',

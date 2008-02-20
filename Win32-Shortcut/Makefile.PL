@@ -1,5 +1,9 @@
 use ExtUtils::MakeMaker;
 
+unless ($^O eq "MSWin32" || $^O eq "cygwin") {
+    die "OS unsupported\n";
+}
+
 my @libs;
 push @libs, '-L/lib/w32api -lole32 -luuid' if $^O eq "cygwin";
 

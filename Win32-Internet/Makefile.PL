@@ -2,6 +2,10 @@ use strict;
 use Config qw(%Config);
 use ExtUtils::MakeMaker;
 
+unless ($^O eq "MSWin32" || $^O eq "cygwin") {
+    die "OS unsupported\n";
+}
+
 my $inetlib = "";
 if ($^O eq "cygwin") {
     $inetlib = "-L/lib/w32api -lwininet -lversion";
