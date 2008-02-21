@@ -139,6 +139,9 @@ of the following flags (separated by whitespace and/or C<|>).
 (C<$filter> can also be an integer composed from the
 C<FILE_NOTIFY_CHANGE_*> constants.)
 
+Under Cygwin, C<$path> must be a Windows pathname, not a Cygwin
+Unix-like pathname.
+
 =item $notify->close
 
 Shut down monitoring.  You could just C<undef $notify> instead (but

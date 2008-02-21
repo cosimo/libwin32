@@ -17,7 +17,7 @@ If it takes longer, please kill it with Ctrl-Break (Ctrl-C won't work right).
 END_WARNING
 
 my $s = Win32::Semaphore->new(3,3);
-ok(1, 'created $s');
+ok($s, 'created $s');
 
 isa_ok($s, 'Win32::Semaphore');
 
