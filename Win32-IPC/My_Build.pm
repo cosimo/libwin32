@@ -67,25 +67,31 @@ sub process_xs
   my $self = shift @_;
   my $pm_file = $_[0];
 
-  # Save the distribution version:
-  my $dist_version = $self->dist_version;
-
-  # Override it with the version number from the corresponding .pm file:
+  # Get the version number from the corresponding .pm file:
   $pm_file =~ s/\.xs$/.pm/i or die "$pm_file: Not an .xs file";
   my $pm_info = Module::Build::ModuleInfo->new_from_file($pm_file)
       or die "Can't find file $pm_file to determine version";
 
-  $self->{properties}{dist_version} = $pm_info->version
+  # Tell dist_version to use it:
+  local $self->{My_Build__pm_version} = $pm_info->version
       or die "Can't find version in $pm_file";
 
-  # Now that we've tricked dist_version into lying, process the XS file:
-  my $result = $self->SUPER::process_xs(@_);
-
-  # Restore the real dist_version:
-  $self->{properties}{dist_version} = $dist_version;
-
-  return $result;
+  # Now that dist_version is lying, process the XS file:
+  $self->SUPER::process_xs(@_);
 } # end process_xs
+
+#---------------------------------------------------------------------
+# Lie about the version number when necessary:
+
+sub dist_version
+{
+  my $self = shift @_;
+
+  return $self->{My_Build__pm_version}
+      if defined $self->{My_Build__pm_version};
+
+  $self->SUPER::dist_version(@_);
+} # end dist_version
 
 #=====================================================================
 # Package Return Value:

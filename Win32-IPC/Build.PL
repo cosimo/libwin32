@@ -26,6 +26,7 @@ my $builder = My_Build->new(
       'File::Spec'         => 0,
       'FindBin'            => 0,
       'Module::Build'      => '0.21',
+      'ExtUtils::ParseXS'  => 0, # Had problems with 5.8.8's xsubpp
       'ExtUtils::CBuilder' => '0.15',
       'Test::More'         => 0,
   },
