@@ -18,6 +18,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+typedef bool TRUEFALSE;
 
 MODULE = Win32::Mutex		PACKAGE = Win32::Mutex
 
@@ -26,9 +27,9 @@ PROTOTYPES: ENABLE
 
 HANDLE
 new(className, initial=FALSE, name=NULL)
-    char*  className
-    BOOL   initial
-    LPCSTR name
+    char*      className
+    TRUEFALSE  initial
+    LPCSTR     name
 PREINIT:
       SECURITY_ATTRIBUTES  sec;
 CODE:
