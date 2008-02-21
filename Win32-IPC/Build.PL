@@ -14,9 +14,14 @@ use lib $FindBin::Bin; # Make sure we're using My_Build from our distribution
 
 use My_Build;          # Our customized version of Module::Build
 
+unless ($^O eq "MSWin32" || $^O eq "cygwin") {
+  die "OS unsupported\n";
+}
+
 my $builder = My_Build->new(
   dist_name           => 'Win32-IPC',
   license             => 'perl',
+  dist_abstract       => 'Use Win32 synchronization objects',
   dist_author         => 'Christopher J. Madsen <perl@cjmweb.net>',
   dist_version_from   => 'lib/Win32/IPC.pm',
   requires => {
@@ -32,7 +37,10 @@ my $builder = My_Build->new(
   },
   create_makefile_pl => 'passthrough',
   dynamic_config     => 0,
-  meta_merge         => { no_index => { file => ['My_Build.pm'] }},
+  meta_merge         => {
+    no_index  => { file     => ['My_Build.pm'] },
+    resources => { homepage => 'http://code.google.com/p/libwin32/' },
+  },
 );
 
 $builder->create_build_script();
