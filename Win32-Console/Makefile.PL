@@ -1,3 +1,5 @@
+use strict;
+use warnings;
 use ExtUtils::MakeMaker;
 
 unless ($^O eq "MSWin32" || $^O eq "cygwin") {

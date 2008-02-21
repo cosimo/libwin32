@@ -2,6 +2,7 @@ ChangeLog
 Clipboard.pm
 Clipboard.xs
 MANIFEST
+META.yml
 Makefile.PL
 README
 ppport.h

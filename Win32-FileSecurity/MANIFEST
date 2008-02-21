@@ -2,6 +2,7 @@ Changes
 FileSecurity.pm
 FileSecurity.xs
 MANIFEST
+META.yml
 Makefile.PL
 ppport.h
 test.pl

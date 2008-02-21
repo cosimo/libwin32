@@ -1,6 +1,7 @@
 Job.pm
 Job.xs
 MANIFEST
+META.yml
 Makefile.PL
 child.t
 test.pl

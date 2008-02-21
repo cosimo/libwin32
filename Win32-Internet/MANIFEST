@@ -1,6 +1,7 @@
 Internet.pm
 Internet.xs
 MANIFEST
+META.yml
 Makefile.PL
 README
 WININET.H

@@ -29,7 +29,7 @@ require DynaLoader;
 
 =head1 NAME
 
-Win32::File - manage file attributes in perl
+Win32::File - Manage file attributes in perl
 
 =head1 SYNOPSIS
 

@@ -1,10 +1,14 @@
+use strict;
+use warnings;
 use ExtUtils::MakeMaker;
 
 unless ($^O eq "MSWin32" || $^O eq "cygwin") {
     die "OS unsupported\n";
 }
 
-WriteMakefile(
-    NAME		=> 'Win32::Job',
-    VERSION_FROM	=> 'Job.pm',
+my %param = (
+    NAME         => 'Win32::Job',
+    VERSION_FROM => 'Job.pm',
 );
+$param{NO_META} = 1 if $ExtUtils::MakeMaker::VERSION >= 6.10_03;
+WriteMakefile(%param);

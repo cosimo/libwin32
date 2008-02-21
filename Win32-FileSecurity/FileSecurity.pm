@@ -85,7 +85,7 @@ __END__
 
 =head1 NAME
 
-Win32::FileSecurity - manage FileSecurity Discretionary Access Control Lists in perl
+Win32::FileSecurity - Manage FileSecurity Discretionary Access Control Lists in Perl
 
 =head1 SYNOPSIS
 

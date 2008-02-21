@@ -1,4 +1,5 @@
 use strict;
+use warnings;
 use Config qw(%Config);
 use ExtUtils::MakeMaker;
 
@@ -14,19 +15,14 @@ elsif ($Config{cc} =~ /^cl/i) {
     $inetlib = "wininet.lib";
 }
 
-WriteMakefile(
-    NAME		=> 'Win32::Internet',
-    VERSION_FROM	=> 'Internet.pm',
-    dist		=> {COMPRESS => 'gzip -9f', SUFFIX => 'gz'},
-    LIBS		=> [ $inetlib ],
-    INC			=> '-I.',
-    ($] < 5.005 ? () :
-      (
-	AUTHOR		=> 'Aldo Calpini <dada@divinf.it>',
-	ABSTRACT	=> 'An object oriented interface to the Win32 '
-			 . 'Internet Functions (WININET.DLL)',
-      )),
+my %param = (
+    NAME         => 'Win32::Internet',
+    VERSION_FROM => 'Internet.pm',
+    LIBS         => [ $inetlib ],
+    INC          => '-I.',
 );
+$param{NO_META} = 1 if $ExtUtils::MakeMaker::VERSION >= 6.10_03;
+WriteMakefile(%param);
 
 package MY;
 use Config qw(%Config);

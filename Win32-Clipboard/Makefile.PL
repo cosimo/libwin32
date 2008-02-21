@@ -1,21 +1,18 @@
+use strict;
+use warnings;
 use ExtUtils::MakeMaker;
 
 unless ($^O eq "MSWin32" || $^O eq "cygwin") {
     die "OS unsupported\n";
 }
 
-WriteMakefile(
-    'NAME'		=> 'Win32::Clipboard',
-    'VERSION_FROM'	=> 'Clipboard.pm',
-    'dist'		=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz'},
-    'XS'		=> { 'Clipboard.xs' => 'Clipboard.cpp' },
-    ($] < 5.005 ? () :
-      (
-	'AUTHOR'	=> 'Aldo Calpini <dada@perl.it>',
-	'ABSTRACT'	=> 'Interaction with the Windows clipboard',
-      )),
+my %param = (
+    NAME         => 'Win32::Clipboard',
+    VERSION_FROM => 'Clipboard.pm',
+    XS           => { 'Clipboard.xs' => 'Clipboard.cpp' },
 );
-
+$param{NO_META} = 1 if $ExtUtils::MakeMaker::VERSION >= 6.10_03;
+WriteMakefile(%param);
 
 sub MY::xs_c {
     '
