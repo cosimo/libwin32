@@ -5,7 +5,7 @@ package Win32::ChangeNotify;
 #
 # Created: 3 Feb 1998 from the ActiveWare version
 #   (c) 1995 Microsoft Corporation. All rights reserved.
-#       Developed by ActiveWare Internet Corp., http://www.ActiveWare.com
+#       Developed by ActiveWare Internet Corp., http://www.ActiveState.com
 #
 #   Other modifications (c) 1997 by Gurusamy Sarathy <gsar@activestate.com>
 #
@@ -222,7 +222,7 @@ or through the web interface at
 L<http://rt.cpan.org/Public/Bug/Report.html?Queue=Win32-IPC>
 
 Loosely based on the original module by ActiveWare Internet Corp.,
-F<http://www.ActiveWare.com>
+L<http://www.ActiveState.com>
 
 =head1 DISCLAIMER OF WARRANTY
 
