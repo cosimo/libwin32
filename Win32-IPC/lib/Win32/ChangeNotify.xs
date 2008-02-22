@@ -16,17 +16,17 @@
 /* #include "ppport.h" */
 
 #define WIN32_LEAN_AND_MEAN
-#define TRUEFALSE bool
 #include <windows.h>
+
+typedef bool TRUEFALSE;
 
 static DWORD
 constant(char* name)
 {
     errno = 0;
-    switch (*name) {
-    case 'F':
         if (strnNE(name, "FILE_NOTIFY_CHANGE_", 19))
           goto invalid;
+
 	if (strEQ(name+19, "ATTRIBUTES"))
 #ifdef FILE_NOTIFY_CHANGE_ATTRIBUTES
 	    return FILE_NOTIFY_CHANGE_ATTRIBUTES;
@@ -63,16 +63,7 @@ constant(char* name)
 #else
 	    goto not_there;
 #endif
-	break;
-    case 'I':
-	if (strEQ(name, "INFINITE"))
-#ifdef INFINITE
-	    return INFINITE;
-#else
-	    goto not_there;
-#endif
-	break;
-    }
+
  invalid:
     errno = EINVAL;
     return 0;

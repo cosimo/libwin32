@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------
 package Win32::Mutex;
 #
-# Copyright 1998 Christopher J. Madsen
+# Copyright 1998-2008 Christopher J. Madsen
 #
 # Created: 3 Feb 1998 from the ActiveWare version
 #   (c) 1995 Microsoft Corporation. All rights reserved.
@@ -23,22 +23,29 @@ package Win32::Mutex;
 # Use Win32 mutex objects for synchronization
 #---------------------------------------------------------------------
 
-$VERSION = '1.06';
+use strict;
+use warnings;
+use vars qw($VERSION @ISA @EXPORT_OK);
 
 use Win32::IPC 1.00 '/./';      # Import everything
-require Exporter;
-require DynaLoader;
 
-@ISA = qw(Exporter DynaLoader Win32::IPC);
-@EXPORT_OK = qw(
-  wait_all wait_any
-);
+BEGIN
+{
+  $VERSION = '1.06';
 
-bootstrap Win32::Mutex;
+  @ISA = qw(Win32::IPC);        # Win32::IPC isa Exporter
+  @EXPORT_OK = qw(
+    wait_any wait_all INFINITE
+  );
 
+  require XSLoader;
+  XSLoader::load('Win32::Mutex', $VERSION);
+} # end BEGIN bootstrap
+
+# Deprecated ActiveWare functions:
 sub Create  { $_[0] = Win32::Mutex->new(@_[1..2]) }
 sub Open  { $_[0] = Win32::Mutex->open($_[1]) }
-sub Release { &release }
+*Release = \&release;           # Alias release to Release
 
 1;
 __END__

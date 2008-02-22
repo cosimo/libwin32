@@ -102,7 +102,7 @@ createFile('file.txt');
 
 is($n->wait(3), 1, 'wait(3) succeeds');
 
-ok($n->reset, 'reset');
+ok($n->FindNext, 'FindNext'); # Deprecated method name (now called reset)
 
 is($n->wait(4), 1, 'wait(4) succeeds');
 
