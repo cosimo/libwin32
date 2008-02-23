@@ -74,7 +74,7 @@ L<Win32::IPC> module.
 
 Constructor for a new semaphore object.  C<$initial> is the initial
 count, and C<$maximum> is the maximum count for the semaphore.  If
-C<$name> is omitted, creates an unnamed semaphore object.
+C<$name> is omitted or C<undef>, creates an unnamed semaphore object.
 
 If C<$name> signifies an existing semaphore object, then C<$initial>
 and C<$maximum> are ignored and the object is opened.  If this
@@ -146,7 +146,11 @@ L<Win32::IPC>
 
 =head1 INCOMPATIBILITIES
 
-None reported.
+Prior to version 1.06, Win32::Semaphore treated C<undef> values
+differently.  In version 1.06 and later, passing C<undef> as the value
+of an optional parameter is the same as omitting that parameter.  In
+previous versions, C<undef> was interpreted as either the empty string
+or 0 (along with a warning about "Use of uninitialized value...").
 
 
 =head1 BUGS AND LIMITATIONS

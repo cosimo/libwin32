@@ -66,8 +66,8 @@ L<Win32::IPC> module.
 Constructor for a new event object.  If C<$manual> is true, you must
 manually reset the event after it is signalled (the default is false).
 If C<$initial> is true, the initial state of the object is signalled
-(default false).  If C<$name> is omitted, creates an unnamed event
-object.
+(default false).  If C<$name> is omitted or C<undef>, creates an
+unnamed event object.
 
 If C<$name> signifies an existing event object, then C<$manual> and
 C<$initial> are ignored and the object is opened.  If this happens,
@@ -130,7 +130,11 @@ L<Win32::IPC>
 
 =head1 INCOMPATIBILITIES
 
-None reported.
+Prior to version 1.06, Win32::Event treated C<undef> values
+differently.  In version 1.06 and later, passing C<undef> as the value
+of an optional parameter is the same as omitting that parameter.  In
+previous versions, C<undef> was interpreted as either the empty string
+or 0 (along with a warning about "Use of uninitialized value...").
 
 
 =head1 BUGS AND LIMITATIONS

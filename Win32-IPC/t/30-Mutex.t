@@ -19,7 +19,7 @@ END_WARNING
 # Make sure we can import the functions:
 use_ok('Win32::Mutex', qw(wait_all wait_any INFINITE));
 
-my $m = Win32::Mutex->new(0);   # Unowned mutex
+my $m = Win32::Mutex->new(0, undef); # Unowned mutex
 ok($m, 'created unowned mutex');
 
 isa_ok($m, 'Win32::Mutex');

@@ -211,7 +211,11 @@ L<Win32::IPC>
 
 =head1 INCOMPATIBILITIES
 
-None reported.
+Prior to version 1.06, Win32::ChangeNotify treated C<undef> values
+differently.  In version 1.06 and later, passing C<undef> as the value
+of an optional parameter is the same as omitting that parameter.  In
+previous versions, C<undef> was interpreted as either the empty string
+or 0 (along with a warning about "Use of uninitialized value...").
 
 
 =head1 BUGS AND LIMITATIONS

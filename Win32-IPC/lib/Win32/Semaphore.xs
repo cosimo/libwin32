@@ -18,6 +18,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+typedef LPCSTR LPCSTR_OPT;
 
 MODULE = Win32::Semaphore	PACKAGE = Win32::Semaphore
 
@@ -28,7 +29,7 @@ new(className, initial, max, name=NULL)
     char*  className
     LONG   initial
     LONG   max
-    LPCSTR name
+    LPCSTR_OPT  name
 CODE:
     {
 	SECURITY_ATTRIBUTES  sec;

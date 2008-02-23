@@ -7,7 +7,7 @@
 
 use strict;
 use warnings;
-use Test::More tests => 19;
+use Test::More tests => 20;
 
 use Win32::Event ();
 
@@ -29,6 +29,8 @@ is($e->wait(10), 1, 'wait(10)');
 is($e->wait(0), 1, 'wait(0)');
 
 is($e->wait, 1, 'wait()');
+
+is($e->wait(undef), 1, 'wait(undef)');
 
 ok($e->reset, 'reset event');
 

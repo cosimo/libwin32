@@ -18,7 +18,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-typedef bool TRUEFALSE;
+typedef bool   TRUEFALSE;
+typedef LPCSTR LPCSTR_OPT;
 
 MODULE = Win32::Event		PACKAGE = Win32::Event
 
@@ -30,7 +31,7 @@ new(className, manual=FALSE, initial=FALSE, name=NULL)
     char*      className
     TRUEFALSE  manual
     TRUEFALSE  initial
-    LPCSTR     name
+    LPCSTR_OPT name
 PREINIT:
     SECURITY_ATTRIBUTES  sec;
 CODE:
