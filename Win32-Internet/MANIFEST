@@ -12,5 +12,5 @@ docs/license.html
 docs/reference.html
 docs/toc.html
 test-async.pl
-test.pl
+sample.pl
 typemap
