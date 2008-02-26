@@ -60,7 +60,7 @@ $VERSION = '0.053';
 
 =head1 NAME
 
-Win32::NetResource - manage network resources in perl
+Win32::NetResource - Manage network resources in Perl
 
 =head1 SYNOPSIS
 

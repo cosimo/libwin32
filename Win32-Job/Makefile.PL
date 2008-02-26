@@ -10,5 +10,5 @@ my %param = (
     NAME         => 'Win32::Job',
     VERSION_FROM => 'Job.pm',
 );
-$param{NO_META} = 1 if $ExtUtils::MakeMaker::VERSION >= 6.10_03;
+$param{NO_META} = 1 if eval "$ExtUtils::MakeMaker::VERSION" >= 6.10_03;
 WriteMakefile(%param);

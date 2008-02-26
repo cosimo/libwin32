@@ -1,19 +1,14 @@
+use strict;
+use warnings;
 use ExtUtils::MakeMaker;
 
 unless ($^O eq "MSWin32" || $^O eq "cygwin") {
     die "OS unsupported\n";
 }
 
-WriteMakefile(
-    'NAME'		=> 'Win32::PerfLib',
-    'VERSION_FROM'	=> 'PerfLib.pm', # finds $VERSION
-    'dist'		=> {COMPRESS => 'gzip -9f', SUFFIX => 'gz'},
-    'LIBS'		=> [''],   # e.g., '-lm' 
-    'DEFINE'		=> '',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'		=> '',     # e.g., '-I/usr/include/other'
-    ($] < 5.005 ? () :
-      (
-	'AUTHOR'	=> 'Jutta M. Klebe <jmk@bybyte.de>',
-	'ABSTRACT_FROM'	=> 'PerfLib.pm',
-      )),
+my %param = (
+    NAME          => 'Win32::PerfLib',
+    VERSION_FROM  => 'PerfLib.pm',
 );
+$param{NO_META} = 1 if eval "$ExtUtils::MakeMaker::VERSION" >= 6.10_03;
+WriteMakefile(%param);

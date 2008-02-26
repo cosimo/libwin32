@@ -334,7 +334,7 @@ __END__
 
 =head1 NAME
 
-Win32::PerfLib - accessing the Windows NT Performance Counter
+Win32::PerfLib - Accessing the Windows NT Performance Counter
 
 =head1 SYNOPSIS
 

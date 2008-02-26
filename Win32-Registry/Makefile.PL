@@ -1,16 +1,14 @@
+use strict;
+use warnings;
 use ExtUtils::MakeMaker;
 
 unless ($^O eq "MSWin32" || $^O eq "cygwin") {
     die "OS unsupported\n";
 }
 
-WriteMakefile(
-    'NAME'		=> 'Win32::Registry',
-    'VERSION_FROM'	=> 'Registry.pm', # finds $VERSION
-    'dist'		=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-    ($] < 5.005 ? () :
-      (
-	'AUTHOR'	=> 'Unknown',
-	'ABSTRACT'	=> 'An object oriented interface to the Win32 Registry.',
-      )),
+my %param = (
+    NAME          => 'Win32::Registry',
+    VERSION_FROM  => 'Registry.pm',
 );
+$param{NO_META} = 1 if eval "$ExtUtils::MakeMaker::VERSION" >= 6.10_03;
+WriteMakefile(%param);

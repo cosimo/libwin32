@@ -11,7 +11,7 @@ my %param = (
     VERSION_FROM => 'Clipboard.pm',
     XS           => { 'Clipboard.xs' => 'Clipboard.cpp' },
 );
-$param{NO_META} = 1 if $ExtUtils::MakeMaker::VERSION >= 6.10_03;
+$param{NO_META} = 1 if eval "$ExtUtils::MakeMaker::VERSION" >= 6.10_03;
 WriteMakefile(%param);
 
 sub MY::xs_c {

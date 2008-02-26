@@ -7,6 +7,7 @@ Constant.cpp
 Constant.h
 HISTORY.TXT
 MANIFEST
+META.yml
 Makefile.PL
 ODBC.h
 ODBC.ico

@@ -2,6 +2,7 @@ Client.pl
 Cpipe.cpp
 Cpipe.hpp
 MANIFEST
+META.yml
 Makefile.PL
 Pipe.h
 Pipe.pm

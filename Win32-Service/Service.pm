@@ -28,7 +28,7 @@ die "The Win32::Service module works only on Windows NT" unless Win32::IsWinNT()
 
 =head1 NAME
 
-Win32::Service - manage system services in perl
+Win32::Service - Manage system services in Perl
 
 =head1 SYNOPSIS
 

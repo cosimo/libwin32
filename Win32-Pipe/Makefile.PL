@@ -1,26 +1,21 @@
 use strict;
-use Config;
+use warnings;
+use Config qw(%Config);
 use ExtUtils::MakeMaker;
 
 unless ($^O eq "MSWin32" || $^O eq "cygwin") {
     die "OS unsupported\n";
 }
 
-my $is_msvc = $Config{'cc'} =~ /^cl/i;
-
-WriteMakefile(
-    'INC'		=> ($is_msvc ? '-GX' : ''),
-    'OBJECT'		=> 'Cpipe$(OBJ_EXT) Pipe$(OBJ_EXT)',
-    'NAME'		=> 'Win32::Pipe',
-    'VERSION_FROM'	=> 'Pipe.pm',
-    'XS'		=> { 'Pipe.xs' => 'Pipe.cpp' },
-    'dist'		=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-    ($] < 5.005 ? () :
-      (
-	'AUTHOR'	=> 'Dave Roth <rothd@roth.net>',
-	'ABSTRACT'	=> 'Pipe extension for Win32 Perl',
-      )),
+my %param = (
+    NAME          => 'Win32::Pipe',
+    VERSION_FROM  => 'Pipe.pm',
+    OBJECT        => 'Cpipe$(OBJ_EXT) Pipe$(OBJ_EXT)',
+    XS            => { 'Pipe.xs' => 'Pipe.cpp' },
 );
+$param{NO_META} = 1 if eval "$ExtUtils::MakeMaker::VERSION" >= 6.10_03;
+$param{INC} = '-GX' if $Config{'cc'} =~ /^cl/i;
+WriteMakefile(%param);
 
 sub MY::xs_c {
     '

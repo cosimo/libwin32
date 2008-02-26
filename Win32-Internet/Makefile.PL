@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+
 use Config qw(%Config);
 use ExtUtils::MakeMaker;
 
@@ -7,21 +8,14 @@ unless ($^O eq "MSWin32" || $^O eq "cygwin") {
     die "OS unsupported\n";
 }
 
-my $inetlib = "";
-if ($^O eq "cygwin") {
-    $inetlib = "-L/lib/w32api -lwininet -lversion";
-}
-elsif ($Config{cc} =~ /^cl/i) {
-    $inetlib = "wininet.lib";
-}
-
 my %param = (
     NAME         => 'Win32::Internet',
     VERSION_FROM => 'Internet.pm',
-    LIBS         => [ $inetlib ],
     INC          => '-I.',
 );
-$param{NO_META} = 1 if $ExtUtils::MakeMaker::VERSION >= 6.10_03;
+$param{LIBS} = ['wininet.lib'] if $Config{cc} =~ /^cl/i;
+$param{LIBS} = ['-L/lib/w32api -lwininet -lversion'] if $^O eq "cygwin";
+$param{NO_META} = 1 if eval "$ExtUtils::MakeMaker::VERSION" >= 6.10_03;
 WriteMakefile(%param);
 
 package MY;

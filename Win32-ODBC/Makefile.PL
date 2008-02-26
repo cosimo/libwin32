@@ -1,36 +1,26 @@
 use strict;
-use Config;
+use warnings;
+
+use Config qw(%Config);
 use ExtUtils::MakeMaker;
 
 unless ($^O eq "MSWin32" || $^O eq "cygwin") {
     die "OS unsupported\n";
 }
 
-my $inc = '';
-if ($Config{'cc'} =~ /^cl/i) {
-    $inc = '-GX';
-}
-elsif ($Config{'cc'} =~ /^bcc32/i) {
-    $inc = '-I$Config{incpath}\\mfc';
-}
-
-
-WriteMakefile(
-    'INC'		=> $inc,
-    'OBJECT'		=> 'CMom$(OBJ_EXT) Constant$(OBJ_EXT) CResults$(OBJ_EXT) ODBC$(OBJ_EXT)',
-    'NAME'		=> 'Win32::ODBC',
-    'VERSION_FROM'	=> 'ODBC.pm',
-    'XS'	=> { 'ODBC.xs' => 'ODBC.cpp' },
-    'dist'	=> { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-    ($] < 5.005 ? () :
-      (
-	'AUTHOR'	=> 'Dave Roth <rothd@roth.net>',
-	'ABSTRACT'	=> 'ODBC implementation',
-      )),
+my %param = (
+    NAME          => 'Win32::ODBC',
+    VERSION_FROM  => 'ODBC.pm',
+    OBJECT        => 'CMom$(OBJ_EXT) Constant$(OBJ_EXT) CResults$(OBJ_EXT) ODBC$(OBJ_EXT)',
+    XS            => { 'ODBC.xs' => 'ODBC.cpp' },
 );
+$param{INC} = '-GX'                     if $Config{'cc'} =~ /^cl/i;
+$param{INC} = '-I$Config{incpath}\\mfc' if $Config{'cc'} =~ /^bcc32/i;
+$param{NO_META} = 1 if eval "$ExtUtils::MakeMaker::VERSION" >= 6.10_03;
+WriteMakefile(%param);
 
 package MY;
-use Config;
+use Config qw(%Config);
 
 sub const_loadlibs {
     my ($self) = @_;
@@ -46,4 +36,4 @@ sub xs_c {
 .xs.cpp:
 	$(PERL) -I$(PERL_ARCHLIB) -I$(PERL_LIB) $(XSUBPP) $(XSPROTOARG) $(XSUBPPARGS) $*.xs >xstmp.c && $(MV) xstmp.c $*.cpp
 ';
-}
+};
