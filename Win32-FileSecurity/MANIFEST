@@ -5,4 +5,4 @@ MANIFEST
 META.yml
 Makefile.PL
 ppport.h
-test.pl
+sample.pl
