@@ -362,7 +362,7 @@ This version was released by Hideyo Imazu <F<himazu@gmail.com>>.
 
 Aldo Calpini <F<dada@perl.it>> was the former maintainer.
 
-Original XS porting by Gurusamy Sarathy <F<gsar@activestate.com>>.
+Original XS porting by Gurusamy Sarathy <F<gsar@cpan.org>>.
 
 =cut
 

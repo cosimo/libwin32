@@ -2,7 +2,7 @@ This module has been modified so that it will compile using the
 win32 support in core perl.
 
  - Sarathy.
-   gsar@activestate.com
+   gsar@cpan.org
 
 Original README follows:
 

@@ -34,15 +34,15 @@ PIPE.PM HISTORY:
 96.06.10 Dave Roth <rothd@roth.net>
          -Original release. Very buggy and very beta. No guarantees on
 		  this stuff, kids!
-99.09.25 Gurusamy Sarathy <gsar@activestate.com> (v0.021)
+99.09.25 Gurusamy Sarathy <gsar@cpan.org> (v0.021)
 	 - minor fixes for Perl 5.005xx compatibility
 	 - delete[] things that got new[]-ed
 
-2000.05.22 Gurusamy Sarathy <gsar@activestate.com> (v0.022)
+2000.05.22 Gurusamy Sarathy <gsar@cpan.org> (v0.022)
 	 - documentation in POD format included (thanks to David Rosinger
 	   <drosing@ingr.com>
 	 - support for building under Perl v5.6.0 and for passing
-	   Unicode strings to methods (Doug Lankshear <dougl@activestate.com>)
+	   Unicode strings to methods (Doug Lankshear <doug@lankshear.net>)
 
 PIPE.PLL HISTORY:
 ----------------

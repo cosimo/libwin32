@@ -2,7 +2,7 @@ Revision history for Perl extension Win32::File.
 
 0.05  Mon May 22 21:11:35 2000
 	- support for passing Unicode strings to Get() and Set()
-	  methods (Doug Lankshear <dougl@activestate.com>)
+	  methods (Doug Lankshear <doug@lankshear.net>)
 
 0.04  Sun Dec 14 04:31:00 1997
 	- added additional constants

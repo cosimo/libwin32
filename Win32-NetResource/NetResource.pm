@@ -297,7 +297,7 @@ Set the information for share $netname.
 
 Jesse Dougherty for Hip Communications.
 
-Additional general cleanups and bug fixes by Gurusamy Sarathy <gsar@activestate.com>.
+Additional general cleanups and bug fixes by Gurusamy Sarathy <gsar@cpan.org>.
 
 =cut
 

@@ -1,6 +1,6 @@
 #test for Perl NetResource Module Extension.
 #Written by Jesse Dougherty for hip communications.
-#Subsequently hacked by Gurusamy Sarathy <gsar@activestate.com>
+#Subsequently hacked by Gurusamy Sarathy <gsar@cpan.org>
 
 #NOTE:
 #this test will only work if a username and password are supplied in the 

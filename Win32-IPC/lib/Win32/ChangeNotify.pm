@@ -7,7 +7,7 @@ package Win32::ChangeNotify;
 #   (c) 1995 Microsoft Corporation. All rights reserved.
 #       Developed by ActiveWare Internet Corp., http://www.ActiveState.com
 #
-#   Other modifications (c) 1997 by Gurusamy Sarathy <gsar@activestate.com>
+#   Other modifications (c) 1997 by Gurusamy Sarathy <gsar@cpan.org>
 #
 # Author: Christopher J. Madsen <perl@cjmweb.net>
 # $Id$

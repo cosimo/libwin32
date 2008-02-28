@@ -2,7 +2,7 @@
  * XS interface to Windows NT Network resources
  * Written by Jesse Dougherty for hip communications
  *
- * Heavily cleaned up and bugfixed by Gurusamy Sarathy <gsar@activestate.com>
+ * Heavily cleaned up and bugfixed by Gurusamy Sarathy <gsar@cpan.org>
  */
 
 #define WIN32_LEAN_AND_MEAN

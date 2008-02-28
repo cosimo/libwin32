@@ -2,7 +2,7 @@ Revision history for Perl extension Win32::Service.
 
 0.05  Mon May 22 21:54:50 2000
 	- support for passing Unicode strings to methods (thanks to
-	  Doug Lankshear <dougl@activestate.com>)
+	  Doug Lankshear <doug@lankshear.net>)
 
 0.04  Thu Sep 10 17:18:25 1998
 	- fix doc bug about GetServices()
