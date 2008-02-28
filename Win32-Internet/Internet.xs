@@ -1,6 +1,6 @@
 /*
  * Internet.CPP
- * 07 Nov 96 by Aldo Calpini <dada@divinf.it>
+ * 07 Nov 96 by Aldo Calpini <dada@perl.it>
  *
  * XS interface to the Win32 Internet Functions (WININET.DLL)
  * based on Registry.CPP written by Jesse Dougherty

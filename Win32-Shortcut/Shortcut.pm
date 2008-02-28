@@ -732,7 +732,7 @@ First implementation of the IShellLink interface (wow, it works!); can
 
 =head1 AUTHOR
 
-Aldo Calpini L<dada@divinf.it>
+Aldo Calpini L<dada@perl.it>
 
 =head1 CREDITS
 

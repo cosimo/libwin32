@@ -1,6 +1,6 @@
 /*
  * Shortcut.CPP
- * 15 Jan 97 by Aldo Calpini <dada@divinf.it>
+ * 15 Jan 97 by Aldo Calpini <dada@perl.it>
  *
  * XS interface to the Win32 IShellLink Interface
  * based on Registry.CPP written by Jesse Dougherty

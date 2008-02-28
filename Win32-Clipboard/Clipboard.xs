@@ -5,7 +5,7 @@
 #
 # Version: 0.52
 # Created: 19 Nov 96
-# Author: Aldo Calpini <dada@divinf.it>
+# Author: Aldo Calpini <dada@perl.it>
 #
 # Modified: 24 Jul 2004
 # By: Hideyo Imazu <h@imazu.net>

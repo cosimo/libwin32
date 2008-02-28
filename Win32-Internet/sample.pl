@@ -1,6 +1,6 @@
 # TEST.PL for the Win32::Internet Package
 # Version 0.08
-# by Aldo Calpini (dada@divinf.it)
+# by Aldo Calpini (dada@perl.it)
 
 use Win32::Internet;
 
@@ -228,7 +228,7 @@ exit; # 25Aug2000 Jan Dubois
 
 $host = "www.divinf.it";
 $user = "anonymous";
-$pass = "dada\@divinf.it";
+$pass = "dada\@perl.it";
 
 # for my LAN testing
 # $host = "intra.sisnet.it";
@@ -303,7 +303,7 @@ if(!$HTTP) {
 
 $host = "www.divinf.it";
 $user = "anonymous";
-$pass = "dada\@divinf.it";
+$pass = "dada\@perl.it";
 
 # [dada] for my LAN testing
 # $host = "intra.sisnet.it";

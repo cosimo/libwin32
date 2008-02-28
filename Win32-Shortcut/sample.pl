@@ -1,6 +1,6 @@
 # TEST.PL for the Win32::Shortcut Package
 # Version 0.03
-# by Aldo Calpini <dada@divinf.it>
+# by Aldo Calpini <dada@perl.it>
 
 use Win32::Shortcut;
 use Cwd;

@@ -1464,14 +1464,14 @@ C<FetchURL>) this way:
 Or, you can open a complete HTTP session:
 
     $INET = new Win32::Internet();
-    $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@divinf.it");
+    $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@perl.it");
     ($statuscode, $headers, $file) = $HTTP->Request("/");
     $HTTP->Close();
 
 Finally, you can choose to manage even the HTTP request:
 
     $INET = new Win32::Internet();
-    $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@divinf.it");
+    $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@perl.it");
     $HTTP->OpenRequest($REQ, "/");
     $REQ->AddHeader("If-Modified-Since: Saturday, 16-Nov-96 15:58:50 GMT");
     $REQ->SendRequest();
@@ -1483,7 +1483,7 @@ Finally, you can choose to manage even the HTTP request:
 
 To open and control a complete FTP session, type:
 
-    $Connection->FTP($Session, "ftp://ftp.activeware.com", "anonymous", "dada\@divinf.it");
+    $Connection->FTP($Session, "ftp://ftp.activeware.com", "anonymous", "dada\@perl.it");
 
 This will create an FTP object in Perl to which you can apply the L<"FTP
 functions"> provided by the package:
@@ -1635,7 +1635,7 @@ extrainfo>.
 For example, the URL "http://www.divinf.it/index.html#top" can be
 splitted in:
 
-    http, www.divinf.it, 80, anonymous, dada@divinf.it, /index.html, #top
+    http, www.divinf.it, 80, anonymous, dada@perl.it, /index.html, #top
 
 If you don't specify a I<flags> parameter, ICU_ESCAPE will be used by
 default; for the possible values of I<flags> refer to the L<"Microsoft
@@ -1808,12 +1808,12 @@ of the newly created I<ftpobject>.
 
 Example:
 
-    $result = $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@divinf.it");
+    $result = $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@perl.it");
     # and then for example...
     $FTP->Cd("/ntperl/perl5.001m/CurrentBuild");
 
     $params{"server"} = "ftp.activeware.com";
-    $params{"password"} = "dada\@divinf.it";
+    $params{"password"} = "dada\@perl.it";
     $params{"pasv"} = 0;
     $result = $INET->FTP($FTP,\%params);
 
@@ -1827,7 +1827,7 @@ the C<Error> function.
 Example:
 
     print $INET->GetResponse();
-    $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@divinf.it");
+    $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@perl.it");
     print $FTP->GetResponse();
 
 =item GetStatusCallback context
@@ -1906,12 +1906,12 @@ methods of the newly created I<httpobject>.
 
 Example:
 
-    $result = $INET->HTTP($HTTP,"www.activeware.com","anonymous","dada\@divinf.it");
+    $result = $INET->HTTP($HTTP,"www.activeware.com","anonymous","dada\@perl.it");
     # and then for example...
     ($statuscode, $headers, $file) = $HTTP->Request("/gifs/camel.gif");
 
     $params{"server"} = "www.activeware.com";
-    $params{"password"} = "dada\@divinf.it";
+    $params{"password"} = "dada\@perl.it";
     $params{"flags"} = INTERNET_FLAG_RELOAD;
     $result = $INET->HTTP($HTTP,\%params);
 
@@ -2083,7 +2083,7 @@ the complete procedure is:
     $INET->SetStatusCallback();
 
     # specify the context parameter (the last 1 in this case)
-    $INET->HTTP($HTTP, "www.yahoo.com", "anonymous", "dada\@divinf.it", 80, 0, 1);
+    $INET->HTTP($HTTP, "www.yahoo.com", "anonymous", "dada\@perl.it", 80, 0, 1);
 
 At this point, control returns immediately to Perl and $INET->Error()
 will return 997, which means an asynchronous I/O operation is
@@ -2396,7 +2396,7 @@ Example:
     print "Pasv is: ", $FTP->Pasv();
 
     $INET->Pasv(1);
-    $INET->FTP($FTP,"ftp.activeware.com", "anonymous", "dada\@divinf.it");
+    $INET->FTP($FTP,"ftp.activeware.com", "anonymous", "dada\@perl.it");
     $FTP->Pasv(0); # this will be ignored...
 
 =item Put local, [remote, context]

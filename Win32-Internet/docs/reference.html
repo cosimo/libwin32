@@ -54,13 +54,13 @@ You can have the same result (and this is actually what is done by FetchURL) thi
 
 Or, you can open a complete HTTP session:
 </FONT><PRE> $INET = new Win32::Internet();
- $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@divinf.it");
+ $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@perl.it");
  ($statuscode, $headers, $file) = $HTTP->Request("/");
  $HTTP->Close();</PRE><FONT FACE=Arial SIZE=2>
 
 Finally, you can choose to manage even the HTTP request:
 </FONT><PRE> $INET = new Win32::Internet();
- $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@divinf.it");
+ $HTTP = $INET->HTTP("www.yahoo.com", "anonymous", "dada@perl.it");
  $HTTP->OpenRequest($REQ, "/");
  $REQ->AddHeader("If-Modified-Since: Saturday, 16-Nov-96 15:58:50 GMT");
  $REQ->SendRequest();
@@ -71,7 +71,7 @@ Finally, you can choose to manage even the HTTP request:
  $HTTP->Close();</PRE><FONT FACE=Arial SIZE=2>
 
 To open and control a complete FTP session, type:
-</FONT><PRE> $Connection->FTP($Session, "ftp://ftp.activeware.com", "anonymous", "dada\@divinf.it");</PRE><FONT FACE=Arial SIZE=2>
+</FONT><PRE> $Connection->FTP($Session, "ftp://ftp.activeware.com", "anonymous", "dada\@perl.it");</PRE><FONT FACE=Arial SIZE=2>
 
 This will create an FTP object in Perl to which you can apply the
 <A HREF="#FTP_Functions">FTP functions</A> provided by the package:
@@ -264,7 +264,7 @@ See <A HREF="#new">new</A> for more information.
     <P>
     <I>scheme, host, port, username, password, path, extrainfo</I><P>
     For example, the URL "http://www.divinf.it/index.html#top" can be splitted in:<P>
-    </FONT><TT>http, www.divinf.it, 80, anonymous, dada@divinf.it, /index.html, #top</TT><FONT FACE=Arial SIZE=2>
+    </FONT><TT>http, www.divinf.it, 80, anonymous, dada@perl.it, /index.html, #top</TT><FONT FACE=Arial SIZE=2>
     <P>    
     If you don't specify a <I>flags</I> parameter, 
     </FONT><TT>ICU_ESCAPE</TT><FONT FACE=Arial SIZE=2>
@@ -450,12 +450,12 @@ See <A HREF="#new">new</A> for more information.
     of the newly created <I>ftpobject</I>.
     <BR>
     Example:</FONT>
-<PRE> $result = $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@divinf.it");
+<PRE> $result = $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@perl.it");
  # and then for example... 
  $FTP->Cd("/ntperl/perl5.001m/CurrentBuild");
 
  $params{"server"} = "ftp.activeware.com";
- $params{"password"} = "dada\@divinf.it";
+ $params{"password"} = "dada\@perl.it";
  $params{"pasv"} = 0;
  $result = $INET->FTP($FTP,\%params);</PRE>
 <P>
@@ -471,7 +471,7 @@ See <A HREF="#new">new</A> for more information.
     <BR>
     Example:</FONT>
 <PRE> print $INET->GetResponse();
- $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@divinf.it");
+ $INET->FTP($FTP, "ftp.activeware.com", "anonymous", "dada\@perl.it");
  print $FTP->GetResponse();</PRE>
 <P>
 
@@ -552,12 +552,12 @@ See <A HREF="#new">new</A> for more information.
     of the newly created <I>httpobject</I>.
     <BR>
     Example:</FONT>
-<PRE> $result = $INET->HTTP($HTTP,"www.activeware.com","anonymous","dada\@divinf.it");
+<PRE> $result = $INET->HTTP($HTTP,"www.activeware.com","anonymous","dada\@perl.it");
  # and then for example... 
  ($statuscode, $headers, $file) = $HTTP->Request("/gifs/camel.gif");
 
  $params{"server"} = "www.activeware.com";
- $params{"password"} = "dada\@divinf.it";
+ $params{"password"} = "dada\@perl.it";
  $params{"flags"} = INTERNET_FLAG_RELOAD;
  $result = $INET->HTTP($HTTP,\%params);</PRE>
 <P>
@@ -752,7 +752,7 @@ See <A HREF="#new">new</A> for more information.
  $INET->SetStatusCallback();
 
  # specify the context parameter (the last 1 in this case)
- $INET->HTTP($HTTP, "www.yahoo.com", "anonymous", "dada\@divinf.it", 80, 0, 1);</PRE><FONT FACE=Arial SIZE=2>
+ $INET->HTTP($HTTP, "www.yahoo.com", "anonymous", "dada\@perl.it", 80, 0, 1);</PRE><FONT FACE=Arial SIZE=2>
 
 At this point, control returns immediately to Perl and 
 </FONT><TT>$INET->Error()</TT><FONT FACE=Arial SIZE=2>
@@ -1072,7 +1072,7 @@ See <A HREF="#new">new</A> and <A HREF="#FTP">FTP</A> for more information.
 <PRE> print "Pasv is: ", $FTP->Pasv();
 
  $INET->Pasv(1);
- $INET->FTP($FTP,"ftp.activeware.com", "anonymous", "dada\@divinf.it");
+ $INET->FTP($FTP,"ftp.activeware.com", "anonymous", "dada\@perl.it");
  $FTP->Pasv(0); # this will be ignored...</PRE>
 <P>
 
@@ -1304,7 +1304,7 @@ See <A HREF="#new">new</A> and <A HREF="#HTTP">HTTP</A> for more information.<P>
 
 <FONT FACE=Arial SIZE=1>
 10 Feb 1997, Aldo Calpini 
-&lt;<A HREF="mailto:dada@divinf.it">dada@divinf.it</A>&gt;
+&lt;<A HREF="mailto:dada@perl.it">dada@perl.it</A>&gt;
 </FONT><P>
 
 </BODY>

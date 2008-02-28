@@ -1,6 +1,6 @@
 /*
  * Console.CPP
- * 20 Jan 97 by Aldo Calpini <dada@divinf.it>
+ * 20 Jan 97 by Aldo Calpini <dada@perl.it>
  *
  * XS interface to the Win32 Console API
  * based on Registry.CPP written by Jesse Dougherty

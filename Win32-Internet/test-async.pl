@@ -1,7 +1,7 @@
 #
 # TEST-ASYNC.PL
 # Test Win32::Internet's Asynchronous Operations
-# by Aldo Calpini <dada@divinf.it>
+# by Aldo Calpini <dada@perl.it>
 #
 # WARNING: this code is most likely to fail with almost-random errors
 #          I don't know what is wrong here, any hint will be greatly
@@ -26,7 +26,7 @@ print "Buffer=$buffer\n";
 
 $host = "ftp.activeware.com";
 $user = "anonymous";
-$pass = "dada\@divinf.it";
+$pass = "dada\@perl.it";
 
 
 print "Doing FTP()...\n";
