@@ -54,6 +54,11 @@ __END__
 
 Win32::Mutex - Use Win32 mutex objects from Perl
 
+=head1 VERSION
+
+This section is filled in by C<Build distdir>.
+
+
 =head1 SYNOPSIS
 
 	require Win32::Mutex;

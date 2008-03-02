@@ -92,6 +92,11 @@ __END__
 
 Win32::ChangeNotify - Monitor events related to files and directories
 
+=head1 VERSION
+
+This section is filled in by C<Build distdir>.
+
+
 =head1 SYNOPSIS
 
 	require Win32::ChangeNotify;

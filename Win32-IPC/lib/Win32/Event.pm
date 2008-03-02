@@ -44,6 +44,11 @@ __END__
 
 Win32::Event - Use Win32 event objects from Perl
 
+=head1 VERSION
+
+This section is filled in by C<Build distdir>.
+
+
 =head1 SYNOPSIS
 
 	use Win32::Event;

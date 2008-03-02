@@ -63,6 +63,11 @@ __END__
 
 Win32::IPC - Base class for Win32 synchronization objects
 
+=head1 VERSION
+
+This section is filled in by C<Build distdir>.
+
+
 =head1 SYNOPSIS
 
     use Win32::Event 1.00 qw(wait_any);
