@@ -8,7 +8,7 @@ package Win32::File;
 #   Gurusamy Sarathy
 #
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 require Exporter;
 require DynaLoader;
