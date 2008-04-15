@@ -1,4 +1,11 @@
-2004-09-10 23:55 +0900 Hideyo Imazu
+2008-04-15
+	- version 0.53 for separate upload to CPAN
+	- updated email addresses
+	- simplified Makefile.PL
+	- added META.yml
+	- added ppport.h
+	
+2004-09-10 by Hideyo Imazu
 	GetBitmap() didn't work well except with 24 bit color images.
 	The reason was that the CF_DIB data structure wasn't recognized
 	correctly and consequently the BITMAPFILEHEADER structure wasn't

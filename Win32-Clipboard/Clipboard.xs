@@ -3,7 +3,7 @@
 #
 # Win32::Clipboard - Interaction with the Windows clipboard
 #
-# Version: 0.52
+# Version: 0.53
 # Created: 19 Nov 96
 # Author: Aldo Calpini <dada@perl.it>
 #

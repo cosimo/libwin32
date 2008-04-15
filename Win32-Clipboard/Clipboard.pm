@@ -3,7 +3,7 @@ package Win32::Clipboard;
 #
 # Win32::Clipboard - Interaction with the Windows clipboard
 #
-# Version: 0.52
+# Version: 0.53
 # Author: Aldo Calpini <dada@perl.it>
 #
 # Modified by: Hideyo Imazu <himazu@gmail.com>
@@ -62,7 +62,7 @@ sub AUTOLOAD {
 #######################################################################
 # STATIC OBJECT PROPERTIES
 #
-$VERSION = "0.5201";
+$VERSION = "0.53";
 
 #######################################################################
 # FUNCTIONS
