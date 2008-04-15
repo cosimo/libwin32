@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32-Console
 abstract: Win32 Console and Character Mode Functions
-version: 0.07
+version: 0.08
 author:
   - Aldo Calpini <dada@perl.it>
   - Jan Dubois <jand@activestate.com>
