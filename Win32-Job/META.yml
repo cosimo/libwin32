@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32-Job
 abstract: Run sub-processes in a "job" environment
-version: 0.01
+version: 0.02
 author:
   - Jan Dubois <jand@activestate.com>
 license: perl
