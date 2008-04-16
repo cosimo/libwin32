@@ -5,8 +5,8 @@
 # This module creates an object oriented interface to the Win32
 # Internet Functions (WININET.DLL).
 #
-# Version: 0.082 (4 Sep 2001)
-# by Aldo Calpini <dada@divinf.it>
+# Version: 0.083 (15 Apr 2008)
+# by Aldo Calpini <dada@perl.it>
 #
 #######################################################################
 
@@ -93,5 +93,5 @@ You can always find the latest version of this package online at:
 
 Send any comment to:
 
-    Aldo Calpini  mailto:dada@divinf.it
+    Aldo Calpini  mailto:dada@perl.it
 

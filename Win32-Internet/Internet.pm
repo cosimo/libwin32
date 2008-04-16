@@ -2797,6 +2797,22 @@ use, refer to the Microsoft Win32 Internet Functions document.
 
 =over
 
+=item * 0.083 (15 Apr 2008)
+
+=over
+
+=item *
+
+New version for separate upload to CPAN.
+
+Updated email addresses (but some stale references to divinf.it still remain).
+
+Simplified Makefile.PL; added META.yml; added ppport.h.
+
+Renamed test.pl to sample.pl because it doesn't generate TAP output.
+
+=back
+
 =item * 0.082 (4 Sep 2001)
 
 =over

@@ -5,7 +5,7 @@
  * XS interface to the Win32 Internet Functions (WININET.DLL)
  * based on Registry.CPP written by Jesse Dougherty
  *
- * Version: 0.082 4 Sep 2001
+ * Version: 0.083 15 Apr 2008
  *
  */
 
