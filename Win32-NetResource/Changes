@@ -1,5 +1,11 @@
 Revision history for Perl extension Win32::NetResource.
 
+0.054 Tue Apr 15 2008
+	- version 0.054 for separate upload to CPAN
+	- updated email addresses
+	- simplified Makefile.PL
+	- added META.yml
+
 0.053 Mon Jul  8 16:44:32 2002
 	- added missing STYPE_* and SHARE_* constants
 	- fixed NetShareCheck() to uppercase the device argument appropriately
