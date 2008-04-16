@@ -1,5 +1,12 @@
 Revision history for Perl extension Win32::Service.
 
+0.06  Tue Apr 15 2008
+	- version 0.06 for separate upload to CPAN
+	- updated email addresses
+	- simplified Makefile.PL
+	- added META.yml
+	- added ppport.h
+
 0.05  Mon May 22 21:54:50 2000
 	- support for passing Unicode strings to methods (thanks to
 	  Doug Lankshear <doug@lankshear.net>)
