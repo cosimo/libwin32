@@ -19,3 +19,10 @@ Revision history for Perl extension Win32::PerfLib.
 	- support for building under Perl v5.6.0
 	- support for passing Unicode strings to methods (thanks to
 	  Doug Lankshear <doug@lankshear.net>)
+
+0.06  Tue Apr 15 2008
+	- version 0.06 for separate upload to CPAN
+	- updated email addresses
+	- simplified Makefile.PL
+	- added META.yml
+	- added ppport.h

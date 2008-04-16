@@ -84,7 +84,7 @@ require AutoLoader;
 	     PERF_TYPE_ZERO
 	    );
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 sub AUTOLOAD {
    

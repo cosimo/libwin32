@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32-PerfLib
 abstract: Accessing the Windows NT Performance Counter
-version: 0.05
+version: 0.06
 author:
   - Jutta M. Klebe <jmk@bybyte.de>
   - Jan Dubois <jand@activestate.com>
