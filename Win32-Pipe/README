@@ -44,6 +44,13 @@ PIPE.PM HISTORY:
 	 - support for building under Perl v5.6.0 and for passing
 	   Unicode strings to methods (Doug Lankshear <doug@lankshear.net>)
 
+2008.04.15 Jan Dubois <jand@activestate.com> (v0.023)
+	- new version for separate upload to CPAN
+	- updated email addresses
+	- simplified Makefile.PL
+	- added META.yml
+	- added ppport.h
+
 PIPE.PLL HISTORY:
 ----------------
 96.06.10 Dave Roth <rothd@roth.net>
