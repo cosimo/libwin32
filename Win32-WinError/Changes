@@ -1,5 +1,10 @@
 Revision history for Perl extension Win32::WinError.
 
+0.02  Wed Apr 16 2008
+	- version 0.02 for separate upload to CPAN
+	- simplified Makefile.PL
+	- added META.yml
+
 0.01  Sat Apr  5 14:25:34 1997
 	- original version; created by h2xs 1.18
 	- imported Activeware version
