@@ -1,5 +1,13 @@
 Revision history for Perl extension Win32::ODBC.
 
+2008-04-15
+
+	* new version 0.33 for separate upload to CPAN
+	* updated email addresses
+	* simplified Makefile.PL
+	* added Changes, META.yml and ppport.h files
+	* renamed Test.pl to sample.pl because it doesn't generate TAP output
+
 2005-09-18 11:15:17 rurban@x-ray.at
 
 	* ODBC/ODBC.xs: use iodbcinst.h with CYGWIN
