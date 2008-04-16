@@ -5,8 +5,8 @@
 # This module creates an object oriented interface to the Win32
 # IShellLink Interface.
 #
-# Version: 0.05 (16 Nov 2005)
-# by Aldo Calpini <dada@divinf.it>
+# Version: 0.06 (16 Apr 2008)
+# by Aldo Calpini <dada@perl.it>
 #
 #######################################################################
 
@@ -24,4 +24,4 @@ You can always find the latest version of this package online at:
 
 Send any comment to:
 
-    Aldo Calpini  <dada@divinf.it>
+    Aldo Calpini  <dada@perl.it>

@@ -1,8 +1,16 @@
 Revision history for Perl extension Win32::Shortcut.
 
+0.06 April 2008
+    - version 0.06 for separate upload to CPAN
+    - updated email addresses
+    - simplified Makefile.PL
+    - added META.yml
+    - renamed test.pl to sample.pl because it doesn't generate TAP output
+
 0.05 November 2005
     - The constructor now saves the filename even if the file does not yet exist.
       This name is then used when the Save() method is called without arguments.
+    - Convert documentation to POD and add it to Shortcut.pm.
 
 0.04 September 2005
     - The Save() function now calls Win32::GetLongPathName() on the filename

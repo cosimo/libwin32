@@ -16,7 +16,7 @@ goto endofperl
 
 # ln32: A Win32 Command Line Link Utility.
 # Version: 1.01
-# by Aldo Calpini <dada@divinf.it>
+# by Aldo Calpini <dada@perl.it>
 
 use Win32::Shortcut;
 
@@ -138,7 +138,7 @@ SYNTAX: ln32 [options] file_name(s)
   -h             : show this help page
 
 Version: 1.01
-by Aldo Calpini <dada\@divinf.it>
+by Aldo Calpini <dada\@perl.it>
 
 USAGE_END
 }
