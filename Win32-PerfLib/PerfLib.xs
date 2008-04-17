@@ -607,34 +607,34 @@ HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
 			 CurCntr->CounterNameTitleIndex,
 			 CurCntr->CounterType);
 	size = CurCntr->CounterType & SIZE_MASK;
-#//	hv_store(hvCounter, "Size", strlen("Size"),
+#//	hv_store(hvCounter, "Size", (I32)strlen("Size"),
 #//		 newSViv(size), 0);
 	type = CurCntr->CounterType & TYPE_MASK;
-#//	hv_store(hvCounter, "Type", strlen("Type"),
+#//	hv_store(hvCounter, "Type", (I32)strlen("Type"),
 #//		 newSViv(type), 0);
 	subtype = CurCntr->CounterType & SUB_TYPE_MASK;
-#//	hv_store(hvCounter, "SubType", strlen("SubType"),
+#//	hv_store(hvCounter, "SubType", (I32)strlen("SubType"),
 #//		 newSViv(subtype), 0);
 	display = CurCntr->CounterType & DISPLAY_MASK;
 	calc_mod = CurCntr->CounterType & CALC_MOD_MASK;
-#//	hv_store(hvCounter, "CalculationModifiers", strlen("CalculationModifiers"),
+#//	hv_store(hvCounter, "CalculationModifiers", (I32)strlen("CalculationModifiers"),
 #//		 newSViv(calc_mod), 0);
 	time_base = CurCntr->CounterType & TIME_BASE_MASK;
-#//	hv_store(hvCounter, "TimeBase", strlen("TimeBase"),
+#//	hv_store(hvCounter, "TimeBase", (I32)strlen("TimeBase"),
 #//		 newSViv(time_base), 0);
 	hv_store(hvCounter, "CounterNameTitleIndex",
-		 strlen("CounterNameTitleIndex"),
+		 (I32)strlen("CounterNameTitleIndex"),
 		 newSViv(CurCntr->CounterNameTitleIndex), 0);
 	hv_store(hvCounter, "CounterHelpTitleIndex",
-		 strlen("CounterHelpTitleIndex"),
+		 (I32)strlen("CounterHelpTitleIndex"),
 		 newSViv(CurCntr->CounterHelpTitleIndex), 0);
-	hv_store(hvCounter, "CounterSize", strlen("CounterSize"),
+	hv_store(hvCounter, "CounterSize", (I32)strlen("CounterSize"),
 		 newSViv(CurCntr->CounterSize), 0);
-	hv_store(hvCounter, "CounterType", strlen("CounterType"),
+	hv_store(hvCounter, "CounterType", (I32)strlen("CounterType"),
 		 newSViv(CurCntr->CounterType), 0);
-	hv_store(hvCounter, "DefaultScale", strlen("DefaultScale"),
+	hv_store(hvCounter, "DefaultScale", (I32)strlen("DefaultScale"),
 		 newSViv(CurCntr->DefaultScale), 0);
-	hv_store(hvCounter, "DetailLevel", strlen("DetailLevel"),
+	hv_store(hvCounter, "DetailLevel", (I32)strlen("DetailLevel"),
 		 newSViv(CurCntr->DetailLevel), 0);
  	if ( PerfObj->NumInstances > 0 )
  	{
@@ -651,7 +651,7 @@ HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
 	{
 	case PERF_SIZE_DWORD:
 	    lpDWord = (DWORD*)lpCounterData;
-	    hv_store(hvCounter, "Counter", strlen("Counter"),
+	    hv_store(hvCounter, "Counter", (I32)strlen("Counter"),
 		     newSViv(*lpDWord), 0);
 	    if (PerfLib_debug)
 	    {
@@ -661,9 +661,9 @@ HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
 	case PERF_SIZE_LARGE:
 	    lpLargeInt = (LARGE_INTEGER*)lpCounterData;
 	    sprintf(buffer, "%I64d", lpLargeInt->QuadPart );
-	    hv_store(hvCounter, "Counter", strlen("Counter"),
+	    hv_store(hvCounter, "Counter", (I32)strlen("Counter"),
 		     newSVpv(buffer, strlen(buffer)), 0);
-#//         hv_store(hvCounter, "Counter", strlen("Counter"),
+#//         hv_store(hvCounter, "Counter", (I32)strlen("Counter"),
 #//		     newSVnv((double)lpLargeInt->QuadPart), 0);
 	    if (PerfLib_debug)
 	    {
@@ -737,17 +737,17 @@ HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
 	    if (PerfLib_debug) printf("\t\tno suffix\n");
 	    break;
 	case PERF_DISPLAY_PER_SEC:
-	    hv_store(hvCounter, "Display", strlen("Display"),
+	    hv_store(hvCounter, "Display", (I32)strlen("Display"),
 		     newSVpv("/sec", strlen("/sec")),0);
 	    if (PerfLib_debug) printf("\t\t/sec\n");
 	    break;
 	case PERF_DISPLAY_PERCENT:
-	    hv_store(hvCounter, "Display", strlen("Display"),
+	    hv_store(hvCounter, "Display", (I32)strlen("Display"),
 		     newSVpv("%", strlen("%")),0);
 	    if (PerfLib_debug) printf("\t\t%%\n");
 	    break;
 	case PERF_DISPLAY_SECONDS:
-	    hv_store(hvCounter, "Display", strlen("Display"),
+	    hv_store(hvCounter, "Display", (I32)strlen("Display"),
 		     newSVpv("sec", strlen("sec")),0);
 	    if (PerfLib_debug) printf("\t\tsecs\n");
 	    break;
@@ -767,7 +767,7 @@ HV *GetCounters(CPERLarg_ PPERF_OBJECT_TYPE PerfObj,
 		printf("\t\tmulti counter\n");
 	}
 	sprintf(buffer, "%d", k );
-	hv_store(hvCounterNum, buffer, strlen(buffer),
+	hv_store(hvCounterNum, buffer, (I32)strlen(buffer),
 		 (SV*)newRV_noinc((SV*)hvCounter),0);
 	CurCntr = NextCounter(CurCntr);
     }
@@ -985,25 +985,25 @@ PerfLibGetObjects(handle,counter,data)
 	    printf("cbData: %d\n", cbData );
 	    printf("NumObjectTypes: %d\n", PerfData->NumObjectTypes );
 	}
-	hv_store((HV*)data, "NumObjectTypes", strlen("NumObjectTypes"),
+	hv_store((HV*)data, "NumObjectTypes", (I32)strlen("NumObjectTypes"),
 		 newSViv(PerfData->NumObjectTypes),0);
 	SystemTimeToFileTime(&(PerfData->SystemTime), &ft);
 	lft.u.LowPart = (DWORD)ft.dwLowDateTime;
 	lft.u.HighPart = (LONG)ft.dwHighDateTime;
 	sprintf(buffer, "%I64d", lft.QuadPart);
-#//	hv_store((HV*)data, "SystemTime", strlen("SystemTime"),
+#//	hv_store((HV*)data, "SystemTime", (I32)strlen("SystemTime"),
 #//		 newSVpv(buffer, strlen(buffer)), 0);
-	hv_store((HV*)data, "SystemTime", strlen("SystemTime"),
+	hv_store((HV*)data, "SystemTime", (I32)strlen("SystemTime"),
 		 newSVnv((double)lft.QuadPart), 0);
-	hv_store((HV*)data, "PerfTime", strlen("PerfTime"),
+	hv_store((HV*)data, "PerfTime", (I32)strlen("PerfTime"),
 		 newSVnv((double)PerfData->PerfTime.QuadPart),0);
-	hv_store((HV*)data, "PerfFreq", strlen("PerfFreq"),
+	hv_store((HV*)data, "PerfFreq", (I32)strlen("PerfFreq"),
 		 newSVnv((double)PerfData->PerfFreq.QuadPart),0);
-	hv_store((HV*)data, "PerfTime100nSec", strlen("PerfTime100nSec"),
+	hv_store((HV*)data, "PerfTime100nSec", (I32)strlen("PerfTime100nSec"),
 		 newSVnv((double)PerfData->PerfTime100nSec.QuadPart),0);
 	WCTMB((LPWSTR)((PBYTE)PerfData + PerfData->SystemNameOffset), buffer,
 	      PerfData->SystemNameLength);
-	hv_store((HV*)data, "SystemName", strlen("SystemName"),
+	hv_store((HV*)data, "SystemName", (I32)strlen("SystemName"),
 		 newSVpv(buffer, strlen(buffer)),0);
 	PerfObj = FirstObject(PerfData);
 	if (PerfLib_debug)
@@ -1015,22 +1015,22 @@ PerfLibGetObjects(handle,counter,data)
 	for (i=1;i<=PerfData->NumObjectTypes;i++)
 	{
 	    hvObject = newHV();
-	    hv_store(hvObject, "ObjectNameTitleIndex", strlen("ObjectNameTitleIndex"),
+	    hv_store(hvObject, "ObjectNameTitleIndex", (I32)strlen("ObjectNameTitleIndex"),
 		     newSViv(PerfObj->ObjectNameTitleIndex), 0);
-	    hv_store(hvObject, "ObjectHelpTitleIndex", strlen("ObjectHelpTitleIndex"),
+	    hv_store(hvObject, "ObjectHelpTitleIndex", (I32)strlen("ObjectHelpTitleIndex"),
 		     newSViv(PerfObj->ObjectHelpTitleIndex), 0);
-	    hv_store(hvObject, "NumCounters", strlen("NumCounters"),
+	    hv_store(hvObject, "NumCounters", (I32)strlen("NumCounters"),
 		     newSViv(PerfObj->NumCounters), 0);
-	    hv_store(hvObject, "NumInstances", strlen("NumInstances"),
+	    hv_store(hvObject, "NumInstances", (I32)strlen("NumInstances"),
 		     newSViv(PerfObj->NumInstances), 0);
-	    hv_store(hvObject, "DetailLevel", strlen("DetailLevel"),
+	    hv_store(hvObject, "DetailLevel", (I32)strlen("DetailLevel"),
 		     newSViv(PerfObj->DetailLevel), 0);
 #//		sprintf(buffer, "%I64d", PerfObj->PerfTime.QuadPart);
-#//		hv_store(hvObject, "PerfTime", strlen("PerfTime"),
+#//		hv_store(hvObject, "PerfTime", (I32)strlen("PerfTime"),
 #//				 newSVpv(buffer, strlen(buffer)), 0);
-	    hv_store(hvObject, "PerfTime", strlen("PerfTime"),
+	    hv_store(hvObject, "PerfTime", (I32)strlen("PerfTime"),
 		     newSVnv((double)PerfObj->PerfTime.QuadPart), 0);
-	    hv_store(hvObject, "PerfFreq", strlen("PerfFreq"),
+	    hv_store(hvObject, "PerfFreq", (I32)strlen("PerfFreq"),
 		     newSVnv((double)PerfObj->PerfFreq.QuadPart), 0);
 	    PerfCntr = FirstCounter(PerfObj);
 	    PerfInst = FirstInstance(PerfObj);
@@ -1048,38 +1048,38 @@ PerfLibGetObjects(handle,counter,data)
 		    hvInstance = newHV();
 		    WCTMB((LPWSTR)((PBYTE)PerfInst + PerfInst->NameOffset), buffer,
 			  PerfInst->NameLength);
-		    hv_store(hvInstance, "Name", strlen("Name"),
+		    hv_store(hvInstance, "Name", (I32)strlen("Name"),
 			     newSVpv(buffer, strlen(buffer)), 0);
 		    hv_store(hvInstance, "ParentObjectTitleIndex",
-			     strlen("ParentObjectTitleIndex"),
+			     (I32)strlen("ParentObjectTitleIndex"),
 			     newSViv(PerfInst->ParentObjectTitleIndex), 0);
 		    hv_store(hvInstance, "ParentObjectInstance",
-			     strlen("ParentObjectInstance"),
+			     (I32)strlen("ParentObjectInstance"),
 			     newSViv(PerfInst->ParentObjectInstance), 0);
 		    hvCounterNum = GetCounters(PERL_OBJECT_THIS_ PerfObj, PerfInst);
-		    hv_store(hvInstance, "Counters", strlen("Counters"),
+		    hv_store(hvInstance, "Counters", (I32)strlen("Counters"),
 			     (SV*)newRV_noinc((SV*)hvCounterNum), 0);
 		    sprintf(buffer, "%d", j);
-		    hv_store(hvInstanceNum, buffer, strlen(buffer),
+		    hv_store(hvInstanceNum, buffer, (I32)strlen(buffer),
 			     (SV*)newRV_noinc((SV*)hvInstance),0);
 		    PerfInst = NextInstance(PerfInst);
 		}
-		hv_store(hvObject, "Instances", strlen("Instances"),
+		hv_store(hvObject, "Instances", (I32)strlen("Instances"),
 			 (SV*)newRV_noinc((SV*)hvInstanceNum),0);
 	    }
 	    else
 	    {
 		hvCounterNum = GetCounters(PERL_OBJECT_THIS_ PerfObj, PerfInst);
-		hv_store(hvObject, "Counters", strlen("Counters"),
+		hv_store(hvObject, "Counters", (I32)strlen("Counters"),
 			 (SV*)newRV_noinc((SV*)hvCounterNum),0);
 	    }
 	    sprintf(buffer, "%d", PerfObj->ObjectNameTitleIndex);
-	    hv_store(hvObjectNum, buffer, strlen(buffer),
+	    hv_store(hvObjectNum, buffer, (I32)strlen(buffer),
 		     (SV*)newRV_noinc((SV*)hvObject),0);
 	    PerfObj = NextObject(PerfObj);
 		
 	}
-	hv_store((HV*)data, "Objects", strlen("Objects"),
+	hv_store((HV*)data, "Objects", (I32)strlen("Objects"),
 		 (SV*)newRV_noinc((SV*)hvObjectNum),0); // AS
 	RETVAL = 1;
     OUTPUT:
