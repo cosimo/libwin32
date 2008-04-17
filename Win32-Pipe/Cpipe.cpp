@@ -57,7 +57,7 @@ CPipe::CPipe(char *szName, DWORD dWait){
 	}else{
 		iPipeType = SERVER;
 		strcpy(szPipeName, PIPE_NAME_PREFIX);
-		iTemp = strlen(PIPE_NAME_PREFIX);
+		iTemp = (int)strlen(PIPE_NAME_PREFIX);
 	}
 	strncat(szPipeName, szName, PIPE_NAME_SIZE - iTemp);
 	if (USING_WIDE()) {

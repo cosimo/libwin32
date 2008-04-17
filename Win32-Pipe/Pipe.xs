@@ -184,7 +184,11 @@ XS(XS_WIN32__Pipe_Create)
 		}
 	}
 	if (Pipe){ // everything is happy
-		XPUSHs(sv_2mortal(newSViv((long)Pipe)));
+#ifdef _WIN64
+		XPUSHs(sv_2mortal(newSViv((DWORD_PTR)Pipe)));
+#else
+		XPUSHs(sv_2mortal(newSViv((DWORD)Pipe)));
+#endif
 	}else{
 		XPUSHs(sv_2mortal(newSViv(0)));
 	}

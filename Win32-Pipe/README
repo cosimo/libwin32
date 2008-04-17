@@ -50,6 +50,7 @@ PIPE.PM HISTORY:
 	- simplified Makefile.PL
 	- added META.yml
 	- added ppport.h
+	- added casts to suppress compiler warnings on Win64
 
 PIPE.PLL HISTORY:
 ----------------
