@@ -64,7 +64,7 @@ require DynaLoader;
 }
 $EXPORT_TAGS{ALL}= \@EXPORT_OK;
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 sub AUTOLOAD {
     my $constname;

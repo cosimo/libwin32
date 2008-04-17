@@ -19,6 +19,10 @@
 
 #include "ppport.h"
 
+#ifndef _WIN64
+#  define DWORD_PTR DWORD
+#endif
+
 static int
 not_here(char *s)
 {
@@ -484,8 +488,8 @@ MBTWC(char* name)
     int length;
     LPWSTR lpPtr = NULL;
     
-    if (name != NULL) { // && *name != '\0') {
-	length = strlen(name)+1;
+    if (name) { // && *name != '\0') {
+	length = (int)strlen(name)+1;
 	Newz(0, lpPtr, length, WCHAR);
 	MultiByteToWideChar(CP_ACP, 0, name, -1, lpPtr,
 				length * sizeof(WCHAR));
@@ -502,22 +506,21 @@ MBTWC(char* name)
 
 #define HV_GET_PV(CAST, field, name) \
     STMT_START {							\
-	STRLEN pl_na;							\
-	if ((svPtr = hv_fetch((HV*)hv, name, strlen(name), 0)) == NULL)	\
+	if ((svPtr = hv_fetch((HV*)hv, name, (I32)strlen(name), 0)) == NULL)	\
 	    croak("Required argument not supplied (%s),", name);	\
 	if (SvOK(*svPtr))						\
-	    ((CAST)uiX)->field = MBTWC(SvPV(*svPtr, pl_na));		\
+	    ((CAST)uiX)->field = MBTWC(SvPV_nolen(*svPtr));		\
 	else /* fields set to "undef" pass NULL to underlying API */	\
 	    ((CAST)uiX)->field = (LPWSTR)NULL;				\
     } STMT_END
 
 #define HV_GET_IV(CAST, field, name) \
     STMT_START {							\
-	if ((svPtr = hv_fetch((HV*)hv, name, strlen(name), 0)) == NULL)	\
+	if ((svPtr = hv_fetch((HV*)hv, name, (I32)strlen(name), 0)) == NULL)	\
 	    croak("Required argument not supplied (%s),", name);	\
 	if (!SvIOK(*svPtr))						\
 	    croak("Bad data for %s, ", name);				\
-	((CAST)uiX)->field = SvIV(*svPtr);				\
+	((CAST)uiX)->field = (DWORD)SvIV(*svPtr);			\
     } STMT_END
 
 #define HV_GET_AV(CAST, field, name, n) \
@@ -525,7 +528,7 @@ MBTWC(char* name)
 	int i = 0;							\
 	SV **svTmp, *svPtrIndirect;					\
 	Newz(0, ((CAST)uiX)->field, n, BYTE);				\
-	if ((svPtr = hv_fetch((HV*)hv, name, strlen(name), 0)) == NULL)	\
+	if ((svPtr = hv_fetch((HV*)hv, name, (I32)strlen(name), 0)) == NULL)	\
 	    croak("Required argument not supplied (%s), ", name);	\
 	if (!(SvROK(*svPtr) && (svPtrIndirect = SvRV(*svPtr))		\
 		&& SvTYPE(svPtrIndirect) == SVt_PVAV))			\
@@ -909,14 +912,14 @@ WCTMB(LPWSTR lpwStr, LPSTR lpStr, int size)
 #define HV_STORE_PV(CAST, field, name) \
     STMT_START {							\
 	WCTMB(((CAST)uiX)->field, tmpBuf, sizeof(tmpBuf));		\
-	sv = newSVpv(tmpBuf, strlen(tmpBuf));				\
-	hv_store((HV*)hv, name, strlen(name), sv, 0);			\
+	sv = newSVpv(tmpBuf, (I32)strlen(tmpBuf));			\
+	hv_store((HV*)hv, name, (I32)strlen(name), sv, 0);		\
     } STMT_END
 
 #define HV_STORE_IV(CAST, field, name) \
     STMT_START {							\
 	sv = newSViv(((CAST)uiX)->field);				\
-	hv_store((HV*)hv, name, strlen(name), sv, 0);			\
+	hv_store((HV*)hv, name, (I32)strlen(name), sv, 0);		\
     } STMT_END
 
 #define HV_STORE_AV(CAST, field, name, n) \
@@ -928,7 +931,7 @@ WCTMB(LPWSTR lpwStr, LPSTR lpStr, int size)
 	    sv = newSViv((BYTE)(((CAST)uiX)->field)[i++]);		\
 	    av_push(av, sv);						\
 	}								\
-	hv_store((HV*)hv, name, strlen(name), newRV_noinc((SV*)av), 0);	\
+	hv_store((HV*)hv, name, (I32)strlen(name), newRV_noinc((SV*)av), 0);	\
     } STMT_END
 
 void
@@ -1226,7 +1229,7 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	PUSER_INFO_0 pwzUsers = NULL;
-	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0, resumeHandle = 0;
 	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -1346,7 +1349,7 @@ CODE:
 
 	if (lastError == NERR_Success) {
 	    fillUserHash((HV *)hash, level, uiX);
-	    sv = newSVpv(user, strlen(user));
+	    sv = newSVpv(user, (I32)strlen(user));
 	    hv_store((HV*)hash, "name", 4, sv, 0);            
 	    NetApiBufferFree(uiX);
 	}
@@ -1423,7 +1426,6 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwUser = MBTWC(user);
 	int i;
-	STRLEN pl_na;
 	DWORD lastError = 0;
 
 	GROUP_INFO_0    *groups;
@@ -1431,7 +1433,7 @@ CODE:
 	Newz(0, groups, items, GROUP_INFO_0);
 
 	for (i=2; i<items; i++) 
-	    groups[i-2].grpi0_name = MBTWC(SvPV(ST(i), pl_na));
+	    groups[i-2].grpi0_name = MBTWC(SvPV_nolen(ST(i)));
 
 	lastError = NetUserSetGroups(lpwServer, lpwUser, 0,
 				     (LPBYTE)groups, items-2);
@@ -1593,7 +1595,8 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	PGROUP_INFO_0 pwzGroups;
-	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0;
+        DWORD_PTR resumeHandle = 0;
         DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -1670,7 +1673,8 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwGroup = MBTWC(group);
 	PGROUP_USERS_INFO_0 pwzGroupUsers;
-	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0;
+        DWORD_PTR resumeHandle = 0;
         DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -1934,7 +1938,8 @@ CODE:
     {
 	LPWSTR lpwServer = MBTWC(server);
 	PLOCALGROUP_INFO_0 pwzLocalGroups;
-	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0;
+        DWORD_PTR resumeHandle = 0;
 	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];
@@ -2016,7 +2021,8 @@ CODE:
 	LPWSTR lpwServer = MBTWC(server);
 	LPWSTR lpwGroup = MBTWC(group);
 	PLOCALGROUP_MEMBERS_INFO_1 pwzMembersInfo;
-	DWORD entriesRead = 0, totalEntries = 0, *resumeHandle = 0;
+	DWORD entriesRead = 0, totalEntries = 0;
+        DWORD_PTR resumeHandle = 0;
 	DWORD index;
 	DWORD lastError = 0;
 	char tmpBuf[UNLEN+1];

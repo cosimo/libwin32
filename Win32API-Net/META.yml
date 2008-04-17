@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32API-Net
 abstract: Perl interface to the Windows NT LanManager API account management functions
-version: 0.11
+version: 0.12
 author:
   - Bret Giddings <bret@essex.ac.uk>
   - Jan Dubois <jand@activestate.com>
