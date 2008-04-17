@@ -1,0 +1,6 @@
+Clipboard.pm
+Clipboard.xs
+MANIFEST
+Makefile.PL
+README
+test.pl

@@ -1,0 +1,6 @@
+Revision history for Perl extension Win32::Registry.
+
+0.01  Sat Apr  5 14:23:42 1997
+	- original version; created by h2xs 1.18
+	- imported Activeware version
+
