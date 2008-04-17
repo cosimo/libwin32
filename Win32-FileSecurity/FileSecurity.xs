@@ -321,7 +321,7 @@ Get(filename, hv)
 		    if (!bResult) {
 			Name = NoName ;
 			bDName = 0;
-			bName = strlen(Name);
+			bName = (DWORD)strlen(Name);
 		    }
 
 		    if ( bDName ) {
@@ -509,7 +509,7 @@ Set(filename, hv)
 		while (tries--) {
 		    /* Add Ace */
 		    if ( AccountRights ) {
-			pAllAce->Header.AceSize = sizeof( ACCESS_ALLOWED_ACE ) - sizeof( DWORD ) + GetLengthSid( (PSID) pSID  ) ;
+			pAllAce->Header.AceSize = (WORD)(sizeof( ACCESS_ALLOWED_ACE ) - sizeof( DWORD ) + GetLengthSid( (PSID) pSID  ));
 			pAllAce->Mask = (ACCESS_MASK) AccountRights ;
 			
 			if (!AddAce(

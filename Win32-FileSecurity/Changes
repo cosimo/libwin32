@@ -1,12 +1,13 @@
 Revision history for Perl extension Win32::FileSecurity.
 
-1.05  Tue Apr 15 2008
+1.05  Tue Apr 17 2008
 	- version 1.05 for separate upload to CPAN
 	- updated email addresses
 	- simplified Makefile.PL
 	- added META.yml
 	- added ppport.h
 	- renamed test.pl to sample.pl because it doesn't generate TAP output
+	- casts to suppress compiler warnings under Win64
 
 1.04  Mon May 22 21:14:00 2000
 	- support for building under Perl v5.6.0
