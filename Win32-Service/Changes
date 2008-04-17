@@ -6,6 +6,7 @@ Revision history for Perl extension Win32::Service.
 	- simplified Makefile.PL
 	- added META.yml
 	- added ppport.h
+	- casts to suppress compiler warnings under Win64
 
 0.05  Mon May 22 21:54:50 2000
 	- support for passing Unicode strings to methods (thanks to

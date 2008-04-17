@@ -279,25 +279,25 @@ GetStatus(lpHostName,lpServiceName,status)
 		    if (RETVAL) {
 			SV *sv;
 			sv = newSViv(serviceStatus.dwServiceType);
-			hv_store((HV*)status, "ServiceType", strlen("ServiceType"), sv, 0);
+			hv_store((HV*)status, "ServiceType", (I32)strlen("ServiceType"), sv, 0);
 			
 			sv = newSViv(serviceStatus.dwCurrentState);
-			hv_store((HV*)status, "CurrentState", strlen("CurrentState"), sv, 0);
+			hv_store((HV*)status, "CurrentState", (I32)strlen("CurrentState"), sv, 0);
 			
 			sv = newSViv(serviceStatus.dwControlsAccepted);
-			hv_store((HV*)status, "ControlsAccepted", strlen("ControlsAccepted"), sv, 0);
+			hv_store((HV*)status, "ControlsAccepted", (I32)strlen("ControlsAccepted"), sv, 0);
 			
 			sv = newSViv(serviceStatus.dwWin32ExitCode);
-			hv_store((HV*)status, "Win32ExitCode", strlen("Win32ExitCode"), sv, 0);
+			hv_store((HV*)status, "Win32ExitCode", (I32)strlen("Win32ExitCode"), sv, 0);
 			
 			sv = newSViv(serviceStatus.dwServiceSpecificExitCode);
-			hv_store((HV*)status, "ServiceSpecificExitCode", strlen("ServiceSpecificExitCode"), sv, 0);
+			hv_store((HV*)status, "ServiceSpecificExitCode", (I32)strlen("ServiceSpecificExitCode"), sv, 0);
 			
 			sv = newSViv(serviceStatus.dwCheckPoint);
-			hv_store((HV*)status, "CheckPoint", strlen("CheckPoint"), sv, 0);
+			hv_store((HV*)status, "CheckPoint", (I32)strlen("CheckPoint"), sv, 0);
 			
 			sv = newSViv(serviceStatus.dwWaitHint);
-			hv_store((HV*)status, "WaitHint", strlen("WaitHint"), sv, 0);
+			hv_store((HV*)status, "WaitHint", (I32)strlen("WaitHint"), sv, 0);
 		    }
 		}
 	    }
@@ -403,7 +403,7 @@ GetServices(lpHostName, hv)
 
 			sv = newSVpv(lpServiceName, 0);
 			hv_store((HV*)hv, lpDisplayName,
-				 strlen(lpDisplayName), sv, 0);
+				 (I32)strlen(lpDisplayName), sv, 0);
 		    }
 		    if (dwResumeHandle == 0) {
 			RETVAL = TRUE;
