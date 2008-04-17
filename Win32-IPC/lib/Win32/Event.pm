@@ -26,7 +26,7 @@ use Win32::IPC 1.00 '/./';      # Import everything
 
 BEGIN
 {
-  $VERSION = '1.06';
+  $VERSION = '1.07';
 
   @ISA = qw(Win32::IPC);        # Win32::IPC isa Exporter
   @EXPORT_OK = qw(
@@ -155,6 +155,15 @@ Please report any bugs or feature requests to
 S<< C<< <bug-Win32-IPC AT rt.cpan.org> >> >>,
 or through the web interface at
 L<http://rt.cpan.org/Public/Bug/Report.html?Queue=Win32-IPC>
+
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 1998-2008 Christopher J. Madsen
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic>.
+
 
 =head1 DISCLAIMER OF WARRANTY
 
