@@ -1,0 +1,14 @@
+Revision history for Perl extension Win32::Shortcut.
+
+0.04 September 2005
+    - The Save() function now calls Win32::GetLongPathName() on the filename
+      to make sure to use a fully qualified pathname.
+
+    - The Save() will store the new filename as the 'File' property unless
+      the Shortcut object already has a 'File' property.
+
+0.03
+    - The PLL file now comes in 2 versions, one for Perl version 5.001 (build 110)
+      and one for Perl version 5.003 (build 300 and higher, EXCEPT 304).
+    - Added an installation program which will automatically copy the right files
+      in the right place.

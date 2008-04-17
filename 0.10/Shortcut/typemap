@@ -1,0 +1,6 @@
+DWORD                  T_IV
+LPSTR                  T_PV
+LPCSTR                 T_PV
+IShellLink *           T_IV
+IPersistFile *         T_IV
+

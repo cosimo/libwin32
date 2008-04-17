@@ -1,0 +1,171 @@
+Welcome to libwin32 version 0.191.
+
+
+WHAT
+----
+
+This used to be a bundle of extensions that provided a quick migration path
+for people wanting to use the core support for win32 in perl 5.004 and later.
+
+With the release of Perl version 5.005 (which brings ActiveState's changes
+to Perl sources into the mainstream), this library of extensions has
+assumed loftier motives.  The long term goal of this project is to provide
+a coherent collection of modules that allow access to the functionality
+provided by the Win32 API, while maintaining the style and spirit of Perl.
+Like Perl, the intention is to make "easy things easy, and hard things
+possible".  Note that we are nowhere close to this goal at the present
+time, but we are slowly getting there.
+
+As the name suggests, all modules in this distribution are Win32-specific.
+They cannot be used on platforms that do not support the Win32 API.
+
+
+WHAT HAS CHANGED
+----------------
+
+The top level "Changes" file contains a version by version overview of
+the most significant changes.
+
+This release has the following changes over the previous one (version 0.18):
+
+   + Win32::Job is now available (thanks to Neil Watkiss).  This
+     extension allows you to manipulate "job" objects (which are
+     groups of processes) in Windows 2000 or later.  See the pod
+     documentation for details.
+
+   + Most modules that autoloaded their constants could reset $!
+     during autoloading.  Such locations now localize $! before
+     potentially modifying it.
+
+   + EventLog has been upgraded to 0.073 (thanks to Brett Williams).
+     EventLog/Changes has a list of bug fixes.
+
+   + NetResource has been upgraded to 0.053.  See NetResource/Changes
+     for the change log.
+
+   + A Win32::GetOSName() function is now available.  It is documented
+     in the Win32.pod distributed with perl 5.8.0-RC2 and with
+     ActivePerl.
+
+   + Some issues with building it under 5.8.0-RC2 have been fixed.
+
+   + This release corresponds to the version of libwin32 included in
+     ActivePerl 5.6.1.633.
+
+Many thanks to all the contributors.
+
+
+WHAT TO DO
+----------
+
+NOTE: If you already have ActivePerl build 633 or later installed, you
+may already have a more recent version of libwin32 installed, and you
+will not need to install this.  To be sure, run this:
+
+    C:\> perl -MWin32 -e "print $Win32::VERSION"
+
+If that prints 0.191 or later, you don't need to install this package.
+
+Many modules come with their own test files.  You may want to use them
+as a source of examples.  Many of the test files will only run on
+Windows NT, others may require Windows NT 4.0, and still others may
+require Administrator privileges, or a full-fledged Windows network.
+
+This set of modules will build with perl v5.6.0 and later on the Windows
+NT platform.  Building on Windows 95 is not supported (it *may* be
+possible if you use the 4DOS command shell, but your mileage may vary).
+
+   + First you need to build perl 5.6.0 or later (you will need
+     either Visual C++ 5.x+ or Borland C++ 5.02+), and install it.  See
+     README.win32 in the perl distribution for details on how to build
+     perl for the Win32 platform.  ActivePerl build 613 or later will
+     also suffice.
+
+   + Make sure your perl is properly configured.  "perl -V:libpth" should
+     report a valid path to your compiler's library files.
+
+     If you built perl yourself, make sure you specify the C compiler's
+     library location properly in the Makefile used to build perl.
+
+     If your C compiler and libraries are installed in a path with
+     spaces, you'll need to quote any components with spaces, or use
+     the short path name equivalents.
+
+   + All that done, you need to extract this distribution into an NTFS
+     partition (the tests in the FileSecurity module and Net* modules
+     will fail otherwise).  The testsuite for OLE needs Excel (from
+     Office 2000) to run.  NetAdmin will only work if you have some kind
+     of live network connection, and are in a domain with a properly
+     configured domain controller.  NetResource requires that you
+     be part of a domain or workgroup.  You may also need
+     Administrator privileges for running some of the tests.
+     If one or more of these conditions will not be met, you may
+     wish to build in the subdirectories one by one.  The steps
+     below will work either at the toplevel directory, or in each
+     of the individual extension subdirectories.
+   
+   + You need either MS Visual C++ (OLE needs 4.2b, NetAdmin needs ver.
+     4.x+, Internet needs ver. 5.0. ver. 2.0 should suffice for the
+     others) or Borland C++ 5.02.  Make sure you have the full installation
+     of either of these compilers ("Minimal" installations or CDROM-based
+     installations may have problems finding all the libraries).
+     [NOTE: I have only tested building this release with Visual Studio 98,
+     aka Visual C++ 6.0.  Please send patches if you hit problems with
+     the other compilers.] 
+     
+   + If the Internet extension doesn't build due to lack of libraries
+     (the wininet.h header is included), fetch the Platform SDK from
+     "http://www.microsoft.com/msdn/sdk/".  You need to look for wininet.h
+     and wininet.dll.  If either of those is newer than the ones you already
+     have, replace the older ones, and copy the newer wininet.lib into the
+     Internet/ directory.
+
+   + perl Makefile.PL               [either at toplevel or in subdirs]
+   
+   + $MAKE                          [either at toplevel or in subdirs]
+   
+   + $MAKE test                     [optional, some interactive tests]
+   
+   + $MAKE install                  [either at toplevel or in subdirs]
+
+$MAKE above stands for either "dmake" or "nmake" depending on your
+available compiler, and perl configuration.
+
+
+WHAT THEN
+---------
+
+If you find any problems with these modules, kindly report them to both
+the original author and to me.  While I have fixed many problems in these
+modules, I may also have introduced brand new bugs in the process :)
+
+I wish to thank the authors of these modules for their effort in making
+them useful, and for making them freely available.
+
+Suggestions, patches, testsuite additions, and wholesale rewrites welcome.
+
+Enjoy!
+
+Gurusamy Sarathy
+gsar@ActiveState.com
+8 July 2002
+
+
+WHATEVER
+--------
+
+Copyright for many of the modules is held by their respective authors.
+Look in the module subdirectories for any conditions of use.
+
+The following copyright applies to all files that don't have an explicit
+copyright statement:
+
+    (c) 1995 Microsoft Corporation. All rights reserved. 
+	Developed by ActiveWare Internet Corp., http://www.ActiveWare.com
+
+    Other modifications (c) 1997-2000 by Gurusamy Sarathy <gsar@ActiveState.com>
+                        (c) 1999-2002 by ActiveState Corp.
+
+    You may distribute under the terms of either the GNU General Public
+    License or the Artistic License, as specified in the README file
+    of the Perl distribution.

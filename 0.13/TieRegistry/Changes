@@ -1,0 +1,43 @@
+Revision history for Perl extension Win32::TieRegistry.
+
+0.10  Fri Nov 21 15:08:55 1997
+	- original, limited install, named Tie::Registry.
+
+0.12  Mon Dec 29 10:11:30 1997
+	- misc.
+
+0.13  Tue Mar 31 20:50:28 1998
+	- "Delimiter" now spelled correctly throughout (sigh).
+	- SetValue now translates "REG_*" strings to numeric constants.
+	- Removed dependance on $^E being tied to Win32::GetLastError().
+
+0.14  Never released
+	- Added Install.bat for people without a version of "make".
+	- Report key path when STORE fails.
+
+0.15  Tue Jul 14 14:14:54 1998
+	- "Stub" version of Tie::Registry for backward compatibility only.
+
+0.20  Tue Jul 14 14:14:54 1998
+	- Renamed to Win32::TieRegistry.
+	- Added options:  SplitMultis, FixSzNulls,
+	    DWordToHex, DualBinVals, and DualTypes.
+	- Added hooks for future option, TieValues.
+	- Most methods now return a tied ref. if called via one:
+	    Open(), Load(), Connect(), and CreateKey().
+	- Changed import() to support setting options.
+	- More options on what to "export" and to where.
+	- Each time you C<use>, you get a _separate copy_ of $Registry.
+	- New methods:  Clone(), GetOptions(), and SetOptions().
+	- Flush() no longer calls RegFlushKey() by default.
+	- Optimize deletes to be faster in void contexts.
+	- If delete OK but fetch of old val failed, have C<delete> return $^E.
+	- "Disposition" option to CreateKey() no longer considered invalid.
+	- CreateKey() always used OS_Delimiter to parse subkey paths.
+	- Load()'s second argument can now be new subkey name.
+	- Load() via remote key w/o specific new subkey name no longer tries
+	    to load into _local_ LMachine.
+	- Finished POD.
+
+0.21  Thu Sep 17 14:49:26 1998
+	- Remove a few "harmless" warnings reported by C<-w>.

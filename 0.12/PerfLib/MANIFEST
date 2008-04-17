@@ -1,0 +1,8 @@
+Changes
+Makefile.PL
+MANIFEST
+PerfLib.pm
+PerfLib.xs
+calc.html
+test.pl
+typemap

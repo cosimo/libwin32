@@ -1,0 +1,14 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+Shortcut.pm
+Shortcut.xs
+docs/index.html
+docs/intro.html
+docs/license.html
+docs/reference.html
+docs/toc.html
+ln32.bat
+test.pl
+typemap

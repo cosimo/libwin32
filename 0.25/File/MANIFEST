@@ -1,0 +1,7 @@
+Changes
+File.pm
+File.xs
+MANIFEST
+Makefile.PL
+t/file.t
+typemap

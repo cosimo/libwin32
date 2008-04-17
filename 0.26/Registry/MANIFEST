@@ -1,0 +1,9 @@
+Changes
+MANIFEST
+Makefile.PL
+Registry.pm
+Registry.xs
+eg/iis_install.pl
+eg/remote.pl
+t/registry.t
+typemap

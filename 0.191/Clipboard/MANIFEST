@@ -1,0 +1,10 @@
+Clipboard.pm
+Clipboard.xs
+MANIFEST
+Makefile.PL
+README
+t/test.t
+samples/bitmap.pl
+samples/monitor.pl
+samples/test-tie.pl
+samples/test.pl

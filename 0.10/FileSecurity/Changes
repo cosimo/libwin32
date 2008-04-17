@@ -1,0 +1,15 @@
+Revision history for Perl extension Win32::FileSecurity.
+
+1.03  Fri Feb  6 20:57:24 1998
+	- updated to base version 0.67 (fixes serious bugs)
+
+1.02  Sun Dec 14 05:13:12 1997
+	- fixed uninitialized vars on unknown ACLs (fix
+	  suggested by Jutta Klebe <jmk@exc.bybyte.de>)
+	- added constants to @EXPORT list
+	- pod fixes
+
+1.01  Sat Apr  5 14:23:42 1997
+	- original version; created by h2xs 1.18
+	- imported Activeware version
+

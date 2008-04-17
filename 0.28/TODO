@@ -1,0 +1,21 @@
+* Convert more extensions to a more complete API backend and an easy
+  to use Perl front end (in the manner of Win32API::Registry and
+  Win32::TieRegistry).
+
+* The pod documentation in many of the extensions is woefully inadequate.
+  Add more examples of use.
+
+* More comprehensive test suite for the extensions that are missing
+  them.
+
+* Add the MSG_ constants to Win32.pm via ExtUtils::Myconst2perl
+  (see APIRegistry/Makefile.PL for how it is used).
+
+* Many of the extensions are missing export lists for convenient use.
+
+* Audit extensions for questionable coding style.
+
+* Rewrite Win32::Registry in terms of Win32::APIRegistry (purely in
+  Perl).
+
+* Add wide syscall support to the modules that are missing them.

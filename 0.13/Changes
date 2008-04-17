@@ -1,0 +1,133 @@
+Revision history for Perl extension libwin32.
+
+
+0.13  Thu Sep 17 19:35:20 1998
+
+   + New modules from Tye McQueen: Win32API-Registry-0.15 and
+     Win32-TieRegistry-0.21.  These are much better designed and implemented
+     than Win32-Registry.  They also begin the concerted effort to layer
+     user-friendly implementations of Win32 functionality on top of a
+     comprehensive set of Win32API-* modules.
+
+   + New module from Bret Giddings: Win32API-Net-0.04 provides access to the
+     Lan Manager API.  Currently supports only the account management
+     functions, but the long-term intent is to support most of the Net* API.
+
+   + Newer version of Win32::OLE from Jan Dubois.  See OLE/Changes for
+     detailed list.
+
+   + PerfLib bugs fixed (thanks to Jutta Klebe and Henry Ptasinski
+     <henry@epigram.com>).
+
+   + Subversive use of LDLOADLIBS in Internet/Makefile.PL fixed.
+
+   + Fixed GPF in NetAdmin::LocalGroupIsMember()
+
+   + Win32::Registry now supports setting REG_NONE entries.  Spurious
+     warnings on 'use' fixed.
+
+   + install.bat has improved sanity checks (thanks to Tye McQueen).
+
+   + Various tweaks to help PERL_OBJECT build
+
+0.12  Mon May 11 00:32:33 1998
+
+   + Applied serious OLE bugfixes from Jan Dubois for public release.
+
+0.11  (unreleased)
+
+   + Jutta Klebe has contributed a new module, Win32::PerfLib. It
+     provides comprehensive facilities for accessing performance counters
+     on Windows NT.  See the documentation in PerfLib/PerfLib.pm.
+
+   + Many, many fixes and enhancements in Win32::OLE, thanks to Jan Dubois
+     See OLE/Changes for a detailed list.
+
+   + Win32::NetAdmin supports new functions: GetAliasFromRID(),
+     GetUserGroupFromRID(), LocalGroupGetMembersWithDomain(), and
+     GetServerDisks() (thanks to David Gardiner and Jutta Klebe).
+     A few broken constants have been fixed and missing ones added
+     (thanks to Dave Roth).  Most symbols are exported on request
+     (thanks to Tye McQueen).
+
+   + Bug fixes for Win32::ChangeNotify (from Chris Madsen, thanks).
+
+   + Win32::Registry exports older symbols for compatibility (thanks to
+     Tye McQueen).  Reg*Key() functions enable priveleges as needed
+     (thanks to Jutta Klebe).
+
+   + Win32::Service now reports stopped services (merged from ActiveState's
+     sources, thanks).
+
+   + Win32::GetArchName() and Win32::GetChipName() functions have been
+     added, for compatibility.
+
+   + The bug whereby Win32::Process couldn't be loaded on Win95 should be
+     fixed.
+
+0.10  Fri Feb  6 21:32:33 1998
+
+   + Chris Madsen <ac608@yfn.ysu.edu> has rethought and rewritten the IPC
+     related modules.  The Win32::Event module is new.  In his own words:
+
+	The Win32::IPC modules
+
+		Win32::ChangeNotify
+		Win32::Event
+		Win32::IPC
+		Win32::Mutex
+		Win32::Semaphore
+
+	have been almost completely rewritten and are now at version 1.00.
+	The rather inconsistent ActiveWare interface is still supported, but
+	you should really use the newer and more powerful interface (using
+	lower case method names).
+
+	Consult the documentation for each module for details on how to
+	convert from the old interface.
+
+	In addition, Win32::Process has been slightly altered to work with
+	Win32::IPC.  Process objects should now work with Win32::IPC's wait_*
+	functions (they were supposed to work before, but they didn't).  You
+	will have to load Win32::IPC yourself, because Win32::Process does
+	not.
+
+   + Yet more OLE fixes from Jan Dubois <jan.dubois@ibm.net>.
+
+   + NetAdmin enhancements from Jutta Klebe <jmk@exc.bybyte.de>
+
+   + Updated FileSecurity to base version 0.67.
+
+   + Win32::Registry sports additional functions that correspond to the
+     Win32 Registry API functions.
+
+   + Misc. changes
+	- fixed buggy InitiateSystemShutdown()
+	- New compatibility XSUBs: MsgBox(), LoadLibrary(), FreeLibrary(),
+	  GetProcAddress(), RegisterServer(), UnregisterServer()
+
+   + Other minor bugs have been fixed.  See "Changes" files in individual
+     module subdirectories.
+
+0.09  Sun Dec 14 12:14:08 1997
+
+   + OLE has been seriously overhauled, thanks largely to the valiant efforts
+     of Jan Dubois <jan.dubois@ibm.net>.  Jan has added many exciting new
+     features, and a much more streamlined implementation.  See the pod
+     documentation for compatibility info.
+
+   + The AdminMisc extension has been dropped, because newer versions with
+     support (and binaries) for the standard perl port are available from the
+     original author.  See "http://www.rothd.net/perl" for details.
+
+   + New compatibility functions (got via C<use Win32;>) : LookupAccountName(),
+     LookupAccountSID(), InitiateSystemShutdown(), AbortSystemShutdown(),
+     ExpandEnvironmentStrings().
+
+   + Numerous bugs have been fixed.  See "Changes" files in individual module
+     subdirectories.
+
+0.08  and earlier
+
+   Lost in the mists of time
+

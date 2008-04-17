@@ -1,0 +1,50 @@
+Revision history for Perl extension Win32API::Registry.
+
+0.17  Thu Jul 29 13:38 1999
+	- Fix failure detection for the misdocumented AdjustTokenPrivileges()
+	  that would cause AllowPriv() to sometimes return TRUE on failure.
+	- Finish new Hungarian notation, including POD documentation.
+	- Add prototypes to auto-loaded constants so Perl can optimize them.
+	- Fixed typo ("and" changed to "or") in example for RegCloseKey().
+
+0.16  Wed Feb 17 15:50:38 1999
+	- Update to v1.09 of buffers.h; use new Hungarian notation.
+	- Added B<-w> to F<test.pl>.
+	- Don't warn when an output-only parameter starts out C<undef>.
+	- Die if output-only parameter is read-only (but not C<[]>).
+	- C<RegSetValueEx[AW](...REG_[EXPAND_]SZ,"val",0)> no longer
+	  fails trying to modify the read-only C<"val">.
+
+0.15  Thu Sep 17 14:58:20 1998
+	- Don't treat unsigned types (eg. DWORD) as signed.
+
+0.14  Tue Sep 15 14:55:31 1998
+	- Enable the C API for PERL_OBJECT builds (VC's cpp has a bug that's
+	  tickled by buffers.h under PERL_OBJECT, and there are various
+	  typecasting issues to resolve in the regular PERL_OBJECT build).
+
+0.13  Fri Jul 10 08:34:26 1998
+	- Added "buffers.h" to standardized how buffer arguments are handled.
+	- Declared all return values as C<bool> [not C<LONG>].
+	- Minor adjustments to variable names (and Hungarian notation).
+	- Allow buffer sizes like C<"=99"> to prevent automatic resizing.
+	- Trim or add '\0' to REG*_SZ values but only when buffer size omitted
+	  [for RegEnumValue*(), RegQueryValueEx*(), and RegSetValueEx*()].
+	- POD finished.
+
+0.12  Mon Dec 29 09:55:30 1997 
+	- Add AllowPriv() function so can load and save keys.
+
+0.11  Mon Nov 17 16:30:30 1997
+	- Don't set $! (Perl patched so $^E is used)
+	- Move KEY_NOTIFY to correct block of switch statement.
+	- Like sysread():  sv_setpvn(arg,"",0) if !SvOK(arg).
+	- Change buffer size behavior because DWORD is unsigned.
+	- Allow caller to omit all buffer size arguments.
+	- Don't try to overwrite read-only buffer size arguments.
+
+0.10  Wed Oct 29 12:11:50 1997
+	- First release (alpha)
+
+0.01  Mon Oct 20 16:54:52 1997
+	- original version; created by h2xs 1.18
