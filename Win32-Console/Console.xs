@@ -406,8 +406,11 @@ void
 _GetStdHandle(fd)
     DWORD fd
 PPCODE:
-    XSRETURN_IV((long)GetStdHandle(fd));
-
+#ifdef _WIN64
+    XSRETURN_IV((DWORD_PTR)GetStdHandle(fd));
+#else
+    XSRETURN_IV((DWORD)GetStdHandle(fd));
+#endif
 
 void
 _SetStdHandle(fd,handle)
@@ -456,7 +459,7 @@ PPCODE:
     COORD coords;
     DWORD written;
     unsigned short buffer[80*999*sizeof(unsigned short)];
-    DWORD towrite = strlen(string);
+    DWORD towrite = (DWORD)strlen(string);
 
     for(i=0; i<towrite; i++) {
         buffer[i] = (unsigned short)(string[i]);
@@ -544,7 +547,7 @@ _WriteConsole(handle,buffer)
     char * buffer
 PPCODE:
     DWORD written;
-    if (WriteConsole(handle,(VOID *)buffer,strlen(buffer),&written,NULL))
+    if (WriteConsole(handle,(VOID *)buffer,(DWORD)strlen(buffer),&written,NULL))
         XSRETURN_IV(written);
     else
         XSRETURN_NO;
@@ -797,9 +800,9 @@ PPCODE:
 	mevent = (MOUSE_EVENT_RECORD *)&(event.Event);
         mevent->dwMousePosition.X = (SHORT)SvIV(ST(2));
         mevent->dwMousePosition.Y = (SHORT)SvIV(ST(3));
-        mevent->dwButtonState     = SvIV(ST(4));
-        mevent->dwControlKeyState = SvIV(ST(5));
-        mevent->dwEventFlags      = SvIV(ST(6));
+        mevent->dwButtonState     = (DWORD)SvIV(ST(4));
+        mevent->dwControlKeyState = (DWORD)SvIV(ST(5));
+        mevent->dwEventFlags      = (DWORD)SvIV(ST(6));
 	break;
     default:
 	XSRETURN_NO;
@@ -998,8 +1001,11 @@ _CreateConsoleScreenBuffer(access,sharemode,flags)
 PPCODE:
     HANDLE handle;
     handle=CreateConsoleScreenBuffer(access,sharemode,NULL,flags,NULL);
-    XSRETURN_IV((long)handle);
-
+#ifdef _WIN64
+    XSRETURN_IV((DWORD_PTR)handle);
+#else
+    XSRETURN_IV((DWORD)handle);
+#endif
 
 void
 _SetConsoleActiveScreenBuffer(handle)
