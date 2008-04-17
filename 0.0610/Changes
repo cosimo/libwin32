@@ -1,0 +1,130 @@
+Revision history for Perl extension Win32::OLE.
+
+0.0610
+	- Win32::OLE::Const now loads consts from all TKINDs and not only ENUMs
+	- Win32::OLE::Variants are actually freed during DESTROY now
+	- Misc. robustness fixes (VariantClear etc.)
+
+0.0609
+	- Win32::OLE::LastError() returns $Win32::OLE::LastError
+	- misc COSERVERINFO fixes
+
+0.0608
+	- use scode from excepinfo structure when available instead 
+	  of DISP_E_EXCEPTION (as suggested by Steve Glassman)
+	- misc. Get(WideChar|MultiByte) robustness enhancements
+	- Win32::OLE::new now uses CLSTLX_SERVER
+	-         "       allows specification of remote server name
+	-         "          "         "       of numeric class id
+
+0.0607
+	- enhanced C<in> allows multiple args and supports array refs too
+	- SetSVFromVariant array bug fixes
+	
+0.0606
+	- use SvTRUE instead of SvIV to convert SV to VARIANT
+	- REFCNT of returned SV for VT_ARRAY variant is now set correctly
+	- SAFEARRAYs of VT_DISPATCH and VT_BSTR (and VT_VARIANT containing
+	  those) are now handled correctly
+	- folding of SAFEARRAYs removed again. Original structure is maintained
+	  t/3_ole.t adjusted accordingly
+	- Win32::OLE::Enum->All doesn't call Reset anymore
+
+0.0605
+	- Property enumeration now dereferences TKIND_COCLASS etc.
+	- Overloading in Win32::OLE now only enabled by OVERLOAD pseudotarget
+	- Win32::OLE::CreateObject function for compatibility w/"Learning Perl"
+	- Win32::OLE->LastError returns a dual value now (IV and PV)
+	- Removed unsupported TKIND_ and VT_ constants from Win32::OLE::Variant
+	- lcidDefault changed back to LOCALE_SYSTEM_DEFAULT, the language
+	  neutral setting didn't allow portable scripts either
+	- Sample file type converter script in eg/word2xxx.pl
+	- valof uses CP and LCID of arg class for variant conversion
+
+0.0604
+	- New package variable Win32::OLE::Tie specifies 'Win32::OLE::Tie' class
+	- Win32::OLE::Tie FIRSTENUM/NEXTENUM added for compatibility mode
+	- Win32::OLE::Tie STORE/FETCH renamed. Added default method argument
+	- Default method retries enabled under C<no strict 'subs';> only
+	- New C<in> function; C<With> renamed to C<with>
+	- Const module now defines xlConstant instead of $xlConstant
+	- multi-dimensional arrays are folded to lower dimensions if possible
+	  (e.g. 1x1 array -> scalar, 1x5 array -> list of 5, 5x1 -> unchanged)
+	- new regression tests: unicode, variant
+	- new sample: eg/word2pod.pl
+	- first cut of NLS.pm module
+	- compiles and tests ok with 5.004_60 built with -DUSE_THREADS
+	- new C<valof> function
+	- Win32::OLE objects overloaded conversion to strings and numbers
+
+0.0603
+	- Win32::OLE::Enum::Count method removed
+	- SetSVFromVariant now works with SAFEARRAYs of non-VARIANT types too
+	- Onedimensional SAFEARRAY of UI1s converted to SvPV
+	- OLE, Enum and Variant objects all linked in g_pObj chain
+	- g_pObj chain protected by critical section to make it thread safe
+	- New package variables $CP,$LCID for Win32::OLE and Win32::OLE::Variant
+	- default lcid changed from LOCALE_SYSTEM_DEFAULT -> language neutral
+	- LastOleError is stored in a package variable $LastError now
+	- Error reporting now controled by $Warn package variable
+	- Win32::OLE::Variant: new As,ChangeType,Type,Unicode,Value methods
+	- Win32::OLE::Variant overloaded "" and 0+ operations
+	- Preliminary Variant BYREF support
+	- Dispatch can return Win32::OLE::Variant objects too
+	- Compatibility package "OLE" created
+	- Invoke method added, supports default method too
+	- Memory leaks
+	- "keys %$object", QueryObjectType and Win32::OLE::Const::Load no
+	  longer croak when the GetTypeInfo is unavailable or returns 0
+	- Enum::new returns undef if object is not a valid collection object
+
+0.06  Fri Feb  6 21:13:20 1998
+	All changes in this release courtesy Jan Dubois <jan.dubois@ibm.net>
+	- bugfix: DoCroak uninitialized variable
+	- Multidimensional arrays can now be sent and received
+
+0.05  Sun Dec 14 21:13:11 1997
+	All changes in this release courtesy Jan Dubois <jan.dubois@ibm.net>
+	- All OLE errors are caught and a verbose error message is provided
+	  through Carp::croak (if -w is in effect)
+	- Internal errors will no longer be silently ignored; they'll croak now
+	- All hardcoded buffer size limits removed from XS code
+	- Collection support is fixed and moved into Win32::OLE::Enum
+	- C<keys %$object> now enumerates the objects properties
+	- Win32::OLE::Const module imports constants from type libraries
+	- Moniker support through Win32::OLE->GetObject
+	- Win32::OLE->GetActiveObject finds active instance of OLE server
+	- Variants moved to Win32::OLE::Variant module; enhanced functionality
+	- Win32::OLE->QueryObjectType return typelib name and class name of
+	  object
+
+0.04  Sun Oct 12 23:03:32 1997 (unreleased)
+	- support for unnamed default methods (thanks to
+	  Doug Lankshear <Doug_Lankshear@ActiveState.com>)
+	- Following changes courtesy Jan Dubois <jan.dubois@ibm.net>:
+	    * CreateVariantFromSV is more robust now
+	    * support for omitting optional params with "undef"
+	    * named arguments can be specified as a hash ref
+	    * array elements are now properly typed (used to be always text)
+	    * additions to testsuite
+	    * With() utility method suggestion
+	    * optional DESTROY method arg for Win32::OLE->new
+	    * Win32::OLE::CreateObject renamed to Win32::OLE::new
+	      old Perl new() method deleted
+	    * Hardcoded package names gone, so inheritance is feasible now
+
+0.03  Sat Jul 12 16:10:07 1997
+	- DllEntryPoint for Borland
+
+0.02  Sat May 10 15:40:52 1997
+	- cleaned up one big memory leakathon (DESTROY actually gets
+	  called now on all the objects)
+	- back to XS
+	- package names are Win32::OLE and Win32::OLE::Tie now
+	- fixed misplaced DESTROY
+	- implemented OLEUninitialize via DllMain
+
+0.01  Sat Apr  5 14:23:42 1997
+	- original version; created by h2xs 1.18
+	- imported Activeware version
+
