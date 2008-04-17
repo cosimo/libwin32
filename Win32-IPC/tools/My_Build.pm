@@ -21,6 +21,7 @@ package My_Build;
 use strict;
 use warnings;
 use File::Spec ();
+use Module::Build ();
 
 # Use Module::Build::DistVersion if we can get it:
 BEGIN {
@@ -32,7 +33,7 @@ BEGIN {
 #=====================================================================
 # Package Global Variables:
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 #=====================================================================
 sub ACTION_distdir
