@@ -438,8 +438,8 @@ PPCODE:
 
 	timeout = INFINITE;
 
-	if(items == 1 && !SvROK(ST(0))) { timeout = SvIV(ST(0)); }
-	if(items == 2) { timeout = SvIV(ST(1)); }
+	if(items == 1 && !SvROK(ST(0))) { timeout = (DWORD)SvIV(ST(0)); }
+	if(items == 2) { timeout = (DWORD)SvIV(ST(1)); }
 
     cause = WaitForSingleObject(hEvt, timeout);
     EXTEND(SP,1);
@@ -541,7 +541,7 @@ PPCODE:
     BITMAPFILEHEADER hdr;
     int dib_size;
     SV* buffer;
-    if(items == 1) format = SvIV(ST(0));
+    if(items == 1) format = (int)SvIV(ST(0));
     if ( OpenClipboard(NULL) ) {
 	switch ( format ) {
 	case CF_HDROP:

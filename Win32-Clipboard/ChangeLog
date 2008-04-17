@@ -4,6 +4,7 @@
 	- simplified Makefile.PL
 	- added META.yml
 	- added ppport.h
+	- casts to suppress compiler warnings under Win64
 	
 2004-09-10 by Hideyo Imazu
 	GetBitmap() didn't work well except with 24 bit color images.
