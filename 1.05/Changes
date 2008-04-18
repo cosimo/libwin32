@@ -1,0 +1,30 @@
+Revision history for Perl extension Win32::FileSecurity.
+
+1.05  Tue Apr 17 2008
+	- version 1.05 for separate upload to CPAN
+	- updated email addresses
+	- simplified Makefile.PL
+	- added META.yml
+	- added ppport.h
+	- renamed test.pl to sample.pl because it doesn't generate TAP output
+	- casts to suppress compiler warnings under Win64
+
+1.04  Mon May 22 21:14:00 2000
+	- support for building under Perl v5.6.0
+	- support for passing Unicode strings to underlying Win32 calls
+	- fixed a bug in the Set() method (could use local account
+	  instead of domain account if both were present)
+
+1.03  Fri Feb  6 20:57:24 1998
+	- updated to base version 0.67 (fixes serious bugs)
+
+1.02  Sun Dec 14 05:13:12 1997
+	- fixed uninitialized vars on unknown ACLs (fix
+	  suggested by Jutta Klebe <jmk@exc.bybyte.de>)
+	- added constants to @EXPORT list
+	- pod fixes
+
+1.01  Sat Apr  5 14:23:42 1997
+	- original version; created by h2xs 1.18
+	- imported Activeware version
+
