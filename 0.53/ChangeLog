@@ -1,0 +1,17 @@
+2008-04-15
+	- version 0.53 for separate upload to CPAN
+	- updated email addresses
+	- simplified Makefile.PL
+	- added META.yml
+	- added ppport.h
+	- casts to suppress compiler warnings under Win64
+	
+2004-09-10 by Hideyo Imazu
+	GetBitmap() didn't work well except with 24 bit color images.
+	The reason was that the CF_DIB data structure wasn't recognized
+	correctly and consequently the BITMAPFILEHEADER structure wasn't
+	generated correctly.
+
+	I fixed the problem and now it work correctly with 1 bit
+	(monochrome), 4 bit, 8 bit, 16 bit, 24 bit, and 32 bit colors as
+	far as my testing goes.
