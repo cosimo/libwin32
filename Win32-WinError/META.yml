@@ -1,7 +1,7 @@
 --- #YAML:1.0
-name: Win32-Internet
+name: Win32-WinError
 abstract: Perl module defining Windows error constants
-version: 0.02
+version: 0.03
 author:
   - Jan Dubois <jand@activestate.com>
 license: perl
