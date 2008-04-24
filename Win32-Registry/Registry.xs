@@ -76,7 +76,7 @@ SetPrivilege( char *privilege, BOOL bEnable )
 }
 
 
-DWORD
+IV
 constant(char *name, int arg)
 {
     errno = 0;
@@ -98,43 +98,43 @@ constant(char *name, int arg)
     case 'H':
 	if (strEQ(name, "HKEY_CLASSES_ROOT"))
 #ifdef HKEY_CLASSES_ROOT
-	    return (DWORD)HKEY_CLASSES_ROOT;
+	    return PTR2IV(HKEY_CLASSES_ROOT);
 #else
 	    goto not_there;
 #endif
 	if (strEQ(name, "HKEY_CURRENT_USER"))
 #ifdef HKEY_CURRENT_USER
-	    return (DWORD)HKEY_CURRENT_USER;
+	    return PTR2IV(HKEY_CURRENT_USER);
 #else
 	    goto not_there;
 #endif
 	if (strEQ(name, "HKEY_LOCAL_MACHINE"))
 #ifdef HKEY_LOCAL_MACHINE
-	    return (DWORD)HKEY_LOCAL_MACHINE;
+	    return PTR2IV(HKEY_LOCAL_MACHINE);
 #else
 	    goto not_there;
 #endif
 	if (strEQ(name, "HKEY_PERFORMANCE_DATA"))
 #ifdef HKEY_PERFORMANCE_DATA
-	    return (DWORD)HKEY_PERFORMANCE_DATA;
+	    return PTR2IV(HKEY_PERFORMANCE_DATA);
 #else
 	    goto not_there;
 #endif
 	if (strEQ(name, "HKEY_CURRENT_CONFIG"))
 #ifdef HKEY_CURRENT_CONFIG
-	    return (DWORD)HKEY_CURRENT_CONFIG;
+	    return PTR2IV(HKEY_CURRENT_CONFIG);
 #else
 	    goto not_there;
 #endif
 	if (strEQ(name, "HKEY_DYN_DATA"))
 #ifdef HKEY_DYN_DATA
-	    return (DWORD)HKEY_DYN_DATA;
+	    return PTR2IV(HKEY_DYN_DATA);
 #else
 	    goto not_there;
 #endif
 	if (strEQ(name, "HKEY_USERS"))
 #ifdef HKEY_USERS
-	    return (DWORD)HKEY_USERS;
+	    return PTR2IV(HKEY_USERS);
 #else
 	    goto not_there;
 #endif
@@ -412,7 +412,7 @@ PROTOTYPES: DISABLE
 
 # modified RegSaveKey that uses a NULL security_descriptor.
 
-long
+IV
 constant(name,arg)
 	char *name
 	int arg
@@ -477,7 +477,7 @@ RegCreateKeyEx(hkey,subkey,res,kclass,options,sam,security,ohandle,disposition)
 	HKEY ohandle = NO_INIT
 	DWORD disposition = NO_INIT
     CODE:
-	unsigned sa_len;
+	STRLEN sa_len;
 	LONG result;
 	SECURITY_ATTRIBUTES *psa = (SECURITY_ATTRIBUTES *)SvPV(security,sa_len);
 	SECURITY_ATTRIBUTES sa;
@@ -917,7 +917,7 @@ RegRestoreKey(hkey,filename, ...)
 	DWORD flags = 0;
     CODE:
 	DWORD dwLastError;
-	if (items > 2) flags = SvIV(ST(2));
+	if (items > 2) flags = (DWORD)SvIV(ST(2));
 	if (!SetPrivilege(SE_RESTORE_NAME, TRUE))
 	    XSRETURN_NO;
 	dwLastError = RegRestoreKey(hkey, filename, flags);
@@ -966,13 +966,13 @@ RegSetValue(hkey,subkey,type,data)
 	DWORD type
 	SV *data
     CODE:
-	unsigned int size;
+	STRLEN size;
 	char *buffer;
 	LONG result;
 	if (type != REG_SZ)
 	    croak("Type was not REG_SZ, cannot set %s\n", subkey);
 	buffer = SvPV(data, size);
-	result = RegSetValue(hkey, subkey, REG_SZ, buffer, size);
+	result = RegSetValue(hkey, subkey, REG_SZ, buffer, (DWORD)size);
 	RETVAL = SUCCESS(result);
 	if (!RETVAL)
 	    SetLastError(result);
@@ -988,7 +988,7 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 	SV *data
     CODE:
 	DWORD val;
-	unsigned int size;
+	STRLEN size;
 	char *buffer;
 	LONG result;
         /* supress unreferenced variable warning */
@@ -1004,7 +1004,7 @@ RegSetValueEx(hkey,valname,reserved,type,data)
 		    if (type != REG_BINARY)
 			size++;		/* include null terminator in size */
 		    result = RegSetValueEx(hkey,valname,0,type,
-						   (PBYTE) buffer, size);
+						   (PBYTE) buffer, (DWORD)size);
 		    break;
 		case REG_DWORD_BIG_ENDIAN:
 		case REG_DWORD_LITTLE_ENDIAN: /* Same as REG_DWORD */
