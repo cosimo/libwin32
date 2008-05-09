@@ -8,6 +8,7 @@
 # Version: 0.08  (14 Feb 1997)
 # Version: 0.081 (25 Sep 1999)
 # Version: 0.082 (04 Sep 2001)
+# Version: 0.083 (15 Apr 2008)
 #
 #######################################################################
 
@@ -151,7 +152,7 @@ sub AUTOLOAD {
 #######################################################################
 # STATIC OBJECT PROPERTIES
 #
-$VERSION = "0.082";
+$VERSION = "0.083";
 
 %callback_code = ();
 %callback_info = ();
@@ -2799,15 +2800,24 @@ use, refer to the Microsoft Win32 Internet Functions document.
 
 =item * 0.083 (15 Apr 2008)
 
+This release unfortunately did not update $Win32::Internet::VERSION.
+Only META.yml reffered to this release as version 0.083.
+
 =over
 
 =item *
 
 New version for separate upload to CPAN.
 
+=item *
+
 Updated email addresses (but some stale references to divinf.it still remain).
 
+=item *
+
 Simplified Makefile.PL; added META.yml; added ppport.h.
+
+=item *
 
 Renamed test.pl to sample.pl because it doesn't generate TAP output.
 
