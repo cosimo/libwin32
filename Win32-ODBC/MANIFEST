@@ -20,7 +20,7 @@ README.TXT
 ROADMAP.TXT
 docs/object.html
 docs/odbc.html
+eg/sample.pl
 hints/cygwin.pl
 ppport.h
 resource.h
-sample.pl

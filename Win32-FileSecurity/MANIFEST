@@ -4,5 +4,5 @@ FileSecurity.xs
 MANIFEST
 META.yml
 Makefile.PL
+eg/sample.pl
 ppport.h
-sample.pl

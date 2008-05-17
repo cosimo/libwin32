@@ -1,4 +1,3 @@
-Client.pl
 Cpipe.cpp
 Cpipe.hpp
 MANIFEST
@@ -8,7 +7,8 @@ Pipe.h
 Pipe.pm
 Pipe.xs
 README
-Server.pl
+eg/Client.pl
+eg/Server.pl
 hints/cygwin.pl
 ppport.h
 test.bat

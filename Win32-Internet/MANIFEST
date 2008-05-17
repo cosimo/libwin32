@@ -11,6 +11,6 @@ docs/intro.html
 docs/license.html
 docs/reference.html
 docs/toc.html
-test-async.pl
-sample.pl
+eg/sample.pl
+eg/test-async.pl
 typemap

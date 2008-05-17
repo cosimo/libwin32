@@ -5,5 +5,5 @@ MANIFEST
 META.yml
 Makefile.PL
 child.t
-sample.pl
+eg/sample.pl
 typemap
