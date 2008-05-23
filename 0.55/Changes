@@ -1,0 +1,116 @@
+History of Win32::API perl extension.
+
+2008-03-23  Win32::API v0.55     Cosimo
+
+   - Integrated patch from Salvador Ortiz Garcia (sog at msg com mx)
+     which fixes RT #14660. There was a bug in arguments type packing
+     unpacking of char* (and other pointer types). 
+
+2008-03-04  Win32::API v0.54     Cosimo
+
+   - Try to clean up this big OS check mess.
+
+2008-03-02  Win32::API v0.53     Cosimo
+
+   - Devel::AssertOS came out unauthorized.
+   - META.yml was outdated and wrong.
+
+2008-03-01  Win32::API v0.52     Cosimo
+
+   - Devel::AssertOS was not properly set up in 0.51.
+
+2008-03-01  Win32::API v0.51     Cosimo
+
+   - Cleaned up API.pm pod docs and clearly stated Win32::API license
+   - Fixed $$/pid tests for Cygwin
+   - Now uses Devel::AssertOS to check that we are on a Win32 or Cygwin
+     system. This should ease the work of CPAN testers.
+
+2008-02-23  Win32::API v0.50     Cosimo
+
+   - Fixed RT #31702 (http://rt.cpan.org/Public/Bug/Display.html?id=31702)
+     Thanks to RUrban for supplying the fix.
+
+2008-02-20  Win32::API v0.49     Cosimo
+
+   - Fixed the stack cleanup assembler statements for GCC in API.xs, I hope.
+   - Fixed a Borland C macro definition in API.xs
+   - Fixed META.yml (stupid me)
+
+2008-02-20  Win32::API v0.48     Cosimo
+
+   - Finally applied the cdecl/stdcall patch available since long time
+     from http://www.xs4all.nl/~itsme/projects/perl/.
+     Now Win32::API *can* work with cdecl DLLs.
+     Fixes RT #32424 (http://rt.cpan.org/Public/Bug/Display.html?id=32424)
+       and RT #24685 (http://rt.cpan.org/Public/Bug/Display.html?id=24685)
+     Thanks to Willem Jan Hengeveld (itsme at xs4all.nl) for your great work.
+     Thanks to JimK for a test case and to BrowserUk and others at PerlMonks
+     for providing me useful information and complaints. :-)
+
+     However, still missing some GCC assembler magic for stack cleanup.
+     Any help?
+
+   - Clarified licensing info. Yes, Win32::API is available with
+     GPL 2 / Artistic license.
+
+2007-11-12  Win32::API v0.47     Cosimo
+
+   - Nothing exciting. Fixed warning on DATA filehandle.
+     Reported by Dmitri Karasik. Build passed on Windows Vista.
+     Fixes RT #30674 (http://rt.cpan.org/Ticket/Display.html?id=30674)
+
+2006-12-23  Win32::API v0.46     Cosimo
+
+   - Test suite now passes on MSVC6, MSVC7, GCC/MinGW and Cygwin.
+     A lot of skips and segfaults on doubles/floats should be examined,
+     though. But now it's possible to cleanly install from CPAN!
+
+   - API_test.dll building phase has been removed. Now there is only
+     a prebuilt version of it, suitable for all compilers to link and
+     use, I hope.
+  
+     Why does Cygwin gcc compile an entirely different API_test.dll?
+     I checked the tdump of msvc and gcc and the gcc version is
+     missing all the kernel32 imports. I don't know why this happens.
+
+   - Removed README.txt file. Now there's only README.
+
+2006-11-29  Win32::API v0.45     Cosimo
+
+   - What a mess! Restored GCC/MinGW compile that broke with that
+     damned assembler macros...
+
+2006-11-28  Win32::API v0.44     Cosimo
+
+   - Fixed compile under MSVC broken with GCC/MinGW last changes.
+
+2006-11-28  Win32::API v0.43     Cosimo
+
+   - Now Win32::API should cleanly *compile* on GCC / MinGW
+     environment. This has been tested only Vanilla Perl and
+     only with Microsoft nmake.
+     Test suite does not work with GCC. You can only test that
+     Win32::API extension works running manually the t\99_GetProcess.t
+     test script.
+     This improvement comes thanks to the 0.42 patches I found
+     and collected from the internet, though I don't know who
+     is the guy that wrote them first. Anyway, thank you!
+
+   - There are problems with current ExtUtils::MakeMaker (6.31 and
+     also blead, I believe) version and dmake generated Makefiles.
+     I'm trying to understand what to do here.
+
+   - Win32::API::Type now doesn't have a INIT block anymore, that
+     seems to be the cause of all evils on this module.
+     Please you out there report your findings on this.
+
+   - Last but not least. Current maintainer of Win32::API is now
+     Cosimo Streppone (me), cosimo at cpan.org. I'm not very
+     skilled on Win32 development, but I'm trying to to work out the
+     CPAN bugs queue. Thanks to Aldo for handing me his wonderful
+     work maintainance.
+
+
+Previous history had no changes file.
+
