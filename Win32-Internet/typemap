@@ -2,7 +2,7 @@ WORD                    T_IV
 DWORD                   T_IV
 LPCSTR                  T_PV
 LPCTSTR                 T_PV
-BOOL                    T_IV
+BOOL                    T_BOOL
 LPTSTR                  T_PV
 HINTERNET               T_HINTERNET
 

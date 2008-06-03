@@ -9,6 +9,7 @@
 # Version: 0.081 (25 Sep 1999)
 # Version: 0.082 (04 Sep 2001)
 # Version: 0.083 (15 Apr 2008)
+# Version: 0.084 unreleased
 #
 #######################################################################
 
@@ -152,7 +153,7 @@ sub AUTOLOAD {
 #######################################################################
 # STATIC OBJECT PROPERTIES
 #
-$VERSION = "0.083";
+$VERSION = "0.084";
 
 %callback_code = ();
 %callback_info = ();
@@ -2797,6 +2798,11 @@ use, refer to the Microsoft Win32 Internet Functions document.
 =head1 VERSION HISTORY
 
 =over
+
+=item * 0.084 unreleased
+
+Use T_BOOL instead of T_IV for BOOL typemap entry so that the code
+doesn't warn on undef.
 
 =item * 0.083 (15 Apr 2008)
 
