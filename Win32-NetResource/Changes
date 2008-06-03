@@ -1,5 +1,9 @@
 Revision history for Perl extension Win32::NetResource.
 
+0.055 unreleased
+        - Use T_BOOL instead of T_IV for BOOL typemap entry so that
+	  the code doesn't warn on undef.
+
 0.054 Tue Apr 15 2008
 	- version 0.054 for separate upload to CPAN
 	- updated email addresses

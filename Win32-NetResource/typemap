@@ -57,7 +57,7 @@ LPSERVICE_STATUS        T_PTRREF
 LPPROCESS_INFORMATION   T_PTRREF
 LPQUERY_SERVICE_CONFIG  T_PTRREF
 LPENUM_SERVICE_STATUS   T_PTRREF
-BOOL                    T_IV
+BOOL                    T_BOOL
 LPVOID                  T_PTR
 LPFILETIME              T_PTRREF
 UINT                    T_IV
@@ -122,6 +122,8 @@ T_INT
 	$var = (int)SvIV($arg)
 T_ENUM
 	$var = ($type)SvIV($arg)
+T_BOOL
+	$var = (bool)SvTRUE($arg)
 T_U_INT
 	$var = (unsigned int)SvIV($arg)
 T_SHORT
@@ -255,6 +257,8 @@ T_SYSRET
 	}
 T_ENUM
 	sv_setiv($arg, (IV)$var);
+T_BOOL
+	$arg = boolSV($var);
 T_U_INT
 	sv_setiv($arg, (IV)$var);
 T_SHORT

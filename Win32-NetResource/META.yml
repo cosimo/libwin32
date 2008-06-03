@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32-NetResource
 abstract: Manage network resources in Perl
-version: 0.054
+version: 0.055
 author:
   - Jan Dubois <jand@activestate.com>
 license: perl
