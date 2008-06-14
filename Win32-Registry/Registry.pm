@@ -49,7 +49,7 @@ require Win32 unless defined &Win32::GetLastError;
 
 use vars qw($VERSION $AUTOLOAD @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 @ISA	= qw( Exporter DynaLoader );
 @EXPORT = qw(
