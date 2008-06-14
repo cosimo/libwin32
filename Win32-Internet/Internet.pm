@@ -9,7 +9,7 @@
 # Version: 0.081 (25 Sep 1999)
 # Version: 0.082 (04 Sep 2001)
 # Version: 0.083 (15 Apr 2008)
-# Version: 0.084 unreleased
+# Version: 0.084 (13 Jun 2008)
 #
 #######################################################################
 
@@ -2799,7 +2799,10 @@ use, refer to the Microsoft Win32 Internet Functions document.
 
 =over
 
-=item * 0.084 unreleased
+=item * 0.084 (13 Jun 2008)
+
+Move sample.pl and test-async.pl into the eg/ subdirectory to avoid
+installing them into the Perl/bin directory.
 
 Use T_BOOL instead of T_IV for BOOL typemap entry so that the code
 doesn't warn on undef.
