@@ -1,6 +1,7 @@
 Revision history for Perl extension Win32::WinError.
 
-0.03  Thu Apr 24 2008
+0.03  Fri Jun 13 2008
+        - version 0.03
         - fix META.yml to include the correct package name
 
 0.02  Wed Apr 16 2008
