@@ -4,6 +4,6 @@ Job.xs
 MANIFEST
 META.yml
 Makefile.PL
-child.t
+eg/child.t
 eg/sample.pl
 typemap

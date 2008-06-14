@@ -1,5 +1,9 @@
 Revision history for Perl extension Win32::Console
 
+0.03 2008-06-13
+        - move sample.pl and child.t into the eg/ subdirectory to avoid
+	  sample.pl from getting installed
+
 0.02 2008-04-15
 	- new version for separate upload to CPAN
 
