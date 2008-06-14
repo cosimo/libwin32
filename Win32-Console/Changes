@@ -1,6 +1,8 @@
 Revision history for Perl extension Win32::Console
 
-0.09 unreleased
+0.09 2008-06-13
+
+- Move sample.pl to eg/sample.pl so that it doesn't get installed.
 
 - Use T_BOOL instead of T_IV for BOOL typemap entry so that
   the code doesn't warn on undef.
