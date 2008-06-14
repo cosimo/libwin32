@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32-Shortcut
 abstract: Perl Module to deal with Windows Shortcuts
-version: 0.06
+version: 0.07
 author:
   - Aldo Calpini <dada@perl.it>
   - Jan Dubois <jand@activestate.com>
