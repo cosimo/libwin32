@@ -1,5 +1,8 @@
 Revision history for Perl extension Win32::FileSecurity.
 
+1.06  Fri Jun 13 2008
+        - move sample.pl to eg/sample.pl so that it doesn't get installed
+
 1.05  Tue Apr 17 2008
 	- version 1.05 for separate upload to CPAN
 	- updated email addresses
