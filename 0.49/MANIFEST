@@ -1,0 +1,12 @@
+MANIFEST
+META.yml
+Makefile.PL
+README
+Sound.pm
+Sound.xs
+eg/sample.pl
+ppport.h
+samples/devices.pl
+samples/format.pl
+samples/sinus.pl
+samples/welcome.wav
