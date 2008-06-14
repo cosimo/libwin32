@@ -1,5 +1,11 @@
 Revision history for Perl extension Win32::ODBC.
 
+2008-06-13
+
+	* version 0.34
+	* moved sample.pl to eg/ subdirectory to avoid the file from
+	  getting installed.
+
 2008-04-15
 
 	* new version 0.33 for separate upload to CPAN
