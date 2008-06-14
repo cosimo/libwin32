@@ -52,6 +52,10 @@ PIPE.PM HISTORY:
 	- added ppport.h
 	- added casts to suppress compiler warnings on Win64
 
+2008.06.13 Jan Dubois <jand@activestate.com> (v0.024)
+	- move test.bat, Client.pl and Server.pl into eg/ subdirectory to
+	  prevent the scripts from being installed
+
 PIPE.PLL HISTORY:
 ----------------
 96.06.10 Dave Roth <rothd@roth.net>
