@@ -7,7 +7,10 @@ use Win32::NetResource;
 my $user   = "";
 my $passwd = "";
 
-my $tests = 7;
+eval {require Win32};
+my $is_admin = defined &Win32::IsAdminUser && Win32::IsAdminUser();
+
+my $tests = $is_admin ? 7 : 1;
 plan tests => $tests;
 
 sub err {
@@ -41,6 +44,8 @@ foreach (keys %share_info) {
     $ok = 0;
 }
 ok($ok);
+
+exit(0) unless $is_admin;
 
 # Make a share of the current directory.
 
