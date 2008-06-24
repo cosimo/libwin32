@@ -1,5 +1,8 @@
 Revision history for Perl extension Win32::Registry.
 
+0.10  Mon Jun 23 2008
+        - Skip tests when not running as an administrator.
+
 0.09  Fri Jun 13 2008
         - Fixes for Win64 support
 
