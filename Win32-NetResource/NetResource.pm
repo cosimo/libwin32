@@ -4,7 +4,7 @@ require Exporter;
 require DynaLoader;
 require AutoLoader;
 
-$VERSION = '0.055';
+$VERSION = '0.056';
 
 @ISA = qw(Exporter DynaLoader);
 # Items to export into callers namespace by default. Note: do not export

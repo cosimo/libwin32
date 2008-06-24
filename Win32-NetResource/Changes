@@ -1,5 +1,8 @@
 Revision history for Perl extension Win32::NetResource.
 
+0.056 Mon Jun 23 2008
+        - Skip tests when not running as an administrator.
+
 0.055 Fri Jun 13 2008
         - Use T_BOOL instead of T_IV for BOOL typemap entry so that
 	  the code doesn't warn on undef.
