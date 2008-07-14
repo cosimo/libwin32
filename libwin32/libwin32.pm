@@ -1,6 +1,6 @@
 package Bundle::libwin32;
 
-$VERSION = 0.30;
+$VERSION = '0.30';
 
 1;
 
