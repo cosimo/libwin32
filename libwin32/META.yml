@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: libwin32
 abstract: A bundle of popular Win32 modules
-version: 0.29
+version: 0.30
 author:
   - Jan Dubois <jand@activestate.com>
 license: perl
