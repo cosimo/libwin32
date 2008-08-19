@@ -3,7 +3,7 @@
 #
 # Win32::Clipboard - Interaction with the Windows clipboard
 #
-# Version: 0.53
+# Version: 0.54
 # Created: 19 Nov 96
 # Author: Aldo Calpini <dada@perl.it>
 #
@@ -579,6 +579,14 @@ PPCODE:
 		CloseClipboard();
 	    }
 	    break;
+        case CF_UNICODETEXT:
+            EXTEND(SP, 1);
+            if (myhandle = GetClipboardData(CF_UNICODETEXT))
+                XST_mPVN(0, (char*)myhandle, wcslen((wchar_t*)myhandle) * sizeof(wchar_t));
+            else
+                XST_mNO(0);
+            toret = 1;
+            break;
 	default:
 	    EXTEND(SP, 1);
 	    if(myhandle = GetClipboardData((UINT) format))

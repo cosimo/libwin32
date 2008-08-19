@@ -1,3 +1,9 @@
+2008-08-18
+	- version 0.54
+	- fix GetAs(CF_UNICODETEXT) to return the right number of
+	  bytes (still returns binary data, not a unicode string).
+	  Thanks to Brian McCauley.
+	
 2008-04-15
 	- version 0.53 for separate upload to CPAN
 	- updated email addresses
