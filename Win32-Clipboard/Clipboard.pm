@@ -253,10 +253,17 @@ to check the clipboard format before getting data.
 
 =item GetAs(FORMAT)
 
-Returns the clipboard content in the desired FORMAT (can be one of the constants
-defined in the L</CONSTANTS> section or a custom format). Note that the only
-meaningful identifiers are C<CF_TEXT>, C<CF_DIB> and C<CF_HDROP>; any other
-format is treated as a string.
+Returns the clipboard content in the desired FORMAT (can be one of the
+constants defined in the L</CONSTANTS> section or a custom
+format). Note that the only meaningful identifiers are CF_TEXT,
+CF_UNICODETEXT, CF_DIB and CF_HDROP; any other format is treated as a
+string.
+
+If CF_UNICODETEXT is used, then binary Unicode data is returned. A
+perl unicode string can be generated as follows:
+
+    $text = $clip->GetAs(CF_UNICODETEXT);
+    $text = Encode::decode("UTF16-LE", $text);
 
 =for html <P>
 

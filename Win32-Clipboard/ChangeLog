@@ -1,3 +1,6 @@
+2008-08-19
+	- documentation for GetAs(CF_UNICODETEXT) suggested by Neilay Dedhia.
+
 2008-08-18
 	- version 0.54
 	- fix GetAs(CF_UNICODETEXT) to return the right number of
