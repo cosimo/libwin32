@@ -96,8 +96,6 @@ static char *szRights[] =
   "R", "READ", "C", "CHANGE", "A", "ADD", "F", "FULL", NULL
 } ;
 
-static char *szLocalLookup[] = { "BUILTIN", "NT AUTHORITY", NULL } ;
-
 static long constant( char *name ) {
     int i;
 
@@ -376,7 +374,7 @@ Set(filename, hv)
 	    PSID pSID = NULL; 
 	    DWORD cbSID = 1024; 
 	    ACCESS_MASK AccountRights;
-	    LPSTR    lpszAccount, lpszDomain, lpszServer, lpszTemp;
+	    LPSTR    lpszAccount, lpszDomain;
 	    DWORD cchDomainName = 80, tries; 
 	    PSID_NAME_USE psnuType = NULL; 
 	    I32 AccountLen;
@@ -450,24 +448,7 @@ Set(filename, hv)
 		cbSID = 1024 ;
 		cchDomainName = 80 ;
 
-		if ( lpszTemp = strchr( lpszAccount, '\\' ) ) {
-		    lpszServer = lpszAccount ;
-		    *lpszTemp = '\0' ;
-		    lpszAccount = lpszTemp + 1 ;
-		} else {
-		    lpszServer = NULL ;
-		}
-
-		if ( lpszServer != NULL ) {
-		    for ( i = 0; szLocalLookup[i] != NULL; i++ ) {
-			if ( stricmp( szLocalLookup[i], lpszServer ) == 0 ) {
-			    lpszServer = NULL ;
-			    break ;
-			}
-		    }
-		}
-
-                bResult = LookupAccountNameA((LPCSTR) lpszServer,
+                bResult = LookupAccountNameA(NULL,
                                              (LPCSTR) lpszAccount,
                                              pSID,
                                              &cbSID,
@@ -476,7 +457,7 @@ Set(filename, hv)
                                              psnuType);
 
 		if (!bResult) { 
-		    printf( "%s\\%s\n", lpszServer ? lpszServer : "", lpszAccount ) ;
+		    printf( "%s\n", lpszAccount ) ;
 		    ErrorHandler( "LookupAccountName"); 
 		    goto SetCleanup; 
 		}

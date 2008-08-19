@@ -13,7 +13,7 @@ require Exporter;
 require DynaLoader;
 use Carp ;
 
-$VERSION = '1.06';
+$VERSION = '1.07';
 
 require Win32 unless defined &Win32::IsWinNT;
 croak "The Win32::FileSecurity module works only on Windows NT" unless Win32::IsWinNT();
