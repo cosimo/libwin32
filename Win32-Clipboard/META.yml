@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32-Clipboard
 abstract: Interaction with the Windows clipboard
-version: 0.54
+version: 0.55
 author:
   - Aldo Calpini <dada@perl.it>
   - Hideyo Imazu <himazu@gmail.com>
