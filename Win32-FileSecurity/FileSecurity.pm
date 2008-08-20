@@ -2,7 +2,7 @@ package Win32::FileSecurity;
 
 use Carp;
 
-$VERSION = '1.07';
+$VERSION = '1.08';
 
 require Win32 unless defined &Win32::IsWinNT;
 croak "The Win32::FileSecurity module works only on Windows NT" unless Win32::IsWinNT();
@@ -98,13 +98,7 @@ from File Manager.
 
 =head1 FUNCTIONS
 
-=head2 NOTE:
-
-All of the functions return false if they fail, unless otherwise
-noted.  Errors returned via $! containing both Win32 GetLastError()
-and a text message indicating Win32 function that failed.
-
-=over 10
+=over
 
 =item constant( $name, $set )
 
@@ -130,9 +124,16 @@ integer value.
 
 =back
 
+Note: All of the functions return false if they fail, unless otherwise
+noted.  Errors returned via $! containing both Win32 GetLastError()
+and a text message indicating Win32 function that failed.
+
 =head2 %permisshash
 
 Entries take the form $permisshash{USERNAME} = $mask ;
+
+Get() may return a SID or the string "<Unknown>" when the account
+name cannot be determined.
 
 =head1 EXAMPLE1
 
@@ -197,18 +198,29 @@ Entries take the form $permisshash{USERNAME} = $mask ;
 
 =head1 LIMITATIONS
 
-The module currently only supports ALLOW ACLs; DENY ACLs
-are not being reported by Get() and cannot be Set() either.
+=over
+
+=item *
+
+The module currently only supports ALLOW ACLs; DENY ACLs are not being
+reported by Get() and cannot be Set() either.
+
+=item *
+
+The Get() function may return an SID when the account cannot be found,
+but the Set() function doesn't allow the use of SIDs for setting ACLs.
+
+=back
 
 =head1 KNOWN ISSUES / BUGS
 
-=over 10
+=over
 
-=item 1
+=item *
 
 May not work on remote drives.
 
-=item 2
+=item *
 
 Errors croak, don't return via $! as documented.
 

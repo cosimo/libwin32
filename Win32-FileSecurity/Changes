@@ -1,5 +1,9 @@
 Revision history for Perl extension Win32::FileSecurity.
 
+1.08  Wed Aug 20 2008
+	- In Get() use SIDs when the account name is not available.
+	  Also fixes http://rt.cpan.org/Ticket/Display.html?id=29557
+
 1.07  Tue Aug 19 2008
         - Don't split account names on "\\", always pass them as-is
 	  to LookupAccountName().

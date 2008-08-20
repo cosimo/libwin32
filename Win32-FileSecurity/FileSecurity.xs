@@ -8,6 +8,8 @@
 
 #include "ppport.h"
 
+typedef BOOL (WINAPI *PFNConvertSidToStringSidA)(PSID Sid, LPSTR *StringSid);
+
 #undef New
 #undef Newc
 
@@ -195,7 +197,7 @@ Get(filename, hv)
 	    PACL pDacl ;
 	    PACE_HEADER pAce ;
 	    PACCESS_ALLOWED_ACE pAllAce ;
-	    LPTSTR FullName, Name = NULL, DName = NULL, NoName = "Unknown\000" ;
+	    LPTSTR FullName, Name = NULL, DName = NULL;
 	    DWORD bFN = MAXIMUM_NAME_LENGTH << 1, 
 		bName = MAXIMUM_NAME_LENGTH, bDName = MAXIMUM_NAME_LENGTH;
 	    SID_NAME_USE eUse ;
@@ -288,8 +290,6 @@ Get(filename, hv)
 		    continue ;
 		}
 
-		bDName = bName = MAXIMUM_NAME_LENGTH ;
-
 		switch ( pAce->AceType ) {
 		case ACCESS_ALLOWED_ACE_TYPE :
 		    pAllAce = (PACCESS_ALLOWED_ACE) pAce ;
@@ -306,17 +306,30 @@ Get(filename, hv)
                         );
 
 		    if (!bResult) {
-			Name = NoName ;
-			bDName = 0;
-			bName = (DWORD)strlen(Name);
+                        /* ConvertSidToStringSid() doesn't exist on Windows NT */
+                        HMODULE module = LoadLibrary("advapi32.dll");
+                        strcpy(FullName, "<Unknown>");
+                        if (module) {
+                            PFNConvertSidToStringSidA pfnConvertSidToStringSidA =
+                                (PFNConvertSidToStringSidA)GetProcAddress(module, "ConvertSidToStringSidA");
+                            if (pfnConvertSidToStringSidA) {
+                                char *string_sid;
+                                if (pfnConvertSidToStringSidA((PSID)&(pAllAce->SidStart), &string_sid)) {
+                                    strcpy(FullName, string_sid);
+                                    LocalFree(string_sid);
+                                }
+                            }
+                            FreeLibrary(module);
+                        }
+                        bFN = (DWORD)strlen(FullName) ;
 		    }
-
-		    if ( bDName ) {
+		    else if ( bDName ) {
 			strcpy( FullName, DName );
 			strcat( FullName, "\\" );
 			strcat( FullName, Name );
 			bFN = bName + bDName + 1 ;
-		    } else {
+		    }
+                    else {
 			strcpy( FullName, Name ) ;
 			bFN = bName ;
 		    }
