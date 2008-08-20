@@ -1,14 +1,3 @@
-/* FileSecurity.cpp
- * By Monte Mitzelfelt, monte@conchas.nm.org
- * Larry Wall's Artistic License applies to all related Perl
- *  and C code for this module
- * Thanks to the guys at ActiveWare!
- * v0.66
- *
- * minor misc hacks by Gurusamy Sarathy <gsar@cpan.org>
- *
- */
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winbase.h>
@@ -370,7 +359,7 @@ Set(filename, hv)
 	    PACL pACLNew = NULL;
 	    PACCESS_ALLOWED_ACE pAllAce;
 	    PSECURITY_DESCRIPTOR pSD = NULL; 
-	    DWORD cbACL = 1024, i; 
+	    DWORD cbACL = 1024; 
 	    PSID pSID = NULL; 
 	    DWORD cbSID = 1024; 
 	    ACCESS_MASK AccountRights;

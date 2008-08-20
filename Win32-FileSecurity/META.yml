@@ -3,6 +3,7 @@ name: Win32-FileSecurity
 abstract: Manage FileSecurity Discretionary Access Control Lists in Perl
 version: 1.07
 author:
+  - Monte Mitzelfelt
   - Jan Dubois <jand@activestate.com>
 license: perl
 requires: 
