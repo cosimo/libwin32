@@ -43,7 +43,6 @@ on one of these.
 use strict;
 require Exporter;
 require DynaLoader;
-use Win32::WinError;
 
 require Win32 unless defined &Win32::GetLastError;
 
