@@ -10,6 +10,7 @@
 # Version: 0.082 (04 Sep 2001)
 # Version: 0.083 (15 Apr 2008)
 # Version: 0.084 (13 Jun 2008)
+# Version: 0.085 (unreleased)
 #
 #######################################################################
 
@@ -153,7 +154,7 @@ sub AUTOLOAD {
 #######################################################################
 # STATIC OBJECT PROPERTIES
 #
-$VERSION = "0.084";
+$VERSION = "0.085";
 
 %callback_code = ();
 %callback_info = ();
@@ -2798,6 +2799,11 @@ use, refer to the Microsoft Win32 Internet Functions document.
 =head1 VERSION HISTORY
 
 =over
+
+=item * 0.085 (unreleased)
+
+HttpSendRequest() now works for binary data too.
+Requested by Gregory Burmistrov.
 
 =item * 0.084 (13 Jun 2008)
 

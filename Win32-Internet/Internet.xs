@@ -1544,15 +1544,17 @@ PPCODE:
 	XSRETURN_NO;
 
 void
-HttpSendRequest(handle,headers,postdata)
+HttpSendRequest(handle,headers_sv,postdata_sv)
     HINTERNET handle
-    LPCTSTR headers
-    LPCTSTR postdata
+    SV *headers_sv
+    SV *postdata_sv
 PPCODE:
-    DWORD headerslen  = strlen(headers);
-    DWORD postdatalen = strlen(postdata);
-    if (HttpSendRequest(handle,headers,strlen(headers),
-			(LPVOID)postdata,strlen(postdata)))
+    STRLEN headers_len;
+    STRLEN postdata_len;
+    char *headers = SvPV(headers_sv, headers_len);
+    char *postdata = SvPV(postdata_sv, postdata_len);
+    if (HttpSendRequest(handle, headers, headers_len,
+			postdata, postdata_len))
 	XSRETURN_YES;
     else
 	XSRETURN_NO;

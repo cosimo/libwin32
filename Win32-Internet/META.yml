@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name: Win32-Internet
 abstract: Perl Module for Internet Extensions
-version: 0.084
+version: 0.085
 author:
   - Aldo Calpini <dada@perl.it>
   - Jan Dubois <jand@activestate.com>
